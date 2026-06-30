@@ -220,9 +220,17 @@
   <div class="card">
     <p style="font-weight:600; margin-bottom:12px;">กำหนดราคา</p>
     <label>ราคาที่ดิน ต่อ 1 แปลง (บาท)</label>
-    <input type="number" id="input-land-price" placeholder="เช่น 500000" value="500000" />
-    <label>มูลค่ารางวัลต่อ 1 ฐาน (บาท) — นักเรียนจะได้รับสินทรัพย์มูลค่าเท่านี้</label>
-    <input type="number" id="input-reward-value" placeholder="เช่น 1000" value="1000" />
+    <input type="number" id="input-land-price" placeholder="เช่น 100000" value="100000" />
+    <div class="row" style="margin-top:4px;">
+      <div>
+        <label>มูลค่ารางวัลทีมชนะ (บาท)</label>
+        <input type="number" id="input-winner-value" placeholder="เช่น 100000" value="100000" />
+      </div>
+      <div>
+        <label>มูลค่ารางวัลทีมแพ้ (บาท)</label>
+        <input type="number" id="input-loser-value" placeholder="เช่น 80000" value="80000" />
+      </div>
+    </div>
     <div style="margin-top:14px;">
       <button class="btn btn-success" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
     </div>
@@ -249,45 +257,78 @@
 <!-- TAB: บันทึกรางวัล -->
 <div class="tab" id="tab-award">
   <p class="section-title">🎖️ บันทึกรางวัล</p>
+  <div class="notice">💡 เลือกทีมชนะก่อน → ทีมชนะเลือกรางวัล → ทีมแพ้เลือกจาก 2 ที่เหลือ → ยืนยัน</div>
 
-  <div class="notice">💡 เลือกนักเรียนและประเภทสินทรัพย์ที่ต้องการรับ ระบบจะบันทึกราคา ณ เวลานั้นเข้ากระเป๋าเงินอัตโนมัติ</div>
-
-  <div class="card">
-    <label>เลือกนักเรียน / กลุ่ม</label>
-    <select id="select-student">
+  <!-- ── ทีมผู้ชนะ ── -->
+  <div class="card" style="border-color:#eab308;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span style="font-size:1.3rem;">🏆</span>
+      <span style="font-weight:700; color:#eab308;">ทีมผู้ชนะ</span>
+      <span style="font-size:0.8rem; color:#64748b; margin-left:auto;" id="winner-value-label">มูลค่า ฿100,000</span>
+    </div>
+    <label>เลือกทีม</label>
+    <select id="select-winner" onchange="onWinnerChange()">
       <option value="">-- กรุณาเลือก --</option>
     </select>
-
-    <label style="margin-top:16px;">เลือกประเภทสินทรัพย์</label>
-    <div class="reward-options" id="reward-options">
-      <div class="reward-option" onclick="selectReward('land')" id="opt-land">
+    <label style="margin-top:14px;">เลือกรางวัล</label>
+    <div class="reward-options" id="winner-options">
+      <div class="reward-option" onclick="selectWinnerReward('land')" id="w-opt-land">
         <div class="icon">🏗️</div>
         <div class="name land-color">ที่ดิน</div>
         <div class="current-price">1 แปลง = <span id="opt-land-price">-</span></div>
       </div>
-      <div class="reward-option" onclick="selectReward('gold')" id="opt-gold">
+      <div class="reward-option" onclick="selectWinnerReward('gold')" id="w-opt-gold">
         <div class="icon">🥇</div>
         <div class="name gold-color">ทองคำ</div>
         <div class="current-price">ราคา/บาท = <span id="opt-gold-price">-</span></div>
       </div>
-      <div class="reward-option" onclick="selectReward('btc')" id="opt-btc">
+      <div class="reward-option" onclick="selectWinnerReward('btc')" id="w-opt-btc">
         <div class="icon">₿</div>
         <div class="name btc-color">Bitcoin</div>
         <div class="current-price">1 BTC = <span id="opt-btc-price">-</span></div>
       </div>
     </div>
+  </div>
 
-    <div class="confirm-box" id="confirm-box">
-      <p style="font-weight:700; margin-bottom:10px; color:#93c5fd;">📋 สรุปรางวัลที่บันทึก</p>
-      <div class="confirm-row"><span class="key">นักเรียน</span><span class="val" id="conf-student">-</span></div>
-      <div class="confirm-row"><span class="key">สินทรัพย์</span><span class="val" id="conf-asset">-</span></div>
-      <div class="confirm-row"><span class="key">จำนวน</span><span class="val" id="conf-qty">-</span></div>
-      <div class="confirm-row"><span class="key">ราคาต่อหน่วย ณ ตอนนี้</span><span class="val" id="conf-price">-</span></div>
-      <div class="confirm-row"><span class="key">มูลค่ารวม</span><span class="val" id="conf-total">-</span></div>
-      <div style="margin-top:12px; display:flex; gap:10px;">
-        <button class="btn btn-success" onclick="confirmAward()">✅ ยืนยันบันทึก</button>
-        <button class="btn" style="background:#334155;" onclick="cancelAward()">ยกเลิก</button>
+  <!-- ── ทีมผู้แพ้ ── -->
+  <div class="card" style="border-color:#475569;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span style="font-size:1.3rem;">🎖️</span>
+      <span style="font-weight:700; color:#94a3b8;">ทีมผู้แพ้</span>
+      <span style="font-size:0.8rem; color:#64748b; margin-left:auto;" id="loser-value-label">มูลค่า ฿80,000</span>
+    </div>
+    <label>เลือกทีม</label>
+    <select id="select-loser">
+      <option value="">-- กรุณาเลือก --</option>
+    </select>
+    <label style="margin-top:14px;">เลือกรางวัลที่เหลือ</label>
+    <div class="reward-options" id="loser-options">
+      <div style="color:#475569; font-size:0.85rem; padding:8px;">เลือกรางวัลทีมชนะก่อน</div>
+    </div>
+  </div>
+
+  <!-- ── สรุป ── -->
+  <div class="confirm-box" id="confirm-box">
+    <p style="font-weight:700; margin-bottom:12px; color:#93c5fd;">📋 สรุปรางวัลทั้งสองทีม</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+      <div style="background:#0f172a; border-radius:8px; padding:12px; border:1px solid #eab30844;">
+        <div style="color:#eab308; font-weight:700; margin-bottom:6px;">🏆 ทีมชนะ</div>
+        <div class="confirm-row"><span class="key">ทีม</span><span class="val" id="conf-w-team">-</span></div>
+        <div class="confirm-row"><span class="key">รางวัล</span><span class="val" id="conf-w-asset">-</span></div>
+        <div class="confirm-row"><span class="key">จำนวน</span><span class="val" id="conf-w-qty">-</span></div>
+        <div class="confirm-row"><span class="key">มูลค่า</span><span class="val" id="conf-w-total">-</span></div>
       </div>
+      <div style="background:#0f172a; border-radius:8px; padding:12px; border:1px solid #47556944;">
+        <div style="color:#94a3b8; font-weight:700; margin-bottom:6px;">🎖️ ทีมแพ้</div>
+        <div class="confirm-row"><span class="key">ทีม</span><span class="val" id="conf-l-team">-</span></div>
+        <div class="confirm-row"><span class="key">รางวัล</span><span class="val" id="conf-l-asset">-</span></div>
+        <div class="confirm-row"><span class="key">จำนวน</span><span class="val" id="conf-l-qty">-</span></div>
+        <div class="confirm-row"><span class="key">มูลค่า</span><span class="val" id="conf-l-total">-</span></div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-success" onclick="confirmAward()">✅ ยืนยันบันทึกทั้งสองทีม</button>
+      <button class="btn" style="background:#334155;" onclick="cancelAward()">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -329,12 +370,33 @@ const DEFAULT_STUDENTS = COLOR_GROUPS.flatMap(g =>
 );
 
 let state = {
-  settings: { landPrice: 500000, rewardValue: 1000 },
+  settings: { landPrice: 100000, winnerValue: 100000, loserValue: 80000 },
   students: DEFAULT_STUDENTS,
   transactions: [],
 };
 let prices = { btc: null, gold: null };
-let selectedReward = null;
+let selectedWinnerReward = null;
+let selectedLoserReward  = null;
+
+// ======================== GOOGLE SHEETS API ========================
+// วาง URL ที่ได้จาก Deploy Apps Script ตรงนี้
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6BSOK2bl8etQIZTQpqDAD7sUoVWwHFzwqBykd_pUWVKHIyiiO4i6wJ48ieIuiala2EQ/exec';
+
+async function apiCall(action, params = {}) {
+  if (!SCRIPT_URL) return null;
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', action);
+    for (const [k, v] of Object.entries(params)) {
+      url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    }
+    const res = await fetch(url.toString());
+    return await res.json();
+  } catch(e) {
+    console.warn('[Sheets] API error:', action, e);
+    return null;
+  }
+}
 
 // ======================== LOCALSTORAGE ========================
 function saveState() {
@@ -399,10 +461,16 @@ async function fetchPrices() {
 
 function updatePriceDisplays() {
   const lp = state.settings.landPrice;
+  const wv = state.settings.winnerValue;
+  const lv = state.settings.loserValue;
   document.getElementById('price-land-header').textContent = fmtCurrency(lp);
-  document.getElementById('opt-land-price').textContent = fmtCurrency(lp);
-  document.getElementById('opt-gold-price').textContent = prices.gold ? fmtCurrency(prices.gold) : 'กำลังโหลด...';
-  document.getElementById('opt-btc-price').textContent = prices.btc ? fmtCurrency(prices.btc) : 'กำลังโหลด...';
+  document.querySelectorAll('#opt-land-price').forEach(el => el.textContent = fmtCurrency(lp));
+  document.querySelectorAll('#opt-gold-price').forEach(el => el.textContent = prices.gold ? fmtCurrency(prices.gold) : 'กำลังโหลด...');
+  document.querySelectorAll('#opt-btc-price').forEach(el => el.textContent = prices.btc ? fmtCurrency(prices.btc) : 'กำลังโหลด...');
+  const wLabel = document.getElementById('winner-value-label');
+  const lLabel = document.getElementById('loser-value-label');
+  if (wLabel) wLabel.textContent = `มูลค่า ${fmtCurrency(wv)}`;
+  if (lLabel) lLabel.textContent = `มูลค่า ${fmtCurrency(lv)}`;
 }
 
 // ======================== FORMATTING ========================
@@ -438,11 +506,14 @@ function assetColor(type) {
 // ======================== SETTINGS ========================
 function saveSettings() {
   const lp = parseFloat(document.getElementById('input-land-price').value);
-  const rv = parseFloat(document.getElementById('input-reward-value').value);
-  if (!lp || !rv) { alert('กรุณากรอกตัวเลขให้ครบ'); return; }
-  state.settings.landPrice = lp;
-  state.settings.rewardValue = rv;
+  const wv = parseFloat(document.getElementById('input-winner-value').value);
+  const lv = parseFloat(document.getElementById('input-loser-value').value);
+  if (!lp || !wv || !lv) { alert('กรุณากรอกตัวเลขให้ครบ'); return; }
+  state.settings.landPrice   = lp;
+  state.settings.winnerValue = wv;
+  state.settings.loserValue  = lv;
   saveState();
+  apiCall('saveSettings', { data: state.settings });
   updatePriceDisplays();
   const msg = document.getElementById('settings-msg');
   msg.style.display = 'block';
@@ -487,94 +558,158 @@ function renderStudentList() {
 }
 
 function populateStudentSelect() {
-  const sel = document.getElementById('select-student');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">-- กรุณาเลือก --</option>';
-  state.students.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = s.name;
-    sel.appendChild(opt);
+  ['select-winner', 'select-loser'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">-- กรุณาเลือก --</option>';
+    state.students.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+    if (current) sel.value = current;
   });
-  if (current) sel.value = current;
 }
 
 // ======================== AWARD ========================
-function selectReward(type) {
-  selectedReward = type;
-  document.querySelectorAll('.reward-option').forEach(el => el.classList.remove('selected'));
-  document.getElementById('opt-' + type).classList.add('selected');
+const ALL_TYPES = ['land', 'gold', 'btc'];
 
-  const studentId = document.getElementById('select-student').value;
-  if (!studentId) { alert('กรุณาเลือกนักเรียนก่อน'); selectedReward = null; document.getElementById('opt-' + type).classList.remove('selected'); return; }
+function onWinnerChange() {
+  // reset loser reward when winner changes
+  selectedLoserReward = null;
+  document.querySelectorAll('#loser-options .reward-option').forEach(el => el.classList.remove('selected'));
+  if (selectedWinnerReward) renderLoserOptions(selectedWinnerReward);
+}
 
-  const student = state.students.find(s => s.id === studentId);
-  const rv = state.settings.rewardValue;
-  let price, qty, label;
+function priceForType(type) {
+  if (type === 'land') return state.settings.landPrice;
+  if (type === 'gold') return prices.gold;
+  if (type === 'btc')  return prices.btc;
+  return null;
+}
 
-  if (type === 'land') {
-    price = state.settings.landPrice;
-    qty = rv / price;
-    label = fmtQty('land', qty);
-  } else if (type === 'gold') {
-    if (!prices.gold) { alert('รอโหลดราคาทองก่อนนะครับ'); return; }
-    price = prices.gold;
-    qty = rv / price;
-    label = fmtQty('gold', qty);
-  } else if (type === 'btc') {
-    if (!prices.btc) { alert('รอโหลดราคา Bitcoin ก่อนนะครับ'); return; }
-    price = prices.btc;
-    qty = rv / price;
-    label = fmtQty('btc', qty);
+function selectWinnerReward(type) {
+  if (!document.getElementById('select-winner').value) {
+    alert('กรุณาเลือกทีมผู้ชนะก่อน'); return;
   }
+  const p = priceForType(type);
+  if (!p) { alert('รอราคา ' + assetLabel(type) + ' โหลดก่อนนะครับ'); return; }
 
-  document.getElementById('conf-student').textContent = student.name;
-  document.getElementById('conf-asset').textContent = assetLabel(type);
-  document.getElementById('conf-qty').textContent = label;
-  document.getElementById('conf-price').textContent = fmtCurrency(price);
-  document.getElementById('conf-total').textContent = fmtCurrency(rv);
+  selectedWinnerReward = type;
+  selectedLoserReward  = null;
+  document.querySelectorAll('#winner-options .reward-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('w-opt-' + type).classList.add('selected');
 
-  const box = document.getElementById('confirm-box');
-  box.className = 'confirm-box show';
+  renderLoserOptions(type);
+  updateConfirmBox();
+}
+
+function renderLoserOptions(excludeType) {
+  const remaining = ALL_TYPES.filter(t => t !== excludeType);
+  const lv = state.settings.loserValue;
+
+  document.getElementById('loser-options').innerHTML = remaining.map(type => {
+    const p = priceForType(type);
+    const priceText = type === 'land'
+      ? `1 แปลง = <span>${fmtCurrency(p)}</span>`
+      : type === 'gold'
+        ? `ราคา/บาท = <span>${p ? fmtCurrency(p) : '-'}</span>`
+        : `1 BTC = <span>${p ? fmtCurrency(p) : '-'}</span>`;
+    return `
+      <div class="reward-option" onclick="selectLoserReward('${type}')" id="l-opt-${type}">
+        <div class="icon">${type === 'land' ? '🏗️' : type === 'gold' ? '🥇' : '₿'}</div>
+        <div class="name ${type === 'land' ? 'land' : type === 'gold' ? 'gold' : 'btc'}-color">${assetLabel(type)}</div>
+        <div class="current-price">${priceText}</div>
+      </div>`;
+  }).join('');
+}
+
+function selectLoserReward(type) {
+  if (!document.getElementById('select-loser').value) {
+    alert('กรุณาเลือกทีมผู้แพ้ก่อน'); return;
+  }
+  selectedLoserReward = type;
+  document.querySelectorAll('#loser-options .reward-option').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('l-opt-' + type);
+  if (el) el.classList.add('selected');
+  updateConfirmBox();
+}
+
+function calcTx(type, value) {
+  const price = priceForType(type);
+  if (!price) return null;
+  return { price, qty: value / price };
+}
+
+function updateConfirmBox() {
+  if (!selectedWinnerReward || !selectedLoserReward) {
+    document.getElementById('confirm-box').className = 'confirm-box';
+    return;
+  }
+  const winnerId  = document.getElementById('select-winner').value;
+  const loserId   = document.getElementById('select-loser').value;
+  if (!winnerId || !loserId) return;
+
+  const wv = state.settings.winnerValue;
+  const lv = state.settings.loserValue;
+  const wTx = calcTx(selectedWinnerReward, wv);
+  const lTx = calcTx(selectedLoserReward,  lv);
+  if (!wTx || !lTx) return;
+
+  const wName = state.students.find(s => s.id === winnerId)?.name ?? winnerId;
+  const lName = state.students.find(s => s.id === loserId)?.name ?? loserId;
+
+  document.getElementById('conf-w-team').textContent  = wName;
+  document.getElementById('conf-w-asset').textContent = assetLabel(selectedWinnerReward);
+  document.getElementById('conf-w-qty').textContent   = fmtQty(selectedWinnerReward, wTx.qty);
+  document.getElementById('conf-w-total').textContent = fmtCurrency(wv);
+
+  document.getElementById('conf-l-team').textContent  = lName;
+  document.getElementById('conf-l-asset').textContent = assetLabel(selectedLoserReward);
+  document.getElementById('conf-l-qty').textContent   = fmtQty(selectedLoserReward, lTx.qty);
+  document.getElementById('conf-l-total').textContent = fmtCurrency(lv);
+
+  document.getElementById('confirm-box').className = 'confirm-box show';
 }
 
 function cancelAward() {
-  selectedReward = null;
+  selectedWinnerReward = null;
+  selectedLoserReward  = null;
   document.querySelectorAll('.reward-option').forEach(el => el.classList.remove('selected'));
   document.getElementById('confirm-box').className = 'confirm-box';
+  document.getElementById('loser-options').innerHTML = '<div style="color:#475569; font-size:0.85rem; padding:8px;">เลือกรางวัลทีมชนะก่อน</div>';
 }
 
 function confirmAward() {
-  const studentId = document.getElementById('select-student').value;
-  if (!studentId || !selectedReward) return;
+  const winnerId = document.getElementById('select-winner').value;
+  const loserId  = document.getElementById('select-loser').value;
+  if (!winnerId || !loserId || !selectedWinnerReward || !selectedLoserReward) return;
+  if (winnerId === loserId) { alert('ทีมชนะและทีมแพ้ต้องไม่ใช่ทีมเดียวกัน'); return; }
 
-  const rv = state.settings.rewardValue;
-  let price;
-  if (selectedReward === 'land') price = state.settings.landPrice;
-  else if (selectedReward === 'gold') price = prices.gold;
-  else if (selectedReward === 'btc') price = prices.btc;
+  const wv  = state.settings.winnerValue;
+  const lv  = state.settings.loserValue;
+  const wTx = calcTx(selectedWinnerReward, wv);
+  const lTx = calcTx(selectedLoserReward,  lv);
+  if (!wTx || !lTx) { alert('ราคายังโหลดไม่ครบ กรุณารอสักครู่'); return; }
 
-  const qty = rv / price;
+  const now = new Date().toISOString();
+  const txW = { id: Date.now() + 'w', studentId: winnerId, type: selectedWinnerReward, qty: wTx.qty, priceAtAward: wTx.price, valueAtAward: wv, timestamp: now };
+  const txL = { id: Date.now() + 'l', studentId: loserId,  type: selectedLoserReward,  qty: lTx.qty, priceAtAward: lTx.price, valueAtAward: lv, timestamp: now };
 
-  const tx = {
-    id: Date.now().toString(),
-    studentId,
-    type: selectedReward,
-    qty,
-    priceAtAward: price,
-    valueAtAward: rv,
-    timestamp: new Date().toISOString(),
-  };
-
-  state.transactions.push(tx);
+  state.transactions.push(txW, txL);
   saveState();
+  apiCall('addTransaction', { data: txW });
+  apiCall('addTransaction', { data: txL });
+
+  const wName = state.students.find(s => s.id === winnerId)?.name ?? winnerId;
+  const lName = state.students.find(s => s.id === loserId)?.name  ?? loserId;
+  showToast(`✅ บันทึกแล้ว! ${wName} (ชนะ) รับ ${assetLabel(selectedWinnerReward)} · ${lName} (แพ้) รับ ${assetLabel(selectedLoserReward)}`);
 
   cancelAward();
-  document.getElementById('select-student').value = '';
-
-  const student = state.students.find(s => s.id === studentId);
-  showToast(`✅ บันทึกแล้ว! ${student?.name} รับ ${assetLabel(selectedReward)}`);
-
+  document.getElementById('select-winner').value = '';
+  document.getElementById('select-loser').value  = '';
   refreshWallets();
   refreshLeaderboard();
   renderHistory();
@@ -739,6 +874,7 @@ function deleteTx(id) {
   if (!confirm('ลบรายการนี้?')) return;
   state.transactions = state.transactions.filter(t => t.id !== id);
   saveState();
+  apiCall('deleteTransaction', { id }); // sync to Sheets
   renderHistory();
   refreshWallets();
   refreshLeaderboard();
@@ -758,19 +894,26 @@ function showTab(name) {
 }
 
 // ======================== INIT ========================
-function init() {
+async function init() {
   loadState();
 
-  // Apply saved settings to inputs
-  document.getElementById('input-land-price').value = state.settings.landPrice;
-  document.getElementById('input-reward-value').value = state.settings.rewardValue;
+  // ── ดึงข้อมูลจาก Google Sheets (ถ้าตั้งค่า SCRIPT_URL แล้ว) ──
+  const remote = await apiCall('getAll');
+  if (remote && !remote.error) {
+    if (remote.transactions?.length) state.transactions = remote.transactions;
+    if (remote.settings) state.settings = { ...state.settings, ...remote.settings };
+    saveState(); // sync กลับมา localStorage ด้วย
+  }
+
+  document.getElementById('input-land-price').value   = state.settings.landPrice;
+  document.getElementById('input-winner-value').value = state.settings.winnerValue ?? 100000;
+  document.getElementById('input-loser-value').value  = state.settings.loserValue  ?? 80000;
 
   renderStudentList();
   populateStudentSelect();
   updatePriceDisplays();
   renderHistory();
 
-  // Fetch prices immediately then every 60s
   fetchPrices();
   setInterval(fetchPrices, 60000);
 }
