@@ -258,7 +258,11 @@ const COLOR_DEFS = [
 const RANK_ICON = ['🥇','🥈','🥉','4️⃣','5️⃣'];
 const GOLD_TROY_TO_BAHT = 15.244 / 31.1035; // troy oz → Thai baht weight
 
+// ── วาง URL Apps Script เดียวกับใน kudbak.html ──
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6BSOK2bl8etQIZTQpqDAD7sUoVWwHFzwqBykd_pUWVKHIyiiO4i6wJ48ieIuiala2EQ/exec';
+
 let prices = { btc: null, gold: null };
+let remoteState = { transactions: [], settings: { landPrice: 100000 } };
 let chartBTC = null;
 let chartGold = null;
 
@@ -301,20 +305,33 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ═══════════════════════════════════════════════════════
-//  STATE FROM LOCALSTORAGE
+//  STATE — Google Sheets (primary) + localStorage (fallback)
 // ═══════════════════════════════════════════════════════
-function loadState() {
-  try { return JSON.parse(localStorage.getItem('campRewardState') || '{}'); }
-  catch(e) { return {}; }
+async function fetchRemoteState() {
+  if (!SCRIPT_URL) {
+    // fallback to localStorage
+    try { return JSON.parse(localStorage.getItem('campRewardState') || '{}'); }
+    catch(e) { return {}; }
+  }
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getAll');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    const data = await res.json();
+    remoteState = data;
+    return data;
+  } catch(e) {
+    console.warn('[Sheets] fetch failed, using last known state');
+    return remoteState;
+  }
 }
 
 // ═══════════════════════════════════════════════════════
 //  SCORE CALCULATION
 // ═══════════════════════════════════════════════════════
-function calcScores() {
-  const s = loadState();
+function calcScores(s) {
+  s = s || remoteState;
   const landPrice = s.settings?.landPrice ?? 500000;
-  const students = s.students ?? [];
   const txs = s.transactions ?? [];
 
   // Update land display
@@ -322,8 +339,8 @@ function calcScores() {
   document.getElementById('t-land').textContent = fmt(landPrice);
 
   return COLOR_DEFS.map(c => {
-    const ids = students.filter(st => st.id?.startsWith(c.id + '-')).map(st => st.id);
-    const rows = txs.filter(t => ids.includes(t.studentId));
+    // จับคู่จาก studentId prefix ตรง ๆ ไม่ต้องพึ่ง student list
+    const rows = txs.filter(t => t.studentId && t.studentId.startsWith(c.id + '-'));
 
     let invested = 0, current = 0;
     rows.forEach(t => {
@@ -341,8 +358,8 @@ function calcScores() {
 // ═══════════════════════════════════════════════════════
 //  SCOREBOARD RENDER
 // ═══════════════════════════════════════════════════════
-function renderScoreboard() {
-  const scores = calcScores().sort((a, b) => b.current - a.current);
+function renderScoreboard(s) {
+  const scores = calcScores(s).sort((a, b) => b.current - a.current);
   const maxVal = Math.max(...scores.map(s => s.current), 1);
 
   document.getElementById('bars-container').innerHTML = scores.map((s, i) => {
@@ -520,7 +537,8 @@ let countdown = 60;
 async function refresh() {
   try { await fetchPrices(); } catch(e) { console.warn('prices err', e); }
   try { await fetchHistorical(); } catch(e) { console.warn('history err', e); }
-  renderScoreboard();
+  const s = await fetchRemoteState();
+  renderScoreboard(s);
   document.getElementById('t-updated').textContent =
     'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour12:false });
 }
@@ -531,9 +549,6 @@ setInterval(() => {
     countdown > 0 ? `อัปเดตอัตโนมัติทุก 60 วินาที (อีก ${countdown}s)` : 'กำลังอัปเดต...';
   if (countdown <= 0) { countdown = 60; refresh(); }
 }, 1000);
-
-// Re-render scoreboard every 5s in case records were added in the other tab
-setInterval(renderScoreboard, 5000);
 
 // ── Init ──────────────────────────────────────────────
 refresh();
