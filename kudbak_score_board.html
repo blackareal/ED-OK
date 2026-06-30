@@ -7,7 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
+html, body { height: 100%; }
 body {
   font-family: 'Sarabun', 'Segoe UI', sans-serif;
   background: #050a14;
@@ -15,6 +15,101 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
+}
+
+/* ── TAB NAV ── */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  padding: 8px 24px 0;
+  background: #07111f;
+  border-bottom: 1px solid #0f2040;
+  flex-shrink: 0;
+}
+.tab-btn {
+  padding: 7px 22px;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: color .2s, background .2s;
+}
+.tab-btn:hover { color: #94a3b8; background: #0f2040; }
+.tab-btn.active { color: #e2e8f0; background: #0f2547; border-bottom: 2px solid #3b82f6; }
+
+/* ── VIEW PANES ── */
+.view-pane { display: none; flex: 1; overflow: hidden; }
+.view-pane.active { display: flex; }
+#view-wallet.active { display: block; overflow-y: auto; padding: 20px 24px; }
+
+/* ── WALLET GRID ── */
+.wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+.wallet-color-col { display: flex; flex-direction: column; gap: 10px; }
+.wallet-col-header {
+  font-size: 0.75rem; font-weight: 800; text-align: center;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 6px 0 8px;
+  border-bottom: 2px solid currentColor;
+  margin-bottom: 2px;
+}
+.wallet-card {
+  background: #07111f;
+  border: 1px solid #0f2040;
+  border-radius: 10px;
+  padding: 12px;
+  transition: border-color .2s;
+}
+.wallet-card:hover { border-color: #1d4ed8; }
+.wallet-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.wallet-team-name { font-size: 0.85rem; font-weight: 800; }
+.wallet-team-total {
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-align: right;
+}
+.wallet-team-gain {
+  font-size: 0.65rem;
+  text-align: right;
+  margin-top: 1px;
+}
+.wallet-empty {
+  font-size: 0.72rem; color: #1e293b;
+  text-align: center; padding: 16px 0;
+}
+.wallet-asset-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-top: 1px solid #0a1628;
+  font-size: 0.75rem;
+}
+.wallet-asset-left { display: flex; align-items: center; gap: 5px; }
+.wallet-asset-icon { font-size: 0.9rem; }
+.wallet-asset-name { color: #64748b; }
+.wallet-asset-qty  { font-size: 0.65rem; color: #1e3a5f; margin-top: 1px; }
+.wallet-asset-right { text-align: right; }
+.wallet-asset-val  { font-weight: 700; }
+.wallet-asset-chg  { font-size: 0.63rem; margin-top: 1px; }
+.wallet-note { font-size: 0.63rem; color: #1e3a5f; margin-top: 1px; }
+.wallet-section-title {
+  font-size: 0.7rem; font-weight: 700; color: #334155;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin: 0 0 10px;
 }
 
 /* ── HEADER ── */
@@ -151,6 +246,14 @@ footer {
   </div>
 </header>
 
+<!-- ─── TAB NAV ─── -->
+<div class="tab-nav">
+  <button class="tab-btn active" id="tab-btn-scoreboard" onclick="switchTab('scoreboard')">🏆 ภาพรวมคะแนน</button>
+  <button class="tab-btn" id="tab-btn-wallet" onclick="switchTab('wallet')">👜 กระเป๋าตัง</button>
+</div>
+
+<!-- ─── VIEW: SCOREBOARD ─── -->
+<div class="view-pane active" id="view-scoreboard">
 <main>
   <!-- ─── SCOREBOARD ─── -->
   <div class="scoreboard-panel">
@@ -206,6 +309,15 @@ footer {
 
   </div><!-- /charts-panel -->
 </main>
+</div><!-- /view-scoreboard -->
+
+<!-- ─── VIEW: WALLET ─── -->
+<div class="view-pane" id="view-wallet">
+  <div class="wallet-section-title">💼 กระเป๋าสินทรัพย์แต่ละทีม — มูลค่า ณ ปัจจุบัน</div>
+  <div class="wallet-grid" id="wallet-grid">
+    <div style="color:#1e293b; font-size:.9rem; padding:20px; grid-column:1/-1">กำลังโหลดข้อมูล...</div>
+  </div>
+</div>
 
 <!-- ─── TICKER ─── -->
 <footer>
@@ -539,6 +651,7 @@ async function refresh() {
   try { await fetchHistorical(); } catch(e) { console.warn('history err', e); }
   const s = await fetchRemoteState();
   renderScoreboard(s);
+  if (currentTab === 'wallet') renderWallet(s);
   document.getElementById('t-updated').textContent =
     'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour12:false });
 }
@@ -549,6 +662,108 @@ setInterval(() => {
     countdown > 0 ? `อัปเดตอัตโนมัติทุก 60 วินาที (อีก ${countdown}s)` : 'กำลังอัปเดต...';
   if (countdown <= 0) { countdown = 60; refresh(); }
 }, 1000);
+
+// ═══════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+let currentTab = 'scoreboard';
+function switchTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.view-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.getElementById('tab-btn-' + name).classList.add('active');
+  if (name === 'wallet') renderWallet(remoteState);
+}
+
+// ═══════════════════════════════════════════════════════
+//  WALLET RENDER
+// ═══════════════════════════════════════════════════════
+function assetLabel(type) {
+  if (type === 'land') return { icon: '🏗️', name: 'ที่ดิน', color: '#22c55e' };
+  if (type === 'gold') return { icon: '🥇', name: 'ทองคำ', color: '#eab308' };
+  if (type === 'btc')  return { icon: '₿',  name: 'Bitcoin', color: '#f97316' };
+  return { icon: '💰', name: type, color: '#94a3b8' };
+}
+
+function currentAssetValue(tx, landPrice) {
+  if (tx.type === 'land') return tx.qty * landPrice;
+  if (tx.type === 'gold' && prices.gold) return tx.qty * prices.gold;
+  if (tx.type === 'btc'  && prices.btc)  return tx.qty * prices.btc;
+  return tx.valueAtAward ?? 0; // no price yet
+}
+
+function renderWallet(s) {
+  s = s || remoteState;
+  const landPrice = s.settings?.landPrice ?? 100000;
+  const txs = s.transactions ?? [];
+  const grid = document.getElementById('wallet-grid');
+
+  const html = COLOR_DEFS.map(c => {
+    const colCards = ['A', 'B'].map(sub => {
+      const teamId = c.id + '-' + sub;
+      const teamTxs = txs.filter(t => t.studentId === teamId);
+
+      let invested = 0, current = 0;
+      teamTxs.forEach(t => {
+        invested += t.valueAtAward ?? 0;
+        current  += currentAssetValue(t, landPrice);
+      });
+
+      const gain    = current - invested;
+      const gainPct = invested > 0 ? ((gain / invested) * 100).toFixed(1) : null;
+      const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
+
+      const assetRows = teamTxs.map(t => {
+        const cur = currentAssetValue(t, landPrice);
+        const ag  = cur - (t.valueAtAward ?? 0);
+        const ap  = t.valueAtAward > 0 ? ((ag / t.valueAtAward) * 100).toFixed(1) : null;
+        const agClass = ag > 0 ? 'positive' : ag < 0 ? 'negative' : 'neutral';
+        const a = assetLabel(t.type);
+        const qtyLabel = t.type === 'land' ? `${t.qty} แปลง`
+                       : t.type === 'gold' ? `${t.qty.toFixed(4)} บาทไทย`
+                       : `${t.qty.toFixed(6)} BTC`;
+        const stationLabel = t.station ? `<span style="color:#1e3a5f; font-size:0.6rem">[${t.station}]</span>` : '';
+        return `
+          <div class="wallet-asset-row">
+            <div class="wallet-asset-left">
+              <span class="wallet-asset-icon">${a.icon}</span>
+              <div>
+                <div class="wallet-asset-name" style="color:${a.color}">${a.name} ${stationLabel}</div>
+                <div class="wallet-asset-qty">${qtyLabel} · ต้นทุน ${fmt(t.valueAtAward)}</div>
+              </div>
+            </div>
+            <div class="wallet-asset-right">
+              <div class="wallet-asset-val" style="color:${a.color}">${fmt(cur)}</div>
+              <div class="wallet-asset-chg ${agClass}">${ap != null ? (parseFloat(ap)>=0?'▲ +':'▼ ')+ap+'%' : ''}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="wallet-card">
+          <div class="wallet-card-header">
+            <div class="wallet-team-name" style="color:${c.hex}">${c.emoji} ${c.label} ${sub}</div>
+            <div>
+              <div class="wallet-team-total" style="color:${c.hex}">${current > 0 ? fmt(current) : '–'}</div>
+              ${gainPct != null ? `<div class="wallet-team-gain ${gainClass}">${parseFloat(gainPct)>=0?'▲ +':'▼ '}${gainPct}%</div>` : ''}
+            </div>
+          </div>
+          ${teamTxs.length === 0
+            ? `<div class="wallet-empty">ยังไม่มีสินทรัพย์</div>`
+            : assetRows}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="wallet-color-col">
+        <div class="wallet-col-header" style="color:${c.hex}">${c.emoji} ${c.label}</div>
+        ${colCards}
+      </div>`;
+  }).join('');
+
+  grid.innerHTML = html;
+}
 
 // ── Init ──────────────────────────────────────────────
 refresh();
