@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบรางวัล · ค่ายพัฒนาศักยภาพผู้เรียนฯ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #1e3a5f, #0f172a);
+    padding: 16px 24px;
+    border-bottom: 1px solid #334155;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { font-size: 1.3rem; color: #93c5fd; font-weight: 700; }
+
+  .price-bar {
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .price-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 10px;
+    padding: 8px 16px; display: flex; flex-direction: column; align-items: center; min-width: 130px;
+  }
+  .price-card .label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+  .price-card .value { font-size: 1.1rem; font-weight: 700; }
+  .price-card .sub { font-size: 0.7rem; color: #64748b; }
+  .btc-color { color: #f97316; }
+  .gold-color { color: #eab308; }
+  .land-color { color: #22c55e; }
+  .refresh-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
+  .refresh-dot.loading { background: #f97316; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  nav {
+    display: flex; background: #1e293b; border-bottom: 1px solid #334155;
+    overflow-x: auto;
+  }
+  nav button {
+    padding: 14px 20px; background: none; border: none; color: #94a3b8;
+    cursor: pointer; font-size: 0.9rem; white-space: nowrap; border-bottom: 3px solid transparent;
+    transition: all .2s;
+  }
+  nav button.active { color: #93c5fd; border-bottom-color: #3b82f6; font-weight: 600; }
+  nav button:hover:not(.active) { color: #e2e8f0; background: #0f172a; }
+
+  .tab { display: none; padding: 24px; max-width: 900px; margin: 0 auto; }
+  .tab.active { display: block; }
+
+  .section-title { font-size: 1.1rem; font-weight: 700; color: #93c5fd; margin-bottom: 16px; }
+
+  .card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  }
+
+  label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; margin-top: 12px; }
+  label:first-child { margin-top: 0; }
+  input, select {
+    width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; color: #e2e8f0; font-size: 0.95rem; outline: none;
+  }
+  input:focus, select:focus { border-color: #3b82f6; }
+
+  .btn {
+    padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;
+    font-size: 0.9rem; font-weight: 600; transition: all .2s;
+  }
+  .btn-primary { background: #3b82f6; color: white; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-success { background: #16a34a; color: white; }
+  .btn-success:hover { background: #15803d; }
+  .btn-danger { background: #dc2626; color: white; font-size: 0.75rem; padding: 6px 12px; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .student-list { display: flex; flex-direction: column; gap: 8px; }
+  .student-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px;
+  }
+  .student-name { font-weight: 600; }
+  .student-id { font-size: 0.75rem; color: #64748b; }
+
+  .reward-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+  .reward-option {
+    border: 2px solid #334155; border-radius: 12px; padding: 16px; text-align: center;
+    cursor: pointer; transition: all .2s; background: #0f172a;
+  }
+  .reward-option:hover { border-color: #475569; background: #1e293b; }
+  .reward-option.selected { border-color: #3b82f6; background: #1e3a5f; }
+  .reward-option .icon { font-size: 2rem; margin-bottom: 8px; }
+  .reward-option .name { font-weight: 700; margin-bottom: 4px; }
+  .reward-option .current-price { font-size: 0.8rem; color: #94a3b8; }
+  .reward-option .current-price span { font-weight: 700; }
+
+  .wallet-grid { display: flex; flex-direction: column; gap: 16px; }
+  .wallet-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden;
+  }
+  .wallet-header {
+    background: #0f172a; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .wallet-name { font-weight: 700; font-size: 1rem; }
+  .wallet-total { font-size: 0.9rem; }
+  .wallet-items { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .wallet-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; background: #0f172a; border-radius: 8px; gap: 8px;
+  }
+  .wallet-item-left { display: flex; align-items: center; gap: 10px; }
+  .wallet-item-icon { font-size: 1.3rem; }
+  .wallet-item-info { }
+  .wallet-item-name { font-weight: 600; font-size: 0.9rem; }
+  .wallet-item-detail { font-size: 0.75rem; color: #64748b; }
+  .wallet-item-right { text-align: right; }
+  .wallet-item-current { font-weight: 700; font-size: 0.95rem; }
+  .wallet-item-change { font-size: 0.75rem; }
+  .positive { color: #22c55e; }
+  .negative { color: #ef4444; }
+  .neutral { color: #94a3b8; }
+  .wallet-empty { color: #64748b; font-size: 0.85rem; padding: 8px 0; }
+
+  .leaderboard { display: flex; flex-direction: column; gap: 10px; }
+  .lb-item {
+    display: flex; align-items: center; gap: 14px;
+    background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px;
+  }
+  .lb-rank { font-size: 1.5rem; font-weight: 900; width: 36px; text-align: center; }
+  .lb-rank.r1 { color: #fbbf24; }
+  .lb-rank.r2 { color: #94a3b8; }
+  .lb-rank.r3 { color: #c2a16e; }
+  .lb-info { flex: 1; }
+  .lb-name { font-weight: 700; font-size: 1rem; }
+  .lb-holdings { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+  .lb-value { text-align: right; }
+  .lb-total { font-size: 1.1rem; font-weight: 700; color: #93c5fd; }
+  .lb-gain { font-size: 0.8rem; margin-top: 2px; }
+
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .history-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; background: #0f172a; border-radius: 8px; font-size: 0.85rem;
+  }
+  .history-time { color: #64748b; min-width: 70px; }
+  .history-text { flex: 1; }
+  .btn-del-history { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 600;
+  }
+  .badge-btc { background: #431407; color: #f97316; }
+  .badge-gold { background: #422006; color: #eab308; }
+  .badge-land { background: #14532d; color: #22c55e; }
+
+  .notice {
+    background: #1e3a5f; border: 1px solid #3b82f6; border-radius: 8px;
+    padding: 10px 14px; font-size: 0.85rem; color: #93c5fd; margin-bottom: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .reward-options { grid-template-columns: 1fr; }
+    .row { flex-direction: column; }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+
+  .confirm-box {
+    background: #0f172a; border: 1px solid #3b82f6; border-radius: 10px; padding: 16px; margin-top: 16px;
+    display: none;
+  }
+  .confirm-box.show { display: block; }
+  .confirm-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
+  .confirm-row .key { color: #94a3b8; }
+  .confirm-row .val { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🏕️ ระบบรางวัลค่ายฯ สังคมศึกษา</h1>
+    <div style="font-size:0.7rem; color:#64748b; margin-top:2px;">ค่ายพัฒนาศักยภาพผู้เรียนส่งเสริมทักษะกระบวนการเรียนรู้ทางสังคมศึกษา · 4 ก.ค. 2569</div>
+  </div>
+  <div class="price-bar">
+    <div class="price-card">
+      <span class="label">Bitcoin <span class="refresh-dot" id="dot"></span></span>
+      <span class="value btc-color" id="price-btc">กำลังโหลด...</span>
+      <span class="sub" id="price-btc-updated">-</span>
+    </div>
+    <div class="price-card">
+      <span class="label">ทองคำ (ต่อบาท)</span>
+      <span class="value gold-color" id="price-gold">กำลังโหลด...</span>
+      <span class="sub" id="price-gold-updated">-</span>
+    </div>
+    <div class="price-card">
+      <span class="label">ที่ดิน (ต่อแปลง)</span>
+      <span class="value land-color" id="price-land-header">-</span>
+      <span class="sub">กำหนดโดยครู</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('setup')">⚙️ ตั้งค่า</button>
+  <button onclick="showTab('award')">🎖️ บันทึกรางวัล</button>
+  <button onclick="showTab('wallets')">👜 กระเป๋าเงิน</button>
+  <button onclick="showTab('leaderboard')">🏆 ผลสรุป</button>
+  <button onclick="showTab('history')">📋 ประวัติ</button>
+</nav>
+
+<!-- TAB: ตั้งค่า -->
+<div class="tab active" id="tab-setup">
+  <p class="section-title">⚙️ ตั้งค่าค่าย</p>
+
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:12px;">กำหนดราคา</p>
+    <label>ราคาที่ดิน ต่อ 1 แปลง (บาท)</label>
+    <input type="number" id="input-land-price" placeholder="เช่น 500000" value="500000" />
+    <label>มูลค่ารางวัลต่อ 1 ฐาน (บาท) — นักเรียนจะได้รับสินทรัพย์มูลค่าเท่านี้</label>
+    <input type="number" id="input-reward-value" placeholder="เช่น 1000" value="1000" />
+    <div style="margin-top:14px;">
+      <button class="btn btn-success" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
+    </div>
+    <div id="settings-msg" style="margin-top:8px; font-size:0.85rem; color:#22c55e; display:none;">✅ บันทึกแล้ว</div>
+  </div>
+
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:12px;">เพิ่มนักเรียน / กลุ่ม</p>
+    <div class="row">
+      <div>
+        <label>ชื่อนักเรียน / กลุ่ม</label>
+        <input type="text" id="input-student-name" placeholder="เช่น กลุ่มที่ 1 หรือ ด.ช.สมชาย" />
+      </div>
+      <div style="display:flex; align-items:flex-end;">
+        <button class="btn btn-primary" onclick="addStudent()" style="width:100%;">+ เพิ่ม</button>
+      </div>
+    </div>
+    <div style="margin-top:16px;" id="student-list-container">
+      <div class="student-list" id="student-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: บันทึกรางวัล -->
+<div class="tab" id="tab-award">
+  <p class="section-title">🎖️ บันทึกรางวัล</p>
+
+  <div class="notice">💡 เลือกนักเรียนและประเภทสินทรัพย์ที่ต้องการรับ ระบบจะบันทึกราคา ณ เวลานั้นเข้ากระเป๋าเงินอัตโนมัติ</div>
+
+  <div class="card">
+    <label>เลือกนักเรียน / กลุ่ม</label>
+    <select id="select-student">
+      <option value="">-- กรุณาเลือก --</option>
+    </select>
+
+    <label style="margin-top:16px;">เลือกประเภทสินทรัพย์</label>
+    <div class="reward-options" id="reward-options">
+      <div class="reward-option" onclick="selectReward('land')" id="opt-land">
+        <div class="icon">🏗️</div>
+        <div class="name land-color">ที่ดิน</div>
+        <div class="current-price">1 แปลง = <span id="opt-land-price">-</span></div>
+      </div>
+      <div class="reward-option" onclick="selectReward('gold')" id="opt-gold">
+        <div class="icon">🥇</div>
+        <div class="name gold-color">ทองคำ</div>
+        <div class="current-price">ราคา/บาท = <span id="opt-gold-price">-</span></div>
+      </div>
+      <div class="reward-option" onclick="selectReward('btc')" id="opt-btc">
+        <div class="icon">₿</div>
+        <div class="name btc-color">Bitcoin</div>
+        <div class="current-price">1 BTC = <span id="opt-btc-price">-</span></div>
+      </div>
+    </div>
+
+    <div class="confirm-box" id="confirm-box">
+      <p style="font-weight:700; margin-bottom:10px; color:#93c5fd;">📋 สรุปรางวัลที่บันทึก</p>
+      <div class="confirm-row"><span class="key">นักเรียน</span><span class="val" id="conf-student">-</span></div>
+      <div class="confirm-row"><span class="key">สินทรัพย์</span><span class="val" id="conf-asset">-</span></div>
+      <div class="confirm-row"><span class="key">จำนวน</span><span class="val" id="conf-qty">-</span></div>
+      <div class="confirm-row"><span class="key">ราคาต่อหน่วย ณ ตอนนี้</span><span class="val" id="conf-price">-</span></div>
+      <div class="confirm-row"><span class="key">มูลค่ารวม</span><span class="val" id="conf-total">-</span></div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button class="btn btn-success" onclick="confirmAward()">✅ ยืนยันบันทึก</button>
+        <button class="btn" style="background:#334155;" onclick="cancelAward()">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: กระเป๋าเงิน -->
+<div class="tab" id="tab-wallets">
+  <p class="section-title">👜 กระเป๋าเงินนักเรียน</p>
+  <div class="wallet-grid" id="wallet-grid"></div>
+</div>
+
+<!-- TAB: ผลสรุป -->
+<div class="tab" id="tab-leaderboard">
+  <p class="section-title">🏆 ผลสรุปมูลค่าพอร์ตโฟลิโอ</p>
+  <div class="notice" id="lb-notice">กำลังคำนวณ...</div>
+  <div class="leaderboard" id="leaderboard"></div>
+</div>
+
+<!-- TAB: ประวัติ -->
+<div class="tab" id="tab-history">
+  <p class="section-title">📋 ประวัติการรับรางวัล</p>
+  <div class="history-list" id="history-list"></div>
+</div>
+
+<script>
+// ======================== STATE ========================
+const COLOR_GROUPS = [
+  { color: 'เหลือง', emoji: '🟡', hex: '#eab308' },
+  { color: 'ฟ้า',    emoji: '🔵', hex: '#3b82f6' },
+  { color: 'แดง',   emoji: '🔴', hex: '#ef4444' },
+  { color: 'ส้ม',   emoji: '🟠', hex: '#f97316' },
+  { color: 'เขียว', emoji: '🟢', hex: '#22c55e' },
+];
+const DEFAULT_STUDENTS = COLOR_GROUPS.flatMap(g =>
+  ['A', 'B'].map((sub, i) => ({
+    id: `${g.color}-${sub}`,
+    name: `${g.emoji} กลุ่มสี${g.color} ${sub}`,
+    color: g.hex,
+  }))
+);
+
+let state = {
+  settings: { landPrice: 500000, rewardValue: 1000 },
+  students: DEFAULT_STUDENTS,
+  transactions: [],
+};
+let prices = { btc: null, gold: null };
+let selectedReward = null;
+
+// ======================== LOCALSTORAGE ========================
+function saveState() {
+  localStorage.setItem('campRewardState', JSON.stringify(state));
+}
+function loadState() {
+  const s = localStorage.getItem('campRewardState');
+  if (s) {
+    try {
+      const saved = JSON.parse(s);
+      state.settings = saved.settings ?? state.settings;
+      state.transactions = saved.transactions ?? [];
+      // Merge saved students with defaults (preserve edits, keep defaults if missing)
+      if (saved.students && saved.students.length > 0) {
+        state.students = saved.students;
+      }
+    } catch(e) {}
+  }
+}
+
+// ======================== PRICE API ========================
+function setDot(loading) {
+  const d = document.getElementById('dot');
+  d.className = 'refresh-dot' + (loading ? ' loading' : '');
+}
+
+async function fetchPrices() {
+  setDot(true);
+  try {
+    // BTC + Tether Gold (XAUT) in THB — single CoinGecko call
+    // XAUT = 1 troy oz of gold, tracks real gold price
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb',
+      { cache: 'no-store' }
+    );
+    const data = await res.json();
+
+    // BTC
+    prices.btc = data.bitcoin.thb;
+    document.getElementById('price-btc').textContent = fmtCurrency(prices.btc);
+
+    // Gold: XAUT = 1 troy oz → convert to Thai baht unit (15.244g)
+    // 1 troy oz = 31.1035g, 1 Thai gold baht = 15.244g
+    const xautThb = data['tether-gold'].thb;
+    prices.gold = xautThb * (15.244 / 31.1035);
+    document.getElementById('price-gold').textContent = fmtCurrency(prices.gold);
+
+    const now = 'อัปเดต ' + new Date().toLocaleTimeString('th-TH');
+    document.getElementById('price-btc-updated').textContent = now;
+    document.getElementById('price-gold-updated').textContent = now;
+  } catch(e) {
+    document.getElementById('price-btc').textContent = 'โหลดไม่ได้';
+    document.getElementById('price-gold').textContent = 'โหลดไม่ได้';
+    console.warn('Price fetch error', e);
+  }
+
+  setDot(false);
+  updatePriceDisplays();
+  refreshWallets();
+  refreshLeaderboard();
+}
+
+function updatePriceDisplays() {
+  const lp = state.settings.landPrice;
+  document.getElementById('price-land-header').textContent = fmtCurrency(lp);
+  document.getElementById('opt-land-price').textContent = fmtCurrency(lp);
+  document.getElementById('opt-gold-price').textContent = prices.gold ? fmtCurrency(prices.gold) : 'กำลังโหลด...';
+  document.getElementById('opt-btc-price').textContent = prices.btc ? fmtCurrency(prices.btc) : 'กำลังโหลด...';
+}
+
+// ======================== FORMATTING ========================
+function fmtCurrency(n) {
+  if (!n) return '-';
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+}
+function fmtCurrencyFull(n) {
+  if (!n && n !== 0) return '-';
+  return '฿' + n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtQty(type, qty) {
+  if (type === 'btc') return qty.toFixed(8) + ' BTC';
+  if (type === 'gold') return qty.toFixed(4) + ' บาท (ทอง)';
+  return qty.toFixed(0) + ' แปลง';
+}
+function assetLabel(type) {
+  if (type === 'btc') return '₿ Bitcoin';
+  if (type === 'gold') return '🥇 ทองคำ';
+  return '🏗️ ที่ดิน';
+}
+function assetIcon(type) {
+  if (type === 'btc') return '₿';
+  if (type === 'gold') return '🥇';
+  return '🏗️';
+}
+function assetColor(type) {
+  if (type === 'btc') return '#f97316';
+  if (type === 'gold') return '#eab308';
+  return '#22c55e';
+}
+
+// ======================== SETTINGS ========================
+function saveSettings() {
+  const lp = parseFloat(document.getElementById('input-land-price').value);
+  const rv = parseFloat(document.getElementById('input-reward-value').value);
+  if (!lp || !rv) { alert('กรุณากรอกตัวเลขให้ครบ'); return; }
+  state.settings.landPrice = lp;
+  state.settings.rewardValue = rv;
+  saveState();
+  updatePriceDisplays();
+  const msg = document.getElementById('settings-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 2000);
+}
+
+// ======================== STUDENTS ========================
+function addStudent() {
+  const name = document.getElementById('input-student-name').value.trim();
+  if (!name) { alert('กรุณากรอกชื่อ'); return; }
+  const id = Date.now().toString();
+  state.students.push({ id, name });
+  saveState();
+  document.getElementById('input-student-name').value = '';
+  renderStudentList();
+  populateStudentSelect();
+}
+
+function removeStudent(id) {
+  if (!confirm('ลบนักเรียนคนนี้? (ข้อมูลรางวัลที่บันทึกไว้จะยังคงอยู่)')) return;
+  state.students = state.students.filter(s => s.id !== id);
+  saveState();
+  renderStudentList();
+  populateStudentSelect();
+}
+
+function renderStudentList() {
+  const container = document.getElementById('student-list');
+  if (state.students.length === 0) {
+    container.innerHTML = '<p style="color:#64748b; font-size:.85rem;">ยังไม่มีนักเรียน กรอกชื่อด้านบนเพื่อเพิ่ม</p>';
+    return;
+  }
+  container.innerHTML = state.students.map(s => `
+    <div class="student-item">
+      <div>
+        <div class="student-name" style="${s.color ? `color:${s.color}` : ''}">${s.name}</div>
+        <div class="student-id">ID: ${s.id}</div>
+      </div>
+      <button class="btn btn-danger" onclick="removeStudent('${s.id}')">ลบ</button>
+    </div>
+  `).join('');
+}
+
+function populateStudentSelect() {
+  const sel = document.getElementById('select-student');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">-- กรุณาเลือก --</option>';
+  state.students.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name;
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
+
+// ======================== AWARD ========================
+function selectReward(type) {
+  selectedReward = type;
+  document.querySelectorAll('.reward-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('opt-' + type).classList.add('selected');
+
+  const studentId = document.getElementById('select-student').value;
+  if (!studentId) { alert('กรุณาเลือกนักเรียนก่อน'); selectedReward = null; document.getElementById('opt-' + type).classList.remove('selected'); return; }
+
+  const student = state.students.find(s => s.id === studentId);
+  const rv = state.settings.rewardValue;
+  let price, qty, label;
+
+  if (type === 'land') {
+    price = state.settings.landPrice;
+    qty = rv / price;
+    label = fmtQty('land', qty);
+  } else if (type === 'gold') {
+    if (!prices.gold) { alert('รอโหลดราคาทองก่อนนะครับ'); return; }
+    price = prices.gold;
+    qty = rv / price;
+    label = fmtQty('gold', qty);
+  } else if (type === 'btc') {
+    if (!prices.btc) { alert('รอโหลดราคา Bitcoin ก่อนนะครับ'); return; }
+    price = prices.btc;
+    qty = rv / price;
+    label = fmtQty('btc', qty);
+  }
+
+  document.getElementById('conf-student').textContent = student.name;
+  document.getElementById('conf-asset').textContent = assetLabel(type);
+  document.getElementById('conf-qty').textContent = label;
+  document.getElementById('conf-price').textContent = fmtCurrency(price);
+  document.getElementById('conf-total').textContent = fmtCurrency(rv);
+
+  const box = document.getElementById('confirm-box');
+  box.className = 'confirm-box show';
+}
+
+function cancelAward() {
+  selectedReward = null;
+  document.querySelectorAll('.reward-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('confirm-box').className = 'confirm-box';
+}
+
+function confirmAward() {
+  const studentId = document.getElementById('select-student').value;
+  if (!studentId || !selectedReward) return;
+
+  const rv = state.settings.rewardValue;
+  let price;
+  if (selectedReward === 'land') price = state.settings.landPrice;
+  else if (selectedReward === 'gold') price = prices.gold;
+  else if (selectedReward === 'btc') price = prices.btc;
+
+  const qty = rv / price;
+
+  const tx = {
+    id: Date.now().toString(),
+    studentId,
+    type: selectedReward,
+    qty,
+    priceAtAward: price,
+    valueAtAward: rv,
+    timestamp: new Date().toISOString(),
+  };
+
+  state.transactions.push(tx);
+  saveState();
+
+  cancelAward();
+  document.getElementById('select-student').value = '';
+
+  const student = state.students.find(s => s.id === studentId);
+  showToast(`✅ บันทึกแล้ว! ${student?.name} รับ ${assetLabel(selectedReward)}`);
+
+  refreshWallets();
+  refreshLeaderboard();
+  renderHistory();
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:12px 20px;border-radius:10px;font-weight:600;z-index:9999;font-size:.9rem;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ======================== CURRENT VALUE ========================
+function currentPrice(type) {
+  if (type === 'land') return state.settings.landPrice;
+  if (type === 'gold') return prices.gold;
+  if (type === 'btc') return prices.btc;
+  return null;
+}
+
+function currentValue(tx) {
+  const cp = currentPrice(tx.type);
+  if (!cp) return null;
+  return tx.qty * cp;
+}
+
+// ======================== WALLETS ========================
+function refreshWallets() {
+  const container = document.getElementById('wallet-grid');
+  if (state.students.length === 0) {
+    container.innerHTML = '<p style="color:#64748b;">ยังไม่มีนักเรียน ไปเพิ่มที่แท็บ "ตั้งค่า" ก่อนนะครับ</p>';
+    return;
+  }
+
+  container.innerHTML = state.students.map(student => {
+    const txs = state.transactions.filter(t => t.studentId === student.id);
+    const totalInvested = txs.reduce((s, t) => s + t.valueAtAward, 0);
+    const totalCurrent = txs.reduce((s, t) => {
+      const cv = currentValue(t);
+      return cv !== null ? s + cv : s;
+    }, 0);
+    const gain = totalCurrent - totalInvested;
+    const gainPct = totalInvested > 0 ? (gain / totalInvested) * 100 : 0;
+
+    const itemsHtml = txs.length === 0
+      ? '<div class="wallet-empty">ยังไม่มีรางวัล</div>'
+      : txs.map(t => {
+          const cv = currentValue(t);
+          const g = cv !== null ? cv - t.valueAtAward : null;
+          const gp = g !== null && t.valueAtAward > 0 ? (g / t.valueAtAward) * 100 : null;
+          const time = new Date(t.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div class="wallet-item">
+              <div class="wallet-item-left">
+                <div class="wallet-item-icon">${assetIcon(t.type)}</div>
+                <div class="wallet-item-info">
+                  <div class="wallet-item-name" style="color:${assetColor(t.type)}">${assetLabel(t.type)}</div>
+                  <div class="wallet-item-detail">${fmtQty(t.type, t.qty)} · รับเวลา ${time}</div>
+                  <div class="wallet-item-detail">ราคาตอนรับ: ${fmtCurrency(t.priceAtAward)}/หน่วย</div>
+                </div>
+              </div>
+              <div class="wallet-item-right">
+                <div class="wallet-item-current">${cv !== null ? fmtCurrency(cv) : '?'}</div>
+                ${gp !== null ? `<div class="wallet-item-change ${gp >= 0 ? 'positive' : 'negative'}">${gp >= 0 ? '▲' : '▼'} ${Math.abs(gp).toFixed(1)}%</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+    const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
+    const gainText = totalInvested > 0 ? `${gain >= 0 ? '+' : ''}${fmtCurrency(gain)} (${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)` : '-';
+
+    return `
+      <div class="wallet-card">
+        <div class="wallet-header">
+          <div class="wallet-name">${student.name}</div>
+          <div class="wallet-total">
+            <span style="color:#93c5fd; font-weight:700;">${fmtCurrency(totalCurrent)}</span>
+            <span class="${gainClass}" style="font-size:.8rem; margin-left:8px;">${gainText}</span>
+          </div>
+        </div>
+        <div class="wallet-items">${itemsHtml}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ======================== LEADERBOARD ========================
+function refreshLeaderboard() {
+  const container = document.getElementById('leaderboard');
+  const notice = document.getElementById('lb-notice');
+
+  const data = state.students.map(student => {
+    const txs = state.transactions.filter(t => t.studentId === student.id);
+    const totalInvested = txs.reduce((s, t) => s + t.valueAtAward, 0);
+    const totalCurrent = txs.reduce((s, t) => {
+      const cv = currentValue(t);
+      return cv !== null ? s + cv : s;
+    }, 0);
+    const holdings = [...new Set(txs.map(t => t.type))].map(assetLabel).join(', ');
+    return { student, totalCurrent, totalInvested, holdings };
+  }).sort((a, b) => b.totalCurrent - a.totalCurrent);
+
+  if (data.length === 0) {
+    container.innerHTML = '<p style="color:#64748b;">ยังไม่มีข้อมูล</p>';
+    notice.textContent = 'เพิ่มนักเรียนและบันทึกรางวัลเพื่อดูผล';
+    return;
+  }
+
+  const totalAll = data.reduce((s, d) => s + d.totalCurrent, 0);
+  notice.textContent = `💰 มูลค่าพอร์ตรวมทุกคน: ${fmtCurrency(totalAll)} · อัปเดตทุก 60 วินาที`;
+
+  const rankIcons = ['🥇', '🥈', '🥉'];
+  container.innerHTML = data.map((d, i) => {
+    const gain = d.totalCurrent - d.totalInvested;
+    const gainPct = d.totalInvested > 0 ? (gain / d.totalInvested * 100) : 0;
+    const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
+    return `
+      <div class="lb-item">
+        <div class="lb-rank ${i < 3 ? 'r' + (i+1) : ''}">${i < 3 ? rankIcons[i] : '#' + (i+1)}</div>
+        <div class="lb-info">
+          <div class="lb-name">${d.student.name}</div>
+          <div class="lb-holdings">${d.holdings || 'ยังไม่มีรางวัล'}</div>
+        </div>
+        <div class="lb-value">
+          <div class="lb-total">${fmtCurrency(d.totalCurrent)}</div>
+          <div class="lb-gain ${gainClass}">${gain >= 0 ? '+' : ''}${fmtCurrency(gain)} (${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ======================== HISTORY ========================
+function renderHistory() {
+  const container = document.getElementById('history-list');
+  if (state.transactions.length === 0) {
+    container.innerHTML = '<p style="color:#64748b; font-size:.85rem;">ยังไม่มีประวัติ</p>';
+    return;
+  }
+
+  const sorted = [...state.transactions].reverse();
+  container.innerHTML = sorted.map(t => {
+    const student = state.students.find(s => s.id === t.studentId);
+    const name = student ? student.name : '(ไม่พบ)';
+    const time = new Date(t.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return `
+      <div class="history-item">
+        <span class="history-time">${time}</span>
+        <span class="history-text">
+          <strong>${name}</strong> รับ <strong style="color:${assetColor(t.type)}">${assetLabel(t.type)}</strong>
+          ${fmtQty(t.type, t.qty)} · ราคา ${fmtCurrency(t.priceAtAward)}/หน่วย · มูลค่า ${fmtCurrency(t.valueAtAward)}
+        </span>
+        <button class="btn-del-history" onclick="deleteTx('${t.id}')" title="ลบ">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteTx(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  state.transactions = state.transactions.filter(t => t.id !== id);
+  saveState();
+  renderHistory();
+  refreshWallets();
+  refreshLeaderboard();
+}
+
+// ======================== TABS ========================
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+
+  if (name === 'wallets') refreshWallets();
+  if (name === 'leaderboard') refreshLeaderboard();
+  if (name === 'history') renderHistory();
+  if (name === 'award') updatePriceDisplays();
+}
+
+// ======================== INIT ========================
+function init() {
+  loadState();
+
+  // Apply saved settings to inputs
+  document.getElementById('input-land-price').value = state.settings.landPrice;
+  document.getElementById('input-reward-value').value = state.settings.rewardValue;
+
+  renderStudentList();
+  populateStudentSelect();
+  updatePriceDisplays();
+  renderHistory();
+
+  // Fetch prices immediately then every 60s
+  fetchPrices();
+  setInterval(fetchPrices, 60000);
+}
+
+init();
+</script>
+</body>
+</html>

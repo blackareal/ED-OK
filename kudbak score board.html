@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scoreboard · ค่ายพัฒนาศักยภาพฯ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Sarabun', 'Segoe UI', sans-serif;
+  background: #050a14;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 28px;
+  background: linear-gradient(90deg, #0a1628 0%, #0f2547 50%, #0a1628 100%);
+  border-bottom: 2px solid #1d4ed8;
+  flex-shrink: 0;
+}
+.camp-name { font-size: 1.05rem; font-weight: 800; color: #93c5fd; line-height: 1.3; }
+.camp-sub  { font-size: 0.72rem; color: #475569; margin-top: 3px; }
+.clock-wrap { text-align: right; }
+.clock { font-size: 2rem; font-weight: 900; color: #e2e8f0; font-variant-numeric: tabular-nums; letter-spacing: 2px; }
+.refresh-label { font-size: 0.68rem; color: #334155; margin-top: 2px; }
+
+/* ── MAIN ── */
+main { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SCOREBOARD (left) ── */
+.scoreboard-panel {
+  flex: 0 0 60%;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px;
+  border-right: 1px solid #0f172a;
+}
+.panel-title {
+  font-size: 0.75rem; font-weight: 700; color: #334155;
+  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; flex-shrink: 0;
+}
+.bars-container {
+  flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 6px;
+}
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-rank { width: 40px; font-size: 1.6rem; text-align: center; flex-shrink: 0; }
+.bar-label-wrap { width: 108px; flex-shrink: 0; }
+.bar-color-name { font-size: 1.05rem; font-weight: 800; line-height: 1.2; }
+.bar-sub-info { font-size: 0.68rem; color: #475569; margin-top: 1px; }
+.bar-track {
+  flex: 1; height: 52px;
+  background: #0c1420; border-radius: 10px; overflow: hidden;
+  border: 1px solid #1a2744; position: relative;
+}
+.bar-fill {
+  height: 100%; border-radius: 10px;
+  transition: width 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative; min-width: 6px;
+  display: flex; align-items: center; padding-left: 12px;
+}
+.bar-fill.is-leader { animation: glow-pulse 2s ease-in-out infinite alternate; }
+@keyframes glow-pulse {
+  from { filter: brightness(1) saturate(1); }
+  to   { filter: brightness(1.35) saturate(1.2); }
+}
+.bar-inline-value {
+  font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.9);
+  white-space: nowrap; overflow: hidden;
+}
+.bar-right { width: 130px; flex-shrink: 0; text-align: right; }
+.bar-value { font-size: 1.05rem; font-weight: 800; }
+.bar-change { font-size: 0.78rem; margin-top: 1px; }
+.bar-empty-msg { color: #334155; font-size: 0.85rem; height: 52px; display: flex; align-items: center; padding-left: 8px; }
+
+/* ── CHARTS (right) ── */
+.charts-panel {
+  flex: 0 0 40%;
+  display: flex; flex-direction: column;
+  padding: 14px 16px; gap: 10px; overflow: hidden;
+  background: #060c18;
+}
+.chart-card {
+  flex: 1; background: #0a1220; border: 1px solid #111e30;
+  border-radius: 12px; padding: 12px 14px;
+  display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+}
+.chart-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 6px; flex-shrink: 0;
+}
+.chart-title-text { font-size: 0.72rem; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 1.5px; }
+.chart-price-now { font-size: 1.15rem; font-weight: 800; }
+.chart-pct { font-size: 0.8rem; font-weight: 700; margin-top: 2px; text-align: right; }
+.chart-body { flex: 1; position: relative; min-height: 0; }
+
+/* Land card */
+.land-card {
+  flex: 0 0 auto !important; height: 80px;
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 18px;
+}
+.land-left .land-label { font-size: 0.72rem; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+.land-left .land-val  { font-size: 1.6rem; font-weight: 900; color: #22c55e; }
+.land-left .land-note { font-size: 0.68rem; color: #334155; margin-top: 2px; }
+.land-badge {
+  border: 1px solid #166534; background: #052e14; border-radius: 8px;
+  padding: 6px 14px; text-align: center;
+}
+.land-badge .risk-label { font-size: 0.65rem; color: #4ade80; }
+.land-badge .risk-val   { font-size: 1rem; font-weight: 800; color: #22c55e; }
+
+/* ── FOOTER TICKER ── */
+footer {
+  display: flex; align-items: center; gap: 0;
+  background: #030711; border-top: 1px solid #0f172a;
+  padding: 0 24px; height: 46px; flex-shrink: 0; overflow: hidden;
+}
+.tick-block { display: flex; align-items: center; gap: 10px; padding: 0 20px; }
+.tick-icon  { font-size: 1.2rem; }
+.tick-info  { }
+.tick-name  { font-size: 0.65rem; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+.tick-val   { font-size: 0.95rem; font-weight: 800; }
+.tick-chg   { font-size: 0.72rem; margin-left: 6px; }
+.tick-sep   { width: 1px; height: 28px; background: #0f172a; flex-shrink: 0; }
+.tick-right { margin-left: auto; font-size: 0.65rem; color: #1e293b; padding-right: 4px; }
+
+/* utility */
+.positive { color: #22c55e; }
+.negative { color: #ef4444; }
+.neutral  { color: #334155; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="camp-name">🏕️ ค่ายพัฒนาศักยภาพผู้เรียนส่งเสริมทักษะกระบวนการเรียนรู้ทางสังคมศึกษา</div>
+    <div class="camp-sub">4 กรกฎาคม 2569 · สวนป่ารีสอร์ท · กุดบาก จ.สกลนคร</div>
+  </div>
+  <div class="clock-wrap">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="refresh-label" id="refresh-label">อัปเดตอัตโนมัติทุก 60 วินาที</div>
+  </div>
+</header>
+
+<main>
+  <!-- ─── SCOREBOARD ─── -->
+  <div class="scoreboard-panel">
+    <div class="panel-title">🏆 คะแนนสะสม &mdash; มูลค่าพอร์ตโฟลิโอ (THB)</div>
+    <div class="bars-container" id="bars-container">
+      <div style="color:#1e293b; font-size:.9rem; padding:20px;">กำลังโหลดข้อมูล...</div>
+    </div>
+  </div>
+
+  <!-- ─── CHARTS ─── -->
+  <div class="charts-panel">
+
+    <!-- Bitcoin -->
+    <div class="chart-card">
+      <div class="chart-top">
+        <div>
+          <div class="chart-title-text">₿ Bitcoin · 6 ชั่วโมงล่าสุด</div>
+        </div>
+        <div style="text-align:right">
+          <div class="chart-price-now" style="color:#f97316" id="h-btc-price">กำลังโหลด</div>
+          <div class="chart-pct" id="h-btc-chg"></div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="chart-btc"></canvas></div>
+    </div>
+
+    <!-- Gold -->
+    <div class="chart-card">
+      <div class="chart-top">
+        <div>
+          <div class="chart-title-text">🥇 ทองคำ (บาทไทย) · 6 ชั่วโมงล่าสุด</div>
+        </div>
+        <div style="text-align:right">
+          <div class="chart-price-now" style="color:#eab308" id="h-gold-price">กำลังโหลด</div>
+          <div class="chart-pct" id="h-gold-chg"></div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="chart-gold"></canvas></div>
+    </div>
+
+    <!-- Land -->
+    <div class="chart-card land-card">
+      <div class="land-left">
+        <div class="land-label">🏗️ ที่ดิน</div>
+        <div class="land-val" id="h-land-price">฿–</div>
+        <div class="land-note">ต่อ 1 แปลง · ราคาคงที่ กำหนดโดยครู</div>
+      </div>
+      <div class="land-badge">
+        <div class="risk-label">ความเสี่ยง</div>
+        <div class="risk-val">ต่ำมาก</div>
+      </div>
+    </div>
+
+  </div><!-- /charts-panel -->
+</main>
+
+<!-- ─── TICKER ─── -->
+<footer>
+  <div class="tick-block">
+    <span class="tick-icon">₿</span>
+    <div class="tick-info">
+      <div class="tick-name">Bitcoin</div>
+      <div>
+        <span class="tick-val" style="color:#f97316" id="t-btc">–</span>
+        <span class="tick-chg" id="t-btc-chg"></span>
+      </div>
+    </div>
+  </div>
+  <div class="tick-sep"></div>
+  <div class="tick-block">
+    <span class="tick-icon">🥇</span>
+    <div class="tick-info">
+      <div class="tick-name">ทองคำ / บาทไทย</div>
+      <div>
+        <span class="tick-val" style="color:#eab308" id="t-gold">–</span>
+        <span class="tick-chg" id="t-gold-chg"></span>
+      </div>
+    </div>
+  </div>
+  <div class="tick-sep"></div>
+  <div class="tick-block">
+    <span class="tick-icon">🏗️</span>
+    <div class="tick-info">
+      <div class="tick-name">ที่ดิน / แปลง</div>
+      <div>
+        <span class="tick-val" style="color:#22c55e" id="t-land">–</span>
+        <span class="tick-chg" style="color:#22c55e">● คงที่</span>
+      </div>
+    </div>
+  </div>
+  <div class="tick-right" id="t-updated">–</div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+const COLOR_DEFS = [
+  { id:'เหลือง', label:'สีเหลือง', emoji:'🟡', hex:'#eab308', grad:['#92650044','#eab30888'] },
+  { id:'ฟ้า',    label:'สีฟ้า',    emoji:'🔵', hex:'#3b82f6', grad:['#1d3a7044','#3b82f688'] },
+  { id:'แดง',   label:'สีแดง',   emoji:'🔴', hex:'#ef4444', grad:['#5a0a0a44','#ef444488'] },
+  { id:'ส้ม',   label:'สีส้ม',   emoji:'🟠', hex:'#f97316', grad:['#6b270444','#f9731688'] },
+  { id:'เขียว', label:'สีเขียว', emoji:'🟢', hex:'#22c55e', grad:['#052e1444','#22c55e88'] },
+];
+const RANK_ICON = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+const GOLD_TROY_TO_BAHT = 15.244 / 31.1035; // troy oz → Thai baht weight
+
+let prices = { btc: null, gold: null };
+let chartBTC = null;
+let chartGold = null;
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+const fmt = n => n == null ? '–' : '฿' + Math.round(n).toLocaleString('th-TH');
+const fmtK = n => {
+  if (n == null) return '–';
+  if (n >= 1e6) return '฿' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '฿' + (n/1e3).toFixed(1) + 'K';
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+};
+const pct = (a,b) => b ? (((a-b)/b)*100).toFixed(2) : null;
+const timeFmt = ts => new Date(ts).toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', hour12:false });
+
+function setChgEl(id, val) {
+  const el = document.getElementById(id);
+  if (!el || val == null) return;
+  const v = parseFloat(val);
+  el.textContent = (v >= 0 ? '▲ +' : '▼ ') + val + '%';
+  el.className = 'chart-pct ' + (v >= 0 ? 'positive' : 'negative');
+}
+function setTickChg(id, val) {
+  const el = document.getElementById(id);
+  if (!el || val == null) return;
+  const v = parseFloat(val);
+  el.textContent = (v >= 0 ? '+' : '') + val + '%';
+  el.className = 'tick-chg ' + (v >= 0 ? 'positive' : 'negative');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('th-TH', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════
+//  STATE FROM LOCALSTORAGE
+// ═══════════════════════════════════════════════════════
+function loadState() {
+  try { return JSON.parse(localStorage.getItem('campRewardState') || '{}'); }
+  catch(e) { return {}; }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCORE CALCULATION
+// ═══════════════════════════════════════════════════════
+function calcScores() {
+  const s = loadState();
+  const landPrice = s.settings?.landPrice ?? 500000;
+  const students = s.students ?? [];
+  const txs = s.transactions ?? [];
+
+  // Update land display
+  document.getElementById('h-land-price').textContent = fmt(landPrice);
+  document.getElementById('t-land').textContent = fmt(landPrice);
+
+  return COLOR_DEFS.map(c => {
+    const ids = students.filter(st => st.id?.startsWith(c.id + '-')).map(st => st.id);
+    const rows = txs.filter(t => ids.includes(t.studentId));
+
+    let invested = 0, current = 0;
+    rows.forEach(t => {
+      invested += t.valueAtAward ?? 0;
+      if      (t.type === 'land' ) current += t.qty * landPrice;
+      else if (t.type === 'gold' && prices.gold) current += t.qty * prices.gold;
+      else if (t.type === 'btc'  && prices.btc ) current += t.qty * prices.btc;
+      else current += t.valueAtAward ?? 0; // no price yet – show at cost
+    });
+
+    return { ...c, invested, current, gain: current - invested, count: rows.length };
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCOREBOARD RENDER
+// ═══════════════════════════════════════════════════════
+function renderScoreboard() {
+  const scores = calcScores().sort((a, b) => b.current - a.current);
+  const maxVal = Math.max(...scores.map(s => s.current), 1);
+
+  document.getElementById('bars-container').innerHTML = scores.map((s, i) => {
+    const widthPct = maxVal > 0 ? Math.max((s.current / maxVal) * 100, s.current > 0 ? 1.5 : 0) : 0;
+    const gainPct = s.invested > 0 ? pct(s.current, s.invested) : null;
+    const gainClass = s.gain > 0 ? 'positive' : s.gain < 0 ? 'negative' : 'neutral';
+    const isLeader = i === 0 && s.current > 0;
+
+    const fillStyle = `background: linear-gradient(90deg, ${s.grad[0]}, ${s.hex}cc); width:${widthPct}%`;
+
+    return `
+      <div class="bar-row">
+        <div class="bar-rank">${RANK_ICON[i]}</div>
+        <div class="bar-label-wrap">
+          <div class="bar-color-name" style="color:${s.hex}">${s.emoji} ${s.label}</div>
+          <div class="bar-sub-info">${s.count} รางวัล</div>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ${isLeader ? 'is-leader' : ''}" style="${fillStyle}">
+            ${s.current > 0 ? `<span class="bar-inline-value">${fmtK(s.current)}</span>` : ''}
+          </div>
+        </div>
+        <div class="bar-right">
+          <div class="bar-value" style="color:${s.hex}">${s.current > 0 ? fmt(s.current) : (s.count === 0 ? '–' : fmt(s.current))}</div>
+          <div class="bar-change ${gainClass}">
+            ${gainPct != null && s.invested > 0 ? (parseFloat(gainPct)>=0?'▲ +':'▼ ') + gainPct + '%' : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHART HELPERS
+// ═══════════════════════════════════════════════════════
+function sampleData(arr, maxPts = 30) {
+  if (arr.length <= maxPts) return arr;
+  const step = Math.ceil(arr.length / maxPts);
+  return arr.filter((_, i) => i % step === 0 || i === arr.length - 1);
+}
+
+function makeChartData(rawPrices) {
+  const sampled = sampleData(rawPrices);
+  return {
+    labels: sampled.map(p => timeFmt(p[0])),
+    values: sampled.map(p => Math.round(p[1])),
+  };
+}
+
+const CHART_OPTS = (color) => ({
+  responsive: true, maintainAspectRatio: false,
+  animation: { duration: 800 },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#0f172a', borderColor: '#1e293b', borderWidth: 1,
+      titleColor: '#64748b', bodyColor: '#e2e8f0',
+      callbacks: { label: ctx => '฿' + ctx.parsed.y.toLocaleString('th-TH') }
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: '#0f172a' },
+      ticks: { color: '#1e3a5f', maxTicksLimit: 7, font: { size: 10 },
+               maxRotation: 0 },
+    },
+    y: {
+      grid: { color: '#0c1420' },
+      ticks: {
+        color: '#1e3a5f', font: { size: 10 },
+        callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v,
+      }
+    }
+  }
+});
+
+function makeGradient(ctx, chart, hex) {
+  const { chartArea } = chart;
+  if (!chartArea) return hex + '33';
+  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, hex + '55');
+  g.addColorStop(1, hex + '00');
+  return g;
+}
+
+function initChart(canvasId, d, color) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: d.labels,
+      datasets: [{
+        data: d.values,
+        borderColor: color,
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.35,
+        fill: true,
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const c = chart.ctx;
+          return makeGradient(c, chart, color);
+        }
+      }]
+    },
+    options: CHART_OPTS(color),
+  });
+}
+
+function updateChart(chart, d) {
+  chart.data.labels = d.labels;
+  chart.data.datasets[0].data = d.values;
+  chart.update('none');
+}
+
+// ═══════════════════════════════════════════════════════
+//  FETCH
+// ═══════════════════════════════════════════════════════
+async function fetchPrices() {
+  const res = await fetch(
+    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb',
+    { cache: 'no-store' }
+  );
+  const data = await res.json();
+  prices.btc  = data.bitcoin.thb;
+  prices.gold = data['tether-gold'].thb * GOLD_TROY_TO_BAHT;
+
+  document.getElementById('h-btc-price').textContent = fmt(prices.btc);
+  document.getElementById('h-gold-price').textContent = fmt(prices.gold);
+  document.getElementById('t-btc').textContent  = fmt(prices.btc);
+  document.getElementById('t-gold').textContent = fmt(prices.gold);
+}
+
+async function fetchHistorical() {
+  const cutoff = Date.now() - 6 * 60 * 60 * 1000;
+
+  // BTC
+  const btcRes  = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+  const btcJson = await btcRes.json();
+  const btcPts  = btcJson.prices.filter(p => p[0] >= cutoff);
+
+  // Gold (XAUT → Thai baht weight)
+  const gRes  = await fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+  const gJson = await gRes.json();
+  const gPts  = gJson.prices.filter(p => p[0] >= cutoff).map(p => [p[0], p[1] * GOLD_TROY_TO_BAHT]);
+
+  // % change over 6h window
+  if (btcPts.length > 1) {
+    const c = pct(btcPts.at(-1)[1], btcPts[0][1]);
+    setChgEl('h-btc-chg', c);
+    setTickChg('t-btc-chg', c);
+  }
+  if (gPts.length > 1) {
+    const c = pct(gPts.at(-1)[1], gPts[0][1]);
+    setChgEl('h-gold-chg', c);
+    setTickChg('t-gold-chg', c);
+  }
+
+  const bd = makeChartData(btcPts);
+  const gd = makeChartData(gPts);
+
+  if (!chartBTC)  chartBTC  = initChart('chart-btc',  bd, '#f97316');
+  else            updateChart(chartBTC, bd);
+
+  if (!chartGold) chartGold = initChart('chart-gold', gd, '#eab308');
+  else            updateChart(chartGold, gd);
+}
+
+// ═══════════════════════════════════════════════════════
+//  REFRESH LOOP
+// ═══════════════════════════════════════════════════════
+let countdown = 60;
+
+async function refresh() {
+  try { await fetchPrices(); } catch(e) { console.warn('prices err', e); }
+  try { await fetchHistorical(); } catch(e) { console.warn('history err', e); }
+  renderScoreboard();
+  document.getElementById('t-updated').textContent =
+    'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour12:false });
+}
+
+setInterval(() => {
+  countdown--;
+  document.getElementById('refresh-label').textContent =
+    countdown > 0 ? `อัปเดตอัตโนมัติทุก 60 วินาที (อีก ${countdown}s)` : 'กำลังอัปเดต...';
+  if (countdown <= 0) { countdown = 60; refresh(); }
+}, 1000);
+
+// Re-render scoreboard every 5s in case records were added in the other tab
+setInterval(renderScoreboard, 5000);
+
+// ── Init ──────────────────────────────────────────────
+refresh();
+</script>
+</body>
+</html>
