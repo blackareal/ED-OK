@@ -259,6 +259,18 @@
   <p class="section-title">🎖️ บันทึกรางวัล</p>
   <div class="notice">💡 เลือกทีมชนะก่อน → ทีมชนะเลือกรางวัล → ทีมแพ้เลือกจาก 2 ที่เหลือ → ยืนยัน</div>
 
+  <div class="card" style="margin-bottom:16px;">
+    <label>📍 ฐานที่บันทึก</label>
+    <select id="select-station">
+      <option value="">-- กรุณาเลือกฐาน --</option>
+      <option value="1">ฐานที่ 1 · หน้าที่พลเมือง — ศาลจำลอง</option>
+      <option value="2">ฐานที่ 2 · เศรษฐศาสตร์ — จำลองวิกฤตเศรษฐกิจ</option>
+      <option value="3">ฐานที่ 3 · ประวัติศาสตร์ — นักสืบประวัติศาสตร์</option>
+      <option value="4">ฐานที่ 4 · ภูมิศาสตร์ — วางแผนฝ่าวิกฤตภัยพิบัติ</option>
+      <option value="5">ฐานที่ 5 · ศาสนาและวัฒนธรรม — การเจรจาในสังคมพหุวัฒนธรรม</option>
+    </select>
+  </div>
+
   <!-- ── ทีมผู้ชนะ ── -->
   <div class="card" style="border-color:#eab308;">
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
@@ -310,7 +322,8 @@
   <!-- ── สรุป ── -->
   <div class="confirm-box" id="confirm-box">
     <p style="font-weight:700; margin-bottom:12px; color:#93c5fd;">📋 สรุปรางวัลทั้งสองทีม</p>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+    <div id="conf-station-row" style="margin-bottom:10px; font-size:0.85rem; color:#64748b;"></div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
       <div style="background:#0f172a; border-radius:8px; padding:12px; border:1px solid #eab30844;">
         <div style="color:#eab308; font-weight:700; margin-bottom:6px;">🏆 ทีมชนะ</div>
         <div class="confirm-row"><span class="key">ทีม</span><span class="val" id="conf-w-team">-</span></div>
@@ -661,6 +674,9 @@ function updateConfirmBox() {
   const wName = state.students.find(s => s.id === winnerId)?.name ?? winnerId;
   const lName = state.students.find(s => s.id === loserId)?.name ?? loserId;
 
+  const stationEl = document.getElementById('select-station');
+  const stationText = stationEl.options[stationEl.selectedIndex]?.text ?? '';
+  document.getElementById('conf-station-row').textContent = '📍 ' + stationText;
   document.getElementById('conf-w-team').textContent  = wName;
   document.getElementById('conf-w-asset').textContent = assetLabel(selectedWinnerReward);
   document.getElementById('conf-w-qty').textContent   = fmtQty(selectedWinnerReward, wTx.qty);
@@ -685,6 +701,8 @@ function cancelAward() {
 function confirmAward() {
   const winnerId = document.getElementById('select-winner').value;
   const loserId  = document.getElementById('select-loser').value;
+  const station  = document.getElementById('select-station').value;
+  if (!station) { alert('กรุณาเลือกฐานก่อน'); return; }
   if (!winnerId || !loserId || !selectedWinnerReward || !selectedLoserReward) return;
   if (winnerId === loserId) { alert('ทีมชนะและทีมแพ้ต้องไม่ใช่ทีมเดียวกัน'); return; }
 
@@ -695,8 +713,8 @@ function confirmAward() {
   if (!wTx || !lTx) { alert('ราคายังโหลดไม่ครบ กรุณารอสักครู่'); return; }
 
   const now = new Date().toISOString();
-  const txW = { id: Date.now() + 'w', studentId: winnerId, type: selectedWinnerReward, qty: wTx.qty, priceAtAward: wTx.price, valueAtAward: wv, timestamp: now };
-  const txL = { id: Date.now() + 'l', studentId: loserId,  type: selectedLoserReward,  qty: lTx.qty, priceAtAward: lTx.price, valueAtAward: lv, timestamp: now };
+  const txW = { id: Date.now() + 'w', studentId: winnerId, type: selectedWinnerReward, qty: wTx.qty, priceAtAward: wTx.price, valueAtAward: wv, timestamp: now, station };
+  const txL = { id: Date.now() + 'l', studentId: loserId,  type: selectedLoserReward,  qty: lTx.qty, priceAtAward: lTx.price, valueAtAward: lv, timestamp: now, station };
 
   state.transactions.push(txW, txL);
   saveState();
@@ -861,6 +879,7 @@ function renderHistory() {
       <div class="history-item">
         <span class="history-time">${time}</span>
         <span class="history-text">
+          ${t.station ? `<span style="color:#475569; font-size:0.75rem;">ฐาน ${t.station} · </span>` : ''}
           <strong>${name}</strong> รับ <strong style="color:${assetColor(t.type)}">${assetLabel(t.type)}</strong>
           ${fmtQty(t.type, t.qty)} · ราคา ${fmtCurrency(t.priceAtAward)}/หน่วย · มูลค่า ${fmtCurrency(t.valueAtAward)}
         </span>
