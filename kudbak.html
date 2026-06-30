@@ -580,6 +580,7 @@ function removeStudent(id) {
 
 function renderStudentList() {
   const container = document.getElementById('student-list');
+  if (!container) return; // ถูกลบออกจาก UI แล้ว
   if (state.students.length === 0) {
     container.innerHTML = '<p style="color:#64748b; font-size:.85rem;">ยังไม่มีนักเรียน กรอกชื่อด้านบนเพื่อเพิ่ม</p>';
     return;
