@@ -206,15 +206,16 @@
 </header>
 
 <nav>
-  <button class="active" onclick="showTab('setup')">⚙️ ตั้งค่า</button>
-  <button onclick="showTab('award')">🎖️ บันทึกรางวัล</button>
+  <button onclick="showTab('setup')">⚙️ ตั้งค่า</button>
+  <button class="active" onclick="showTab('award')">🎖️ บันทึกรางวัล</button>
+  <button onclick="showTab('bonus')">⭐ คะแนนพิเศษ</button>
   <button onclick="showTab('wallets')">👜 กระเป๋าเงิน</button>
   <button onclick="showTab('leaderboard')">🏆 ผลสรุป</button>
   <button onclick="showTab('history')">📋 ประวัติ</button>
 </nav>
 
 <!-- TAB: ตั้งค่า -->
-<div class="tab active" id="tab-setup">
+<div class="tab" id="tab-setup">
   <p class="section-title">⚙️ ตั้งค่าค่าย</p>
 
   <div class="card">
@@ -237,25 +238,10 @@
     <div id="settings-msg" style="margin-top:8px; font-size:0.85rem; color:#22c55e; display:none;">✅ บันทึกแล้ว</div>
   </div>
 
-  <div class="card">
-    <p style="font-weight:600; margin-bottom:12px;">เพิ่มนักเรียน / กลุ่ม</p>
-    <div class="row">
-      <div>
-        <label>ชื่อนักเรียน / กลุ่ม</label>
-        <input type="text" id="input-student-name" placeholder="เช่น กลุ่มที่ 1 หรือ ด.ช.สมชาย" />
-      </div>
-      <div style="display:flex; align-items:flex-end;">
-        <button class="btn btn-primary" onclick="addStudent()" style="width:100%;">+ เพิ่ม</button>
-      </div>
-    </div>
-    <div style="margin-top:16px;" id="student-list-container">
-      <div class="student-list" id="student-list"></div>
-    </div>
-  </div>
 </div>
 
 <!-- TAB: บันทึกรางวัล -->
-<div class="tab" id="tab-award">
+<div class="tab active" id="tab-award">
   <p class="section-title">🎖️ บันทึกรางวัล</p>
   <div class="notice">💡 เลือกทีมชนะก่อน → ทีมชนะเลือกรางวัล → ทีมแพ้เลือกจาก 2 ที่เหลือ → ยืนยัน</div>
 
@@ -342,6 +328,45 @@
     <div style="display:flex; gap:10px;">
       <button class="btn btn-success" onclick="confirmAward()">✅ ยืนยันบันทึกทั้งสองทีม</button>
       <button class="btn" style="background:#334155;" onclick="cancelAward()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: คะแนนพิเศษ -->
+<div class="tab" id="tab-bonus">
+  <p class="section-title">⭐ ให้คะแนนพิเศษ</p>
+  <div class="notice">💡 บวกคะแนนพิเศษให้ทีมใดทีมหนึ่ง เช่น รางวัลจากกิจกรรมพิเศษหรือคะแนนโบนัส</div>
+
+  <div class="card">
+    <label>เลือกทีมที่ได้รับคะแนนพิเศษ</label>
+    <select id="bonus-select-team">
+      <option value="">-- กรุณาเลือกทีม --</option>
+    </select>
+
+    <label style="margin-top:16px;">ประเภทสินทรัพย์</label>
+    <div class="reward-options" id="bonus-options">
+      <div class="reward-option" onclick="selectBonusType('land')" id="b-opt-land">
+        <div class="icon">🏗️</div>
+        <div class="name land-color">ที่ดิน</div>
+        <div class="current-price">ราคา <span id="b-land-price">-</span>/แปลง</div>
+      </div>
+      <div class="reward-option" onclick="selectBonusType('gold')" id="b-opt-gold">
+        <div class="icon">🥇</div>
+        <div class="name gold-color">ทองคำ</div>
+        <div class="current-price">ราคา <span id="b-gold-price">-</span>/บาท</div>
+      </div>
+      <div class="reward-option" onclick="selectBonusType('btc')" id="b-opt-btc">
+        <div class="icon">₿</div>
+        <div class="name btc-color">Bitcoin</div>
+        <div class="current-price">ราคา <span id="b-btc-price">-</span>/BTC</div>
+      </div>
+    </div>
+
+    <label style="margin-top:16px;">มูลค่าคะแนนพิเศษ (บาท)</label>
+    <input type="number" id="bonus-value" placeholder="เช่น 50000" value="50000" />
+
+    <div style="margin-top:16px;">
+      <button class="btn btn-success" onclick="confirmBonus()">⭐ บันทึกคะแนนพิเศษ</button>
     </div>
   </div>
 </div>
@@ -899,6 +924,76 @@ function deleteTx(id) {
   refreshLeaderboard();
 }
 
+// ======================== BONUS ========================
+let selectedBonusType = null;
+
+function selectBonusType(type) {
+  selectedBonusType = type;
+  document.querySelectorAll('#bonus-options .reward-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('b-opt-' + type).classList.add('selected');
+}
+
+function updateBonusPrices() {
+  const lp = state.settings.landPrice;
+  document.getElementById('b-land-price').textContent = fmtCurrency(lp);
+  document.getElementById('b-gold-price').textContent = prices.gold ? fmtCurrency(prices.gold) : '-';
+  document.getElementById('b-btc-price').textContent  = prices.btc  ? fmtCurrency(prices.btc)  : '-';
+}
+
+function populateBonusSelect() {
+  const sel = document.getElementById('bonus-select-team');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">-- กรุณาเลือกทีม --</option>';
+  state.students.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name;
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
+
+function confirmBonus() {
+  const teamId = document.getElementById('bonus-select-team').value;
+  const value  = parseFloat(document.getElementById('bonus-value').value);
+  if (!teamId)           { alert('กรุณาเลือกทีม'); return; }
+  if (!selectedBonusType){ alert('กรุณาเลือกประเภทสินทรัพย์'); return; }
+  if (!value || value <= 0) { alert('กรุณากรอกมูลค่า'); return; }
+
+  const price = priceForType(selectedBonusType);
+  if (!price) { alert('ราคายังโหลดไม่ครบ กรุณารอสักครู่'); return; }
+
+  const qty = value / price;
+  const tx = {
+    id: Date.now() + 'b',
+    studentId: teamId,
+    type: selectedBonusType,
+    qty,
+    priceAtAward: price,
+    valueAtAward: value,
+    timestamp: new Date().toISOString(),
+    station: 'โบนัส',
+  };
+
+  state.transactions.push(tx);
+  saveState();
+  apiCall('addTransaction', { data: tx });
+
+  const teamName = state.students.find(s => s.id === teamId)?.name ?? teamId;
+  showToast(`⭐ บันทึกแล้ว! ${teamName} ได้รับโบนัส ${assetLabel(selectedBonusType)} มูลค่า ${fmtCurrency(value)}`);
+
+  // reset
+  document.getElementById('bonus-select-team').value = '';
+  document.getElementById('bonus-value').value = '50000';
+  selectedBonusType = null;
+  document.querySelectorAll('#bonus-options .reward-option').forEach(el => el.classList.remove('selected'));
+
+  refreshWallets();
+  refreshLeaderboard();
+  renderHistory();
+}
+
 // ======================== TABS ========================
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -910,6 +1005,7 @@ function showTab(name) {
   if (name === 'leaderboard') refreshLeaderboard();
   if (name === 'history') renderHistory();
   if (name === 'award') updatePriceDisplays();
+  if (name === 'bonus') updateBonusPrices();
 }
 
 // ======================== INIT ========================
@@ -930,6 +1026,7 @@ async function init() {
 
   renderStudentList();
   populateStudentSelect();
+  populateBonusSelect();
   updatePriceDisplays();
   renderHistory();
 
