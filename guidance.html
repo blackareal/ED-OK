@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP & AI Co-Pilot | วิทยากรแนะแนว</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #slideshow {
+    width: 100vw; height: 100vh;
+    position: relative; overflow: hidden;
+  }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 60px 80px;
+    opacity: 0; transform: translateX(60px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none; text-align: center;
+  }
+  .slide.active  { opacity: 1; transform: translateX(0); pointer-events: all; }
+  .slide.exit    { opacity: 0; transform: translateX(-60px); }
+
+  /* Phase backgrounds */
+  .phase-0 { background: linear-gradient(135deg, #0d1117, #1a1a2e, #16213e); }
+  .phase-1 { background: linear-gradient(135deg, #0d0d2b, #1a0a3e, #2d1b69); }
+  .phase-2 { background: linear-gradient(135deg, #1a0d00, #2d1500, #3d2000); }
+  .phase-3 { background: linear-gradient(135deg, #001a0d, #002d1a, #004d2a); }
+
+  /* Activity slides — dark base + vivid glow */
+  .activity-slide {
+    background: #070710 !important;
+  }
+  .activity-slide::after {
+    content: '';
+    position: absolute; inset: 0;
+    pointer-events: none;
+  }
+  .act-purple::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%); }
+  .act-orange::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(249,115,22,0.15) 0%, transparent 70%); }
+
+  /* BG glow */
+  .slide::before {
+    content: '';
+    position: absolute; width: 600px; height: 600px;
+    border-radius: 50%; opacity: 0.06; pointer-events: none;
+  }
+  .phase-0::before { background: radial-gradient(circle, #6c63ff, transparent); top:-200px; right:-200px; }
+  .phase-1::before { background: radial-gradient(circle, #7c3aed, transparent); top:-150px; right:-150px; }
+  .phase-2::before { background: radial-gradient(circle, #f97316, transparent); bottom:-200px; left:-200px; }
+  .phase-3::before { background: radial-gradient(circle, #10b981, transparent); top:-200px; right:-200px; }
+  .activity-slide::before { display: none; }
+
+  /* Phase badge */
+  .phase-badge {
+    position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; font-weight: 600; letter-spacing: 2px;
+    padding: 5px 18px; border-radius: 20px; text-transform: uppercase;
+  }
+  .badge-p1 { background: rgba(124,58,237,0.25); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+  .badge-p2 { background: rgba(249,115,22,0.2);  color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+  .badge-p3 { background: rgba(16,185,129,0.2);  color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+
+  /* Activity badge */
+  .activity-badge {
+    position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    padding: 5px 18px; border-radius: 20px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .abadge-purple { background: rgba(124,58,237,0.3); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.5); }
+  .abadge-orange { background: rgba(249,115,22,0.25); color: #fed7aa; border: 1px solid rgba(251,146,60,0.5); }
+
+  /* Timer chip */
+  .timer-chip {
+    position: absolute; top: 28px; right: 32px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
+  }
+
+  /* Slide num */
+  .slide-num-badge {
+    position: absolute; top: 28px; left: 32px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; opacity: 0.3; text-transform: uppercase;
+  }
+
+  /* Typography */
+  .slide-tag {
+    font-size: 13px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; opacity: 0.5; margin-bottom: 14px;
+  }
+  h1.main-title { font-size: clamp(2.2rem,4.5vw,3.8rem); font-weight: 800; line-height: 1.15; margin-bottom: 20px; }
+  h2.slide-title { font-size: clamp(1.5rem,3vw,2.4rem); font-weight: 700; line-height: 1.25; margin-bottom: 20px; }
+  .subtitle { font-size: clamp(0.9rem,1.6vw,1.2rem); font-weight: 300; opacity: 0.7; max-width: 720px; line-height: 1.6; }
+
+  /* Activity title */
+  h2.act-title {
+    font-size: clamp(1.6rem,3.2vw,2.6rem); font-weight: 800;
+    line-height: 1.2; margin-bottom: 6px;
+  }
+  .act-no {
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; opacity: 0.5; margin-bottom: 10px;
+  }
+
+  /* Colors */
+  .hl-purple { color: #a78bfa; }
+  .hl-orange { color: #fb923c; }
+  .hl-green  { color: #34d399; }
+  .hl-blue   { color: #60a5fa; }
+  .hl-yellow { color: #fbbf24; }
+  .hl-pink   { color: #f472b6; }
+  .hl-cyan   { color: #22d3ee; }
+
+  /* Divider */
+  .divider { width: 60px; height: 3px; border-radius: 2px; margin: 0 auto 22px; }
+  .div-purple { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+  .div-orange { background: linear-gradient(90deg, #f97316, #fbbf24); }
+  .div-green  { background: linear-gradient(90deg, #10b981, #34d399); }
+  .div-blue   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+
+  /* Cards */
+  .card-grid { display: grid; gap: 14px; width: 100%; max-width: 900px; margin-top: 8px; }
+  .card-grid-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid-4 { grid-template-columns: repeat(4,1fr); }
+
+  .card { border-radius: 16px; padding: 20px 18px; text-align: left; position: relative; overflow: hidden; }
+  .card-purple { background: rgba(124,58,237,0.18); border: 1px solid rgba(167,139,250,0.25); }
+  .card-orange { background: rgba(249,115,22,0.15);  border: 1px solid rgba(251,146,60,0.25); }
+  .card-green  { background: rgba(16,185,129,0.15);  border: 1px solid rgba(52,211,153,0.25); }
+  .card-blue   { background: rgba(59,130,246,0.15);  border: 1px solid rgba(96,165,250,0.25); }
+  .card-num { font-size: 2rem; font-weight: 800; opacity: 0.2; position: absolute; top: 10px; right: 14px; }
+  .card-icon { font-size: 1.6rem; margin-bottom: 8px; }
+  .card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 5px; }
+  .card p  { font-size: 0.82rem; opacity: 0.68; line-height: 1.45; }
+
+  /* Compare */
+  .compare-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 0; width: 100%; max-width: 860px; align-items: center; }
+  .compare-box { border-radius: 16px; padding: 22px 20px; text-align: left; }
+  .compare-vs  { text-align: center; font-size: 1.1rem; font-weight: 700; opacity: 0.35; }
+  .compare-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; opacity: 0.6; }
+  .compare-example { font-size: 0.92rem; line-height: 1.65; font-style: italic; opacity: 0.88; }
+
+  /* Checklist */
+  .check-list { list-style: none; text-align: left; max-width: 780px; width: 100%; }
+  .check-list li { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; border-radius: 12px; margin-bottom: 9px; font-size: 0.95rem; line-height: 1.5; }
+  .check-do   { background: rgba(16,185,129,0.12); border: 1px solid rgba(52,211,153,0.2); }
+  .check-dont { background: rgba(239,68,68,0.12);  border: 1px solid rgba(248,113,113,0.2); }
+  .check-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+
+  /* Prompt box */
+  .prompt-box {
+    background: rgba(0,0,0,0.4); border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 16px; padding: 22px 26px; max-width: 820px; width: 100%; text-align: left; position: relative;
+  }
+  .prompt-box .label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #a78bfa; margin-bottom: 10px; text-transform: uppercase; }
+  .prompt-box p { font-size: 0.88rem; line-height: 1.8; color: #c4b5fd; font-family: 'Courier New', monospace; }
+  .prompt-box .bracket { color: #f472b6; }
+
+  /* Big quote */
+  .big-quote { font-size: clamp(1.3rem,2.4vw,1.9rem); font-weight: 700; line-height: 1.5; max-width: 760px; position: relative; }
+  .big-quote::before { content: '"'; font-size: 5rem; position: absolute; top:-20px; left:-30px; opacity: 0.08; font-family: serif; line-height: 1; }
+
+  /* Pills */
+  .pill-row { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; margin-top: 18px; }
+  .pill { padding: 6px 16px; border-radius: 50px; font-size: 0.82rem; font-weight: 600; }
+  .pill-purple { background: rgba(124,58,237,0.3); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.4); }
+  .pill-orange { background: rgba(249,115,22,0.25); color: #fed7aa; border: 1px solid rgba(251,146,60,0.4); }
+  .pill-green  { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.4); }
+  .pill-blue   { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(96,165,250,0.4); }
+
+  /* Phase row (agenda) */
+  .phase-row { display: flex; align-items: stretch; gap: 0; width: 100%; max-width: 920px; margin-top: 16px; }
+  .phase-block { border-radius: 14px; padding: 18px 14px; flex: 1; text-align: left; position: relative; }
+  .phase-block + .phase-sep { width: 16px; display: flex; align-items: center; justify-content: center; opacity: 0.3; font-size: 1rem; flex-shrink: 0; }
+  .phase-time { font-size: 11px; font-weight: 700; letter-spacing: 1px; opacity: 0.55; margin-bottom: 5px; text-transform: uppercase; }
+  .phase-block h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+  .phase-block p  { font-size: 0.77rem; opacity: 0.62; line-height: 1.4; }
+
+  /* Step row */
+  .step-row { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 860px; justify-content: center; }
+  .step-block { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; flex: 1; text-align: center; }
+  .step-icon { font-size: 1.5rem; margin-bottom: 6px; }
+  .step-block h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 3px; }
+  .step-block p  { font-size: 0.72rem; opacity: 0.6; line-height: 1.35; }
+  .step-arrow { font-size: 1.2rem; opacity: 0.28; flex-shrink: 0; }
+
+  /* Phase intro num */
+  .phase-intro-num { font-size: 7rem; font-weight: 800; opacity: 0.07; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-55%); pointer-events: none; line-height: 1; }
+
+  /* ===== ACTIVITY STEPS ===== */
+  .act-steps { display: flex; flex-direction: column; gap: 10px; max-width: 760px; width: 100%; }
+  .act-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 14px; padding: 14px 18px; text-align: left;
+  }
+  .act-step-num {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 800;
+  }
+  .num-purple { background: rgba(124,58,237,0.4); color: #c4b5fd; }
+  .num-orange { background: rgba(249,115,22,0.35); color: #fed7aa; }
+  .act-step-body h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 3px; }
+  .act-step-body p  { font-size: 0.82rem; opacity: 0.65; line-height: 1.45; }
+
+  /* Activity highlight box */
+  .act-highlight {
+    border-radius: 14px; padding: 14px 20px;
+    max-width: 760px; width: 100%;
+    font-size: 0.88rem; line-height: 1.55;
+  }
+  .act-highlight-purple { background: rgba(124,58,237,0.18); border: 1px solid rgba(167,139,250,0.35); color: #e9d5ff; }
+  .act-highlight-orange { background: rgba(249,115,22,0.15); border: 1px solid rgba(251,146,60,0.35); color: #fed7aa; }
+
+  /* Lecture tag */
+  .lecture-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    padding: 4px 14px; border-radius: 20px; margin-bottom: 14px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  #progress-bar-outer { position: fixed; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.07); z-index: 100; }
+  #progress-bar-p1,#progress-bar-p2,#progress-bar-p3 { height: 100%; position: absolute; top: 0; transition: width 0.4s ease; border-radius: 0 2px 2px 0; }
+  #progress-bar-p1 { background: linear-gradient(90deg,#7c3aed,#a78bfa); left: 0; }
+  #progress-bar-p2 { background: linear-gradient(90deg,#f97316,#fbbf24); left: 0; }
+  #progress-bar-p3 { background: linear-gradient(90deg,#10b981,#34d399); left: 0; }
+
+  /* ===== NAV ===== */
+  #nav {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px; z-index: 100;
+    background: rgba(0,0,0,0.3); backdrop-filter: blur(10px);
+    padding: 7px 16px; border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.07);
+    opacity: 0.4; transition: opacity 0.3s;
+  }
+  #nav:hover { opacity: 1; }
+  .nav-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.12); background: transparent;
+    color: rgba(255,255,255,0.45); font-size: 0.7rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+  .nav-btn:disabled { opacity: 0.18; cursor: default; }
+  #slide-counter { font-size: 0.72rem; font-weight: 500; opacity: 0.38; min-width: 48px; text-align: center; }
+  #fs-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.12); background: transparent;
+    color: rgba(255,255,255,0.35); font-size: 0.65rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; margin-left: 4px;
+  }
+  #fs-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+
+  /* ===== PHASE DOTS ===== */
+  #phase-dots { position: fixed; top: 24px; right: 28px; display: flex; flex-direction: column; gap: 6px; z-index: 100; }
+  .pdot { width: 8px; height: 8px; border-radius: 50%; opacity: 0.22; transition: all 0.3s; }
+  .pdot.active { opacity: 1; transform: scale(1.3); }
+  .pdot-p1 { background: #a78bfa; }
+  .pdot-p2 { background: #fb923c; }
+  .pdot-p3 { background: #34d399; }
+</style>
+</head>
+<body>
+<div id="slideshow">
+
+<!-- ── 0 TITLE ── -->
+<div class="slide phase-0 active" data-phase="0">
+  <div class="slide-tag">🎓 Workshop 60 นาที</div>
+  <h1 class="main-title">ถอดรหัส <span class="hl-purple">SOP</span><br>&amp; <span class="hl-orange">AI</span> ผู้ช่วยทำ Port</h1>
+  <div class="divider div-blue"></div>
+  <p class="subtitle">เขียน Statement of Purpose ให้มหาลัยเลือก<br>และใช้ AI เป็น <strong>Co-Pilot</strong> ไม่ใช่คนเขียนแทน</p>
+  <div class="pill-row">
+    <span class="pill pill-purple">📝 SOP</span>
+    <span class="pill pill-orange">🤖 AI Tools</span>
+    <span class="pill pill-green">🎨 Portfolio</span>
+    <span class="pill pill-blue">⚡ 60 นาที · 3 กิจกรรม</span>
+  </div>
+</div>
+
+<!-- ── 1 AGENDA ── -->
+<div class="slide phase-0" data-phase="0">
+  <div class="slide-tag">ภาพรวม 60 นาที</div>
+  <h2 class="slide-title">3 เฟส — เส้นทางวันนี้</h2>
+  <div class="divider div-blue"></div>
+  <div class="phase-row">
+    <div class="phase-block" style="background:rgba(124,58,237,0.15);border:1px solid rgba(167,139,250,0.25);">
+      <div class="phase-time">Phase 1 · 25 นาที</div>
+      <h4 class="hl-purple">🔓 ถอดรหัส SOP</h4>
+      <p>บรรยาย 5 นาที → กิจกรรม 2 อัน (20 นาที)</p>
+    </div>
+    <div class="phase-sep">▶</div>
+    <div class="phase-block" style="background:rgba(249,115,22,0.12);border:1px solid rgba(251,146,60,0.25);">
+      <div class="phase-time">Phase 2 · 25 นาที</div>
+      <h4 class="hl-orange">🤖 AI ผู้ช่วยทำ Port</h4>
+      <p>บรรยาย 10 นาที → กิจกรรม 1 อัน (15 นาที)</p>
+    </div>
+    <div class="phase-sep">▶</div>
+    <div class="phase-block" style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);">
+      <div class="phase-time">Phase 3 · 10 นาที</div>
+      <h4 class="hl-green">💬 Q&amp;A &amp; Wrap Up</h4>
+      <p>ถาม-ตอบ · แจก Prompt ฟรี</p>
+    </div>
+  </div>
+  <p style="margin-top:18px;font-size:0.82rem;opacity:0.45;">🎯 3 กิจกรรม Active Learning แทรกในแต่ละเฟส</p>
+</div>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+
+<!-- ── 2 PHASE 1 INTRO ── -->
+<div class="slide phase-1" data-phase="1">
+  <div class="phase-badge badge-p1">Phase 1</div>
+  <div class="phase-intro-num">1</div>
+  <div class="slide-tag">5 นาทีแรก · บรรยาย</div>
+  <h1 class="main-title"><span class="hl-purple">SOP</span> คืออะไร?<br>ทำไมเขียนส่ง ๆ มหาลัยถึงคัดออก</h1>
+  <div class="divider div-purple"></div>
+  <p class="subtitle">Resume บอกว่า "ทำอะไร" — SOP บอกว่า "คิดอย่างไร"</p>
+</div>
+
+<!-- ── 3 4 BLOCKS ── -->
+<div class="slide phase-1" data-phase="1">
+  <div class="phase-badge badge-p1">Phase 1 · บรรยาย</div>
+  <div class="lecture-tag">📖 5 นาที</div>
+  <h2 class="slide-title">4 บล็อกสติ๊กเกอร์<br><span class="hl-purple">ประกอบร่าง SOP ให้ปัง</span></h2>
+  <div class="divider div-purple"></div>
+  <div class="card-grid card-grid-4" style="max-width:960px;">
+    <div class="card card-purple">
+      <div class="card-num">1</div>
+      <div class="card-icon">✨</div>
+      <h3>แรงบันดาลใจ</h3>
+      <p>เรื่องเล่าที่จุดประกายให้เดินเส้นทางนี้</p>
+    </div>
+    <div class="card" style="background:rgba(236,72,153,0.15);border:1px solid rgba(244,114,182,0.25);">
+      <div class="card-num">2</div>
+      <div class="card-icon">🏆</div>
+      <h3>ต้นทุน / กิจกรรม</h3>
+      <p>ค่าย โครงงาน ประสบการณ์ที่สั่งสมมา</p>
+    </div>
+    <div class="card card-blue">
+      <div class="card-num">3</div>
+      <div class="card-icon">🎯</div>
+      <h3>ทำไมต้องที่นี่?</h3>
+      <p>จุดเชื่อมระหว่างตัวเองกับคณะที่เลือก</p>
+    </div>
+    <div class="card card-green">
+      <div class="card-num">4</div>
+      <div class="card-icon">🚀</div>
+      <h3>เป้าหมายอนาคต</h3>
+      <p>วิสัยทัศน์หลังเรียนจบ สร้างอะไรให้สังคม</p>
+    </div>
+  </div>
+  <p class="subtitle" style="margin-top:18px;font-size:0.85rem;">
+    <span class="hl-yellow">Show, Don't Tell</span> — เล่าให้เห็นภาพ อย่าแค่อวดอ้างด้วยคำคุณศัพท์
+  </p>
+</div>
+
+<!-- ── 4 ACTIVITY 1 ── -->
+<div class="slide activity-slide act-purple" data-phase="1">
+  <div class="activity-badge abadge-purple">🎯 กิจกรรมที่ 1</div>
+  <div class="timer-chip">⏱ 10 นาที</div>
+  <div class="act-no">Elevator Pitch</div>
+  <h2 class="act-title"><span class="hl-purple">30-Second</span><br>Elevator Pitch</h2>
+  <p style="font-size:0.9rem;opacity:0.55;margin-bottom:20px;">จับคู่กับเพื่อนข้าง ๆ · ผลัดกันพูด · ห้ามพูดแค่ชื่อกิจกรรม</p>
+  <div class="act-steps">
+    <div class="act-step">
+      <div class="act-step-num num-purple">1</div>
+      <div class="act-step-body">
+        <h4>สมมติสถานการณ์</h4>
+        <p>คุณติดอยู่ในลิฟต์กับ <strong style="color:#c4b5fd;">คณบดีของคณะที่อยากเข้า</strong> มีเวลา 30 วินาที</p>
+      </div>
+    </div>
+    <div class="act-step">
+      <div class="act-step-num num-purple">2</div>
+      <div class="act-step-body">
+        <h4>บอกให้ได้ว่า "ทำไมคณะนี้ต้องรับฉัน"</h4>
+        <p>ต้องพูดจุดเด่นสูงสุด 1 อย่าง — ห้ามพูดว่า "ผมเป็นคนขยัน" ต้องยกเหตุการณ์จริง</p>
+      </div>
+    </div>
+    <div class="act-step">
+      <div class="act-step-num num-purple">3</div>
+      <div class="act-step-body">
+        <h4>สลับกันพูด → แลกคอมเมนต์</h4>
+        <p>คนละ 30 วิ (รวม 1 นาที) แล้วบอกเพื่อนว่าประโยคไหน "เห็นภาพ" ที่สุด</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 5 ACTIVITY 2 ── -->
+<div class="slide activity-slide act-purple" data-phase="1">
+  <div class="activity-badge abadge-purple">🎯 กิจกรรมที่ 2</div>
+  <div class="timer-chip">⏱ 10 นาที</div>
+  <div class="act-no">Case Study</div>
+  <h2 class="act-title"><span class="hl-purple">SOP แย่</span> vs <span class="hl-green">SOP ปัง</span></h2>
+  <p style="font-size:0.9rem;opacity:0.55;margin-bottom:16px;">อ่านแล้วโหวต — แล้วบอกเหตุผล</p>
+  <div class="compare-grid" style="max-width:800px;">
+    <div class="compare-box" style="background:rgba(239,68,68,0.12);border:1px solid rgba(248,113,113,0.25);">
+      <div class="compare-label" style="color:#f87171;">❌ แบบ A — ง่วง</div>
+      <div class="compare-example" style="color:#fca5a5;">
+        "ผมเป็นคนมีความรับผิดชอบสูง ชอบเรียนรู้สิ่งใหม่ ๆ และมีความมุ่งมั่นอย่างแน่วแน่ในการศึกษาด้านนี้ อยากได้รับโอกาสนี้มาก..."
+      </div>
+    </div>
+    <div class="compare-vs">VS</div>
+    <div class="compare-box" style="background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);">
+      <div class="compare-label" style="color:#34d399;">✅ แบบ B — จำได้</div>
+      <div class="compare-example" style="color:#a7f3d0;">
+        "ตอนอายุ 15 ผมล้มเหลวในการแข่งขันโอลิมปิกฟิสิกส์ แต่ความพ่ายแพ้ครั้งนั้นทำให้ผมนั่งทบทวน 3 ชั่วโมง แล้วออกแบบแผนการเรียนใหม่ทั้งหมด..."
+      </div>
+    </div>
+  </div>
+  <div class="act-highlight act-highlight-purple" style="margin-top:14px;">
+    💬 <strong>สุ่มถาม 1-2 คน:</strong> "ทำไมฝั่ง B ถึงน่าเลือกกว่า?" → สรุปเข้า Do's &amp; Don'ts
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+
+<!-- ── 6 PHASE 2 INTRO ── -->
+<div class="slide phase-2" data-phase="2">
+  <div class="phase-badge badge-p2">Phase 2</div>
+  <div class="phase-intro-num" style="color:#f97316;">2</div>
+  <div class="slide-tag">เครื่องมือ</div>
+  <h1 class="main-title"><span class="hl-orange">AI</span> ผู้ช่วยทำ Port<br><span style="font-size:0.6em;font-weight:300;opacity:0.7;">Co-Pilot ไม่ใช่ Ghostwriter</span></h1>
+  <div class="divider div-orange"></div>
+  <p class="subtitle">Mindset · Prompt · กิจกรรม The Story Behind the Badge</p>
+</div>
+
+<!-- ── 7 AI MINDSET ── -->
+<div class="slide phase-2" data-phase="2">
+  <div class="phase-badge badge-p2">Phase 2 · บรรยาย</div>
+  <div class="lecture-tag">📖 5 นาที</div>
+  <h2 class="slide-title">AI: <span class="hl-orange">Co-Pilot</span> ไม่ใช่ Ghostwriter</h2>
+  <div class="divider div-orange"></div>
+  <div class="card-grid card-grid-2" style="max-width:820px;">
+    <div>
+      <p style="font-size:0.8rem;opacity:0.55;margin-bottom:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">✅ AI ช่วยได้</p>
+      <ul class="check-list">
+        <li class="check-do"><span class="check-icon">🧠</span><span>Brainstorm ไอเดียและโครงร่าง</span></li>
+        <li class="check-do"><span class="check-icon">✍️</span><span>เรียบเรียงและขัดเกลาภาษา</span></li>
+        <li class="check-do"><span class="check-icon">🔍</span><span>ตรวจ Grammar &amp; Flow</span></li>
+      </ul>
+    </div>
+    <div>
+      <p style="font-size:0.8rem;opacity:0.55;margin-bottom:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">❌ AI ทำแทนไม่ได้</p>
+      <ul class="check-list">
+        <li class="check-dont"><span class="check-icon">❤️</span><span>เล่าประสบการณ์จริงของคุณ</span></li>
+        <li class="check-dont"><span class="check-icon">😰</span><span>แสดงหยาดเหงื่อและความพยายาม</span></li>
+        <li class="check-dont"><span class="check-icon">⚠️</span><span>หลีกเลี่ยง AI Detector ของมหาวิทยาลัย</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ── 8 PROMPT TEMPLATE ── -->
+<div class="slide phase-2" data-phase="2">
+  <div class="phase-badge badge-p2">Phase 2 · บรรยาย</div>
+  <div class="lecture-tag">📖 5 นาที</div>
+  <h2 class="slide-title">🔑 สูตรลับสั่ง AI<br><span class="hl-orange" style="font-size:0.7em;font-weight:400;">แจกฟรี — เอาไปใช้ในกิจกรรมได้เลย</span></h2>
+  <div class="divider div-orange"></div>
+  <div class="prompt-box">
+    <div class="label">📋 Prompt Template · วางโครงร่าง SOP จากข้อมูลดิบ</div>
+    <p>
+      "ฉันกำลังเตรียมตัวเข้าคณะ <span class="bracket">[ชื่อคณะ]</span> มหาวิทยาลัย <span class="bracket">[ชื่อมหาลัย]</span><br>
+      1. แรงบันดาลใจ: <span class="bracket">[เรื่องเล่าสั้น ๆ ที่เพิ่งแชร์กับเพื่อน]</span><br>
+      2. กิจกรรมที่ทำ: <span class="bracket">[ค่าย/โครงงาน/เกียรติบัตร]</span><br>
+      3. เป้าหมายอนาคต: <span class="bracket">[เรียนจบอยากทำอะไร]</span><br><br>
+      ช่วยวาง <strong>Outline SOP 4 ย่อหน้า</strong> ใช้เทคนิค Show, Don't Tell
+      <strong>ยังไม่ต้องเขียนเนื้อหาเต็ม</strong>"
+    </p>
+  </div>
+  <p style="font-size:0.78rem;opacity:0.45;margin-top:12px;">💡 ป้อนสิ่งที่เพิ่งเล่าให้เพื่อนฟังในกิจกรรมที่ 3 ลงไปเป็น "ข้อมูลดิบ" ได้เลย</p>
+</div>
+
+<!-- ── 9 ACTIVITY 3 ── -->
+<div class="slide activity-slide act-orange" data-phase="2">
+  <div class="activity-badge abadge-orange">🎯 กิจกรรมที่ 3</div>
+  <div class="timer-chip">⏱ 15 นาที</div>
+  <div class="act-no">The Story Behind the Badge</div>
+  <h2 class="act-title">เรื่องเล่า<span class="hl-orange">เบื้องหลัง</span>ผลงาน</h2>
+  <p style="font-size:0.88rem;opacity:0.55;margin-bottom:16px;">หยิบรูปผลงาน / เกียรติบัตรในมือถือ 1 อย่าง → แชร์กับกลุ่ม 3 ข้อ</p>
+  <div class="act-steps">
+    <div class="act-step">
+      <div class="act-step-num num-orange">1</div>
+      <div class="act-step-body">
+        <h4>💥 พังตรงไหน?</h4>
+        <p>ระหว่างทำกิจกรรมนั้น เจออุปสรรคหรือล้มเหลวตรงไหนบ้าง?</p>
+      </div>
+    </div>
+    <div class="act-step">
+      <div class="act-step-num num-orange">2</div>
+      <div class="act-step-body">
+        <h4>🔧 แก้ยังไง?</h4>
+        <p>คุณจัดการกับปัญหานั้นอย่างไร? ใครช่วย? ตัดสินใจอะไรบ้าง?</p>
+      </div>
+    </div>
+    <div class="act-step">
+      <div class="act-step-num num-orange">3</div>
+      <div class="act-step-body">
+        <h4>💡 ได้เรียนรู้อะไร?</h4>
+        <p>บทเรียนจากครั้งนั้นเปลี่ยนวิธีคิดหรือทิศทางชีวิตอย่างไร?</p>
+      </div>
+    </div>
+  </div>
+  <div class="act-highlight act-highlight-orange" style="margin-top:12px;">
+    🤖 <strong>ต่อด้วย AI:</strong> นำสิ่งที่เพิ่งเล่าป้อนเข้า Prompt ในมือถือ → ให้ AI สกัดเป็นโครงร่าง SOP สด ๆ ในห้องเลย
+  </div>
+</div>
+
+<!-- ── 10 DESIGN MAGIC ── -->
+<div class="slide phase-2" data-phase="2">
+  <div class="phase-badge badge-p2">Phase 2 · บรรยายสรุป</div>
+  <div class="lecture-tag">📖 5 นาที</div>
+  <h2 class="slide-title">AI ตกแต่ง: <span class="hl-orange">คุม Mood &amp; Tone</span><br><span style="font-weight:300;font-size:0.7em;opacity:0.7;">พอร์ตให้เข้าตา</span></h2>
+  <div class="divider div-orange"></div>
+  <div class="step-row">
+    <div class="step-block">
+      <div class="step-icon">🎨</div>
+      <h4>Canva AI</h4>
+      <p>Magic Design สร้างเลย์เอาต์จากธีม</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-block">
+      <div class="step-icon">🖼️</div>
+      <h4>Adobe Firefly</h4>
+      <p>สร้าง Background &amp; Asset ตาม Style</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-block">
+      <div class="step-icon">🌈</div>
+      <h4>Coolors</h4>
+      <p>Color Palette จาก Keyword ของคณะ</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-block">
+      <div class="step-icon">✍️</div>
+      <h4>ChatGPT / Claude</h4>
+      <p>ถาม Mood &amp; Tone เหมาะกับคณะ</p>
+    </div>
+  </div>
+  <div style="margin-top:20px;padding:12px 22px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.22);border-radius:12px;max-width:820px;width:100%;">
+    <p style="font-size:0.88rem;color:#fde68a;">💡 ลองถาม: "คณะแพทย์ควรใช้ Tone อะไร?" → AI แนะนำสี ฟอนต์ น้ำหนักได้ทันที</p>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+
+<!-- ── 11 Q&A ── -->
+<div class="slide phase-3" data-phase="3">
+  <div class="phase-badge badge-p3">Phase 3</div>
+  <h1 class="main-title" style="font-size:clamp(2rem,4vw,3.2rem);">💬 เคลียร์ทุกข้อสงสัย</h1>
+  <div class="divider div-green"></div>
+  <p class="subtitle">เปิดเวทีให้ถาม — โดยเฉพาะข้อสงสัยจากการลองใช้ AI เมื่อกี้</p>
+  <div class="pill-row" style="margin-top:28px;">
+    <span class="pill pill-purple">📝 SOP เขียนยังไง?</span>
+    <span class="pill pill-orange">🤖 AI ใช้ฟรีได้ที่ไหน?</span>
+    <span class="pill pill-green">🎨 พอร์ตต้องมีอะไรบ้าง?</span>
+    <span class="pill pill-blue">📅 เริ่มเตรียมเมื่อไหร่?</span>
+  </div>
+</div>
+
+<!-- ── 12 WRAP UP ── -->
+<div class="slide phase-3" data-phase="3">
+  <div class="phase-badge badge-p3">Phase 3 · Wrap Up</div>
+  <div class="slide-tag">✨ Take Away</div>
+  <div class="big-quote">
+    "พอร์ตที่ดีที่สุด<br>
+    คือพอร์ตที่ <span class="hl-green">เล่าเรื่องของคุณ</span><br>
+    ได้จริงที่สุด"
+  </div>
+  <div class="divider div-green" style="margin-top:28px;"></div>
+  <p class="subtitle" style="margin-bottom:22px;">
+    AI ช่วยให้พอร์ตสวยและภาษาสละสลวยได้<br>
+    แต่ <strong class="hl-yellow">AI เล่า 'หัวใจและหยาดเหงื่อ' ของคุณแทนไม่ได้</strong>
+  </p>
+  <div class="pill-row">
+    <span class="pill pill-purple">📥 สแกน QR รับ Prompt ฟรี</span>
+    <span class="pill pill-green">🙌 โชคดีทุกคน!</span>
+  </div>
+</div>
+
+</div><!-- /slideshow -->
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar-outer">
+  <div id="progress-bar-p1" style="width:0"></div>
+  <div id="progress-bar-p2" style="width:0;display:none"></div>
+  <div id="progress-bar-p3" style="width:0;display:none"></div>
+</div>
+
+<!-- PHASE DOTS -->
+<div id="phase-dots">
+  <div class="pdot pdot-p1 active" title="Phase 1: SOP"></div>
+  <div class="pdot pdot-p2" title="Phase 2: AI"></div>
+  <div class="pdot pdot-p3" title="Phase 3: Q&A"></div>
+</div>
+
+<!-- NAV -->
+<div id="nav">
+  <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled title="ก่อนหน้า (←)">◀</button>
+  <span id="slide-counter">1 / 13</span>
+  <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)" title="ถัดไป (→)">▶</button>
+  <button id="fs-btn" onclick="toggleFullscreen()" title="เต็มจอ (F)">⛶</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0, animating = false;
+
+  // Phase 1: slides 2–5, Phase 2: slides 6–10, Phase 3: slides 11–12
+  const phases = { p1:[2,5], p2:[6,10], p3:[11,12] };
+
+  function updateUI() {
+    document.getElementById('slide-counter').textContent = (current+1)+' / '+total;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total-1;
+
+    const b1=document.getElementById('progress-bar-p1');
+    const b2=document.getElementById('progress-bar-p2');
+    const b3=document.getElementById('progress-bar-p3');
+    [b1,b2,b3].forEach(b=>{b.style.display='none';b.style.width='0';});
+    document.querySelectorAll('.pdot').forEach(d=>d.classList.remove('active'));
+
+    if (current>=phases.p1[0]&&current<=phases.p1[1]) {
+      const pct=((current-phases.p1[0]+1)/(phases.p1[1]-phases.p1[0]+1))*100;
+      b1.style.display='block'; b1.style.width=pct+'%';
+      document.querySelectorAll('.pdot')[0].classList.add('active');
+    } else if (current>=phases.p2[0]&&current<=phases.p2[1]) {
+      const pct=((current-phases.p2[0]+1)/(phases.p2[1]-phases.p2[0]+1))*100;
+      b2.style.display='block'; b2.style.width=pct+'%';
+      document.querySelectorAll('.pdot')[1].classList.add('active');
+    } else if (current>=phases.p3[0]&&current<=phases.p3[1]) {
+      const pct=((current-phases.p3[0]+1)/(phases.p3[1]-phases.p3[0]+1))*100;
+      b3.style.display='block'; b3.style.width=pct+'%';
+      document.querySelectorAll('.pdot')[2].classList.add('active');
+    }
+  }
+
+  function changeSlide(dir) {
+    const next = current+dir;
+    if (next<0||next>=total||animating) return;
+    animating = true;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('exit');
+    setTimeout(()=>{
+      slides[current].classList.remove('exit');
+      current = next;
+      slides[current].classList.add('active');
+      updateUI();
+      setTimeout(()=>{ animating=false; },450);
+    },200);
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+    } else { document.exitFullscreen(); }
+  }
+  document.addEventListener('fullscreenchange',()=>{
+    const btn=document.getElementById('fs-btn');
+    btn.textContent = document.fullscreenElement ? '✕' : '⛶';
+  });
+
+  document.addEventListener('keydown',e=>{
+    if (e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();changeSlide(1);}
+    if (e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();changeSlide(-1);}
+    if (e.key==='f'||e.key==='F'){toggleFullscreen();}
+  });
+
+  let touchX=0;
+  document.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;});
+  document.addEventListener('touchend',e=>{
+    const dx=touchX-e.changedTouches[0].clientX;
+    if(Math.abs(dx)>50) changeSlide(dx>0?1:-1);
+  });
+
+  updateUI();
+</script>
+</body>
+</html>
