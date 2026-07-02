@@ -3,700 +3,646 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOP & AI Co-Pilot | วิทยากรแนะแนว</title>
+<title>SOP & AI Co-Pilot | ครูอนุพงศ์ ไชยบุตร</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Sarabun',sans-serif;background:#080810;color:#fff;height:100vh;overflow:hidden;user-select:none;}
+  #deck{width:100vw;height:100vh;position:relative;overflow:hidden;}
+  .s{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px 88px;opacity:0;transform:translateX(50px);transition:opacity .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.4,0,.2,1);pointer-events:none;text-align:center;}
+  .s.on{opacity:1;transform:translateX(0);pointer-events:all;}
+  .s.out{opacity:0;transform:translateX(-50px);}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  .bg0{background:radial-gradient(ellipse 120% 80% at 70% 20%,#1a1a3e,#080810 60%);}
+  .bg1{background:radial-gradient(ellipse 120% 80% at 30% 80%,#1e0a4a,#080810 60%);}
+  .bg2{background:radial-gradient(ellipse 120% 80% at 70% 20%,#2a0f00,#080810 60%);}
+  .bg3{background:radial-gradient(ellipse 120% 80% at 30% 30%,#001f0e,#080810 60%);}
 
-  body {
-    font-family: 'Sarabun', sans-serif;
-    background: #0a0a0f;
-    color: #fff;
-    height: 100vh;
-    overflow: hidden;
-    user-select: none;
-  }
+  .acc{width:48px;height:3px;border-radius:2px;margin:0 auto 20px;}
+  .acc-v{background:linear-gradient(90deg,#6d28d9,#8b5cf6);}
+  .acc-o{background:linear-gradient(90deg,#c2410c,#f97316);}
+  .acc-g{background:linear-gradient(90deg,#065f46,#10b981);}
+  .acc-b{background:linear-gradient(90deg,#1d4ed8,#60a5fa);}
 
-  #slideshow {
-    width: 100vw; height: 100vh;
-    position: relative; overflow: hidden;
-  }
+  .eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;opacity:.4;margin-bottom:12px;}
+  .hero{font-size:clamp(2.4rem,5vw,4.2rem);font-weight:900;line-height:1.1;margin-bottom:16px;letter-spacing:-.02em;}
+  .title{font-size:clamp(1.5rem,3vw,2.6rem);font-weight:800;line-height:1.15;margin-bottom:16px;letter-spacing:-.01em;}
+  .body{font-size:clamp(.88rem,1.5vw,1.12rem);font-weight:300;opacity:.65;max-width:680px;line-height:1.7;}
+  .caption{font-size:.78rem;opacity:.32;margin-top:10px;}
 
-  .slide {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    padding: 60px 80px;
-    opacity: 0; transform: translateX(60px);
-    transition: opacity 0.45s ease, transform 0.45s ease;
-    pointer-events: none; text-align: center;
-  }
-  .slide.active  { opacity: 1; transform: translateX(0); pointer-events: all; }
-  .slide.exit    { opacity: 0; transform: translateX(-60px); }
+  .vp{color:#8b5cf6;} .vo{color:#f97316;} .vg{color:#10b981;} .vb{color:#60a5fa;} .vy{color:#f59e0b;} .vr{color:#f87171;}
 
-  /* Phase backgrounds */
-  .phase-0 { background: linear-gradient(135deg, #0d1117, #1a1a2e, #16213e); }
-  .phase-1 { background: linear-gradient(135deg, #0d0d2b, #1a0a3e, #2d1b69); }
-  .phase-2 { background: linear-gradient(135deg, #1a0d00, #2d1500, #3d2000); }
-  .phase-3 { background: linear-gradient(135deg, #001a0d, #002d1a, #004d2a); }
+  .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;}
+  .pill{padding:5px 15px;border-radius:50px;font-size:.78rem;font-weight:600;}
+  .pill-p{background:rgba(109,40,217,.25);color:#c4b5fd;border:1px solid rgba(139,92,246,.3);}
+  .pill-o{background:rgba(194,65,12,.22);color:#fdba74;border:1px solid rgba(249,115,22,.3);}
+  .pill-g{background:rgba(6,95,70,.25);color:#6ee7b7;border:1px solid rgba(16,185,129,.3);}
+  .pill-b{background:rgba(29,78,216,.22);color:#93c5fd;border:1px solid rgba(96,165,250,.3);}
 
-  /* Activity slides — dark base + vivid glow */
-  .activity-slide {
-    background: #070710 !important;
-  }
-  .activity-slide::after {
-    content: '';
-    position: absolute; inset: 0;
-    pointer-events: none;
-  }
-  .act-purple::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%); }
-  .act-orange::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(249,115,22,0.15) 0%, transparent 70%); }
-
-  /* BG glow */
-  .slide::before {
-    content: '';
-    position: absolute; width: 600px; height: 600px;
-    border-radius: 50%; opacity: 0.06; pointer-events: none;
-  }
-  .phase-0::before { background: radial-gradient(circle, #6c63ff, transparent); top:-200px; right:-200px; }
-  .phase-1::before { background: radial-gradient(circle, #7c3aed, transparent); top:-150px; right:-150px; }
-  .phase-2::before { background: radial-gradient(circle, #f97316, transparent); bottom:-200px; left:-200px; }
-  .phase-3::before { background: radial-gradient(circle, #10b981, transparent); top:-200px; right:-200px; }
-  .activity-slide::before { display: none; }
-
-  /* Phase badge */
-  .phase-badge {
-    position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
-    font-size: 12px; font-weight: 600; letter-spacing: 2px;
-    padding: 5px 18px; border-radius: 20px; text-transform: uppercase;
-  }
-  .badge-p1 { background: rgba(124,58,237,0.25); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
-  .badge-p2 { background: rgba(249,115,22,0.2);  color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
-  .badge-p3 { background: rgba(16,185,129,0.2);  color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
-
-  /* Activity badge */
-  .activity-badge {
-    position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
-    font-size: 12px; font-weight: 700; letter-spacing: 2px;
-    padding: 5px 18px; border-radius: 20px; text-transform: uppercase;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .abadge-purple { background: rgba(124,58,237,0.3); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.5); }
-  .abadge-orange { background: rgba(249,115,22,0.25); color: #fed7aa; border: 1px solid rgba(251,146,60,0.5); }
-
-  /* Timer chip */
-  .timer-chip {
-    position: absolute; top: 28px; right: 32px;
-    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 20px; padding: 5px 14px;
-    font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.5);
-    letter-spacing: 1px;
-  }
-
-  /* Slide num */
-  .slide-num-badge {
-    position: absolute; top: 28px; left: 32px;
-    font-size: 11px; font-weight: 700; letter-spacing: 1px; opacity: 0.3; text-transform: uppercase;
-  }
-
-  /* Typography */
-  .slide-tag {
-    font-size: 13px; font-weight: 600; letter-spacing: 3px;
-    text-transform: uppercase; opacity: 0.5; margin-bottom: 14px;
-  }
-  h1.main-title { font-size: clamp(2.2rem,4.5vw,3.8rem); font-weight: 800; line-height: 1.15; margin-bottom: 20px; }
-  h2.slide-title { font-size: clamp(1.5rem,3vw,2.4rem); font-weight: 700; line-height: 1.25; margin-bottom: 20px; }
-  .subtitle { font-size: clamp(0.9rem,1.6vw,1.2rem); font-weight: 300; opacity: 0.7; max-width: 720px; line-height: 1.6; }
-
-  /* Activity title */
-  h2.act-title {
-    font-size: clamp(1.6rem,3.2vw,2.6rem); font-weight: 800;
-    line-height: 1.2; margin-bottom: 6px;
-  }
-  .act-no {
-    font-size: 0.75rem; font-weight: 700; letter-spacing: 3px;
-    text-transform: uppercase; opacity: 0.5; margin-bottom: 10px;
-  }
-
-  /* Colors */
-  .hl-purple { color: #a78bfa; }
-  .hl-orange { color: #fb923c; }
-  .hl-green  { color: #34d399; }
-  .hl-blue   { color: #60a5fa; }
-  .hl-yellow { color: #fbbf24; }
-  .hl-pink   { color: #f472b6; }
-  .hl-cyan   { color: #22d3ee; }
-
-  /* Divider */
-  .divider { width: 60px; height: 3px; border-radius: 2px; margin: 0 auto 22px; }
-  .div-purple { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
-  .div-orange { background: linear-gradient(90deg, #f97316, #fbbf24); }
-  .div-green  { background: linear-gradient(90deg, #10b981, #34d399); }
-  .div-blue   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-
-  /* Cards */
-  .card-grid { display: grid; gap: 14px; width: 100%; max-width: 900px; margin-top: 8px; }
-  .card-grid-2 { grid-template-columns: 1fr 1fr; }
-  .card-grid-4 { grid-template-columns: repeat(4,1fr); }
-
-  .card { border-radius: 16px; padding: 20px 18px; text-align: left; position: relative; overflow: hidden; }
-  .card-purple { background: rgba(124,58,237,0.18); border: 1px solid rgba(167,139,250,0.25); }
-  .card-orange { background: rgba(249,115,22,0.15);  border: 1px solid rgba(251,146,60,0.25); }
-  .card-green  { background: rgba(16,185,129,0.15);  border: 1px solid rgba(52,211,153,0.25); }
-  .card-blue   { background: rgba(59,130,246,0.15);  border: 1px solid rgba(96,165,250,0.25); }
-  .card-num { font-size: 2rem; font-weight: 800; opacity: 0.2; position: absolute; top: 10px; right: 14px; }
-  .card-icon { font-size: 1.6rem; margin-bottom: 8px; }
-  .card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 5px; }
-  .card p  { font-size: 0.82rem; opacity: 0.68; line-height: 1.45; }
-
-  /* Compare */
-  .compare-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 0; width: 100%; max-width: 860px; align-items: center; }
-  .compare-box { border-radius: 16px; padding: 22px 20px; text-align: left; }
-  .compare-vs  { text-align: center; font-size: 1.1rem; font-weight: 700; opacity: 0.35; }
-  .compare-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; opacity: 0.6; }
-  .compare-example { font-size: 0.92rem; line-height: 1.65; font-style: italic; opacity: 0.88; }
+  .grid{display:grid;gap:12px;width:100%;max-width:900px;}
+  .g2{grid-template-columns:1fr 1fr;} .g3{grid-template-columns:repeat(3,1fr);} .g4{grid-template-columns:repeat(4,1fr);}
+  .card{border-radius:14px;padding:18px 16px;text-align:left;position:relative;overflow:hidden;}
+  .cp{background:rgba(109,40,217,.16);border:1px solid rgba(139,92,246,.22);}
+  .co{background:rgba(194,65,12,.14);border:1px solid rgba(249,115,22,.22);}
+  .cg{background:rgba(6,95,70,.16);border:1px solid rgba(16,185,129,.22);}
+  .cb{background:rgba(29,78,216,.14);border:1px solid rgba(96,165,250,.22);}
+  .cpi{background:rgba(190,24,93,.14);border:1px solid rgba(236,72,153,.22);}
+  .cd{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);}
+  .cr{background:rgba(185,28,28,.12);border:1px solid rgba(239,68,68,.2);}
+  .card-n{font-size:1.8rem;font-weight:900;opacity:.16;position:absolute;top:8px;right:12px;line-height:1;}
+  .card-i{font-size:1.5rem;margin-bottom:7px;}
+  .card h3{font-size:.88rem;font-weight:700;margin-bottom:4px;}
+  .card p{font-size:.76rem;opacity:.6;line-height:1.45;}
 
   /* Checklist */
-  .check-list { list-style: none; text-align: left; max-width: 780px; width: 100%; }
-  .check-list li { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; border-radius: 12px; margin-bottom: 9px; font-size: 0.95rem; line-height: 1.5; }
-  .check-do   { background: rgba(16,185,129,0.12); border: 1px solid rgba(52,211,153,0.2); }
-  .check-dont { background: rgba(239,68,68,0.12);  border: 1px solid rgba(248,113,113,0.2); }
-  .check-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+  .cklist{list-style:none;text-align:left;max-width:740px;width:100%;}
+  .cklist li{display:flex;align-items:flex-start;gap:11px;padding:10px 15px;border-radius:11px;margin-bottom:8px;font-size:.9rem;line-height:1.5;}
+  .li-g{background:rgba(6,95,70,.14);border:1px solid rgba(16,185,129,.2);}
+  .li-r{background:rgba(185,28,28,.12);border:1px solid rgba(239,68,68,.18);}
+  .li-i{font-size:.88rem;flex-shrink:0;margin-top:2px;}
 
-  /* Prompt box */
-  .prompt-box {
-    background: rgba(0,0,0,0.4); border: 1px solid rgba(167,139,250,0.3);
-    border-radius: 16px; padding: 22px 26px; max-width: 820px; width: 100%; text-align: left; position: relative;
-  }
-  .prompt-box .label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #a78bfa; margin-bottom: 10px; text-transform: uppercase; }
-  .prompt-box p { font-size: 0.88rem; line-height: 1.8; color: #c4b5fd; font-family: 'Courier New', monospace; }
-  .prompt-box .bracket { color: #f472b6; }
+  /* Activity steps */
+  .act-wrap{display:flex;flex-direction:column;gap:9px;max-width:700px;width:100%;}
+  .act-row{display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:13px 16px;text-align:left;}
+  .act-num{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;margin-top:1px;}
+  .an-o{background:rgba(194,65,12,.38);color:#fdba74;}
+  .act-row h4{font-size:.9rem;font-weight:700;margin-bottom:2px;}
+  .act-row p{font-size:.78rem;opacity:.6;line-height:1.45;}
+
+  /* Prompt */
+  .pbox{background:rgba(0,0,0,.45);border:1px solid rgba(139,92,246,.28);border-radius:16px;padding:20px 24px;max-width:760px;width:100%;text-align:left;}
+  .plabel{font-size:.62rem;font-weight:700;letter-spacing:.18em;color:#8b5cf6;margin-bottom:9px;text-transform:uppercase;}
+  .pbox p{font-size:.84rem;line-height:1.85;color:#c4b5fd;font-family:'Courier New',monospace;}
+  .pbr{color:#f472b6;}
+
+  /* Steps row */
+  .srow{display:flex;align-items:center;gap:8px;width:100%;max-width:820px;}
+  .sblk{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:13px;padding:13px;flex:1;text-align:center;}
+  .sblk .si{font-size:1.35rem;margin-bottom:5px;}
+  .sblk h4{font-size:.78rem;font-weight:700;margin-bottom:2px;}
+  .sblk p{font-size:.68rem;opacity:.55;line-height:1.3;}
+  .sarr{font-size:.95rem;opacity:.22;flex-shrink:0;}
+
+  /* Resources */
+  .resg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:800px;width:100%;}
+  .resc{border-radius:12px;padding:14px 15px;display:flex;align-items:center;gap:11px;}
+  .resc .ri{font-size:1.4rem;flex-shrink:0;}
+  .resc h4{font-size:.84rem;font-weight:700;margin-bottom:2px;}
+  .resc p{font-size:.7rem;opacity:.45;font-family:monospace;}
+
+  /* AI table */
+  .ait{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;max-width:800px;width:100%;}
+  .aic{border-radius:13px;padding:16px;text-align:left;}
+  .aih{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+  .ail{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+  .aic h3{font-size:.86rem;font-weight:700;}
+  .aitag{display:inline-block;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:5px;margin-bottom:7px;letter-spacing:.08em;text-transform:uppercase;}
+  .aipts{list-style:none;}
+  .aipts li{font-size:.74rem;opacity:.6;line-height:1.55;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+  .aipts li:last-child{border:none;}
+  .aipts li::before{content:'· ';opacity:.4;}
+
+  /* Agenda phase row */
+  .phrow{display:flex;align-items:stretch;gap:0;width:100%;max-width:860px;margin-top:14px;}
+  .phblk{border-radius:13px;padding:16px 14px;flex:1;text-align:left;}
+  .phblk+.phsep{width:14px;display:flex;align-items:center;justify-content:center;opacity:.2;font-size:.8rem;flex-shrink:0;}
+  .phtime{font-size:.62rem;font-weight:700;letter-spacing:.1em;opacity:.42;margin-bottom:4px;text-transform:uppercase;}
+  .phblk h4{font-size:.88rem;font-weight:700;margin-bottom:3px;}
+  .phblk p{font-size:.72rem;opacity:.52;line-height:1.4;}
 
   /* Big quote */
-  .big-quote { font-size: clamp(1.3rem,2.4vw,1.9rem); font-weight: 700; line-height: 1.5; max-width: 760px; position: relative; }
-  .big-quote::before { content: '"'; font-size: 5rem; position: absolute; top:-20px; left:-30px; opacity: 0.08; font-family: serif; line-height: 1; }
+  .bq{font-size:clamp(1.3rem,2.4vw,2rem);font-weight:700;line-height:1.5;max-width:700px;position:relative;}
+  .bq::before{content:'"';font-size:5.5rem;position:absolute;top:-20px;left:-32px;opacity:.07;font-family:Georgia,serif;line-height:1;}
 
-  /* Pills */
-  .pill-row { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; margin-top: 18px; }
-  .pill { padding: 6px 16px; border-radius: 50px; font-size: 0.82rem; font-weight: 600; }
-  .pill-purple { background: rgba(124,58,237,0.3); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.4); }
-  .pill-orange { background: rgba(249,115,22,0.25); color: #fed7aa; border: 1px solid rgba(251,146,60,0.4); }
-  .pill-green  { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.4); }
-  .pill-blue   { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(96,165,250,0.4); }
+  /* Intro */
+  .av{width:86px;height:86px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#4338ca);display:flex;align-items:center;justify-content:center;font-size:2.1rem;margin-bottom:16px;box-shadow:0 0 0 5px rgba(109,40,217,.2),0 0 0 10px rgba(109,40,217,.08);}
+  .avname{font-size:clamp(1.4rem,2.8vw,2.2rem);font-weight:800;margin-bottom:4px;}
+  .avrole{font-size:clamp(.8rem,1.4vw,.98rem);opacity:.45;margin-bottom:20px;}
+  .stbox{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-left:3px solid #6d28d9;border-radius:13px;padding:20px 26px;max-width:640px;width:100%;text-align:left;}
+  .stlabel{font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8b5cf6;margin-bottom:9px;}
+  .stph{font-size:.9rem;opacity:.38;font-style:italic;line-height:1.75;}
 
-  /* Phase row (agenda) */
-  .phase-row { display: flex; align-items: stretch; gap: 0; width: 100%; max-width: 920px; margin-top: 16px; }
-  .phase-block { border-radius: 14px; padding: 18px 14px; flex: 1; text-align: left; position: relative; }
-  .phase-block + .phase-sep { width: 16px; display: flex; align-items: center; justify-content: center; opacity: 0.3; font-size: 1rem; flex-shrink: 0; }
-  .phase-time { font-size: 11px; font-weight: 700; letter-spacing: 1px; opacity: 0.55; margin-bottom: 5px; text-transform: uppercase; }
-  .phase-block h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
-  .phase-block p  { font-size: 0.77rem; opacity: 0.62; line-height: 1.4; }
+  /* Phase big bg */
+  .pbig{font-size:clamp(5rem,14vw,10rem);font-weight:900;opacity:.06;position:absolute;top:50%;left:50%;transform:translate(-50%,-52%);pointer-events:none;line-height:1;letter-spacing:-.04em;}
 
-  /* Step row */
-  .step-row { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 860px; justify-content: center; }
-  .step-block { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; flex: 1; text-align: center; }
-  .step-icon { font-size: 1.5rem; margin-bottom: 6px; }
-  .step-block h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 3px; }
-  .step-block p  { font-size: 0.72rem; opacity: 0.6; line-height: 1.35; }
-  .step-arrow { font-size: 1.2rem; opacity: 0.28; flex-shrink: 0; }
+  /* Quiz */
+  .qopts{display:flex;flex-direction:column;gap:9px;max-width:640px;width:100%;margin-top:12px;}
+  .qopt{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:13px 19px;font-size:.9rem;text-align:left;cursor:pointer;transition:all .2s;}
+  .qopt:hover{background:rgba(255,255,255,.09);}
+  .qopt.qok{background:rgba(6,95,70,.22);border-color:rgba(16,185,129,.4);color:#6ee7b7;}
+  .qopt.qno{background:rgba(185,28,28,.16);border-color:rgba(239,68,68,.3);color:#fca5a5;}
+  .qfb{margin-top:13px;font-size:.86rem;opacity:0;transition:opacity .3s;}
 
-  /* Phase intro num */
-  .phase-intro-num { font-size: 7rem; font-weight: 800; opacity: 0.07; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-55%); pointer-events: none; line-height: 1; }
+  /* ─── SOP Discussion slides ─── */
+  .disc-wrap{display:grid;grid-template-columns:1fr 2px 1fr;width:100%;max-width:980px;height:360px;gap:0;}
+  .disc-side{display:flex;flex-direction:column;padding:28px 30px;text-align:left;overflow:hidden;}
+  .disc-side-a{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px 0 0 16px;}
+  .disc-side-b{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-left:none;border-radius:0 16px 16px 0;}
+  .disc-label{font-size:.62rem;font-weight:900;letter-spacing:.2em;opacity:.28;margin-bottom:14px;text-transform:uppercase;}
+  .disc-text{font-size:clamp(1.08rem,1.85vw,1.38rem);line-height:1.8;opacity:.9;flex:1;overflow:hidden;}
+  .disc-divider{background:rgba(255,255,255,.07);}
+  .disc-q{margin-top:14px;font-size:.9rem;opacity:.5;letter-spacing:.03em;}
 
-  /* ===== ACTIVITY STEPS ===== */
-  .act-steps { display: flex; flex-direction: column; gap: 10px; max-width: 760px; width: 100%; }
-  .act-step {
-    display: flex; align-items: flex-start; gap: 16px;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 14px; padding: 14px 18px; text-align: left;
-  }
-  .act-step-num {
-    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem; font-weight: 800;
-  }
-  .num-purple { background: rgba(124,58,237,0.4); color: #c4b5fd; }
-  .num-orange { background: rgba(249,115,22,0.35); color: #fed7aa; }
-  .act-step-body h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 3px; }
-  .act-step-body p  { font-size: 0.82rem; opacity: 0.65; line-height: 1.45; }
+  /* Schedule */
+  .sched-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:860px;}
+  .sched-col h3{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.38;margin-bottom:10px;}
+  .sched-item{display:flex;align-items:flex-start;gap:12px;padding:9px 14px;border-radius:10px;margin-bottom:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);}
+  .sched-item.hl{background:rgba(109,40,217,.2);border-color:rgba(139,92,246,.4);}
+  .sched-time{font-size:.7rem;font-weight:700;opacity:.45;flex-shrink:0;min-width:80px;line-height:1.4;}
+  .sched-item.hl .sched-time{opacity:.8;color:#c4b5fd;}
+  .sched-body h4{font-size:.82rem;font-weight:700;margin-bottom:1px;}
+  .sched-body p{font-size:.72rem;opacity:.5;}
+  .sched-item.hl .sched-body h4{color:#c4b5fd;}
+  .sched-break{font-size:.68rem;opacity:.3;text-align:center;padding:4px 0;}
 
-  /* Activity highlight box */
-  .act-highlight {
-    border-radius: 14px; padding: 14px 20px;
-    max-width: 760px; width: 100%;
-    font-size: 0.88rem; line-height: 1.55;
-  }
-  .act-highlight-purple { background: rgba(124,58,237,0.18); border: 1px solid rgba(167,139,250,0.35); color: #e9d5ff; }
-  .act-highlight-orange { background: rgba(249,115,22,0.15); border: 1px solid rgba(251,146,60,0.35); color: #fed7aa; }
+  /* Goal setting */
+  .goal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:800px;}
+  .goal-box{border-radius:15px;padding:22px 20px;text-align:left;}
+  .goal-box h3{font-size:.96rem;font-weight:800;margin-bottom:12px;}
+  .goal-box ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .goal-box ul li{font-size:.82rem;line-height:1.5;opacity:.82;}
 
-  /* Lecture tag */
-  .lecture-tag {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-    padding: 4px 14px; border-radius: 20px; margin-bottom: 14px;
-    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.5);
-  }
+  /* Progress */
+  #pbo{position:fixed;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.06);z-index:100;}
+  #pb1,#pb2,#pb3{height:100%;position:absolute;top:0;transition:width .38s ease;border-radius:2px;}
+  #pb1{background:linear-gradient(90deg,#6d28d9,#8b5cf6);left:0;}
+  #pb2{background:linear-gradient(90deg,#c2410c,#f97316);left:0;}
+  #pb3{background:linear-gradient(90deg,#065f46,#10b981);left:0;}
 
-  /* ===== PROGRESS BAR ===== */
-  #progress-bar-outer { position: fixed; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.07); z-index: 100; }
-  #progress-bar-p1,#progress-bar-p2,#progress-bar-p3 { height: 100%; position: absolute; top: 0; transition: width 0.4s ease; border-radius: 0 2px 2px 0; }
-  #progress-bar-p1 { background: linear-gradient(90deg,#7c3aed,#a78bfa); left: 0; }
-  #progress-bar-p2 { background: linear-gradient(90deg,#f97316,#fbbf24); left: 0; }
-  #progress-bar-p3 { background: linear-gradient(90deg,#10b981,#34d399); left: 0; }
+  /* Nav */
+  #nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;z-index:100;background:rgba(0,0,0,.28);backdrop-filter:blur(12px);padding:6px 14px;border-radius:50px;border:1px solid rgba(255,255,255,.06);opacity:.35;transition:opacity .3s;}
+  #nav:hover{opacity:1;}
+  .nb{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.4);font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;}
+  .nb:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);}
+  .nb:disabled{opacity:.15;cursor:default;}
+  #ctr{font-size:.68rem;font-weight:500;opacity:.32;min-width:44px;text-align:center;}
+  #fsb{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.3);font-size:.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;margin-left:2px;}
+  #fsb:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);}
 
-  /* ===== NAV ===== */
-  #nav {
-    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 10px; z-index: 100;
-    background: rgba(0,0,0,0.3); backdrop-filter: blur(10px);
-    padding: 7px 16px; border-radius: 50px;
-    border: 1px solid rgba(255,255,255,0.07);
-    opacity: 0.4; transition: opacity 0.3s;
-  }
-  #nav:hover { opacity: 1; }
-  .nav-btn {
-    width: 28px; height: 28px; border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.12); background: transparent;
-    color: rgba(255,255,255,0.45); font-size: 0.7rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-  }
-  .nav-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
-  .nav-btn:disabled { opacity: 0.18; cursor: default; }
-  #slide-counter { font-size: 0.72rem; font-weight: 500; opacity: 0.38; min-width: 48px; text-align: center; }
-  #fs-btn {
-    width: 28px; height: 28px; border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.12); background: transparent;
-    color: rgba(255,255,255,0.35); font-size: 0.65rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s; margin-left: 4px;
-  }
-  #fs-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
-
-  /* ===== PHASE DOTS ===== */
-  #phase-dots { position: fixed; top: 24px; right: 28px; display: flex; flex-direction: column; gap: 6px; z-index: 100; }
-  .pdot { width: 8px; height: 8px; border-radius: 50%; opacity: 0.22; transition: all 0.3s; }
-  .pdot.active { opacity: 1; transform: scale(1.3); }
-  .pdot-p1 { background: #a78bfa; }
-  .pdot-p2 { background: #fb923c; }
-  .pdot-p3 { background: #34d399; }
+  /* Phase dots */
+  #dots{position:fixed;top:22px;right:24px;display:flex;flex-direction:column;gap:5px;z-index:100;}
+  .dot{width:6px;height:6px;border-radius:50%;opacity:.18;transition:all .28s;}
+  .dot.on{opacity:1;transform:scale(1.4);}
+  .d1{background:#8b5cf6;} .d2{background:#f97316;} .d3{background:#10b981;}
 </style>
 </head>
 <body>
-<div id="slideshow">
+<div id="deck">
 
-<!-- ── 0 TITLE ── -->
-<div class="slide phase-0 active" data-phase="0">
-  <div class="slide-tag">🎓 Workshop 60 นาที</div>
-  <h1 class="main-title">ถอดรหัส <span class="hl-purple">SOP</span><br>&amp; <span class="hl-orange">AI</span> ผู้ช่วยทำ Port</h1>
-  <div class="divider div-blue"></div>
-  <p class="subtitle">เขียน Statement of Purpose ให้มหาลัยเลือก<br>และใช้ AI เป็น <strong>Co-Pilot</strong> ไม่ใช่คนเขียนแทน</p>
-  <div class="pill-row">
-    <span class="pill pill-purple">📝 SOP</span>
-    <span class="pill pill-orange">🤖 AI Tools</span>
-    <span class="pill pill-green">🎨 Portfolio</span>
-    <span class="pill pill-blue">⚡ 60 นาที · 3 กิจกรรม</span>
+<!-- 0 · TITLE -->
+<div class="s bg0 on">
+  <div class="eyebrow">กิจกรรม · ฐานที่ 3</div>
+  <h1 class="hero"><span class="vp">AI</span> ในบทบาท<br>ผู้ช่วยทำพอร์ต</h1>
+  <div class="acc acc-b"></div>
+  <p class="body">ใช้ AI เป็น <strong>Co-Pilot</strong> ไม่ใช่คนทำแทน<br>และถอดรหัส <strong class="vp">SOP</strong> ให้มหาลัยเลือก</p>
+  <div class="pills">
+    <span class="pill pill-p">📝 SOP</span>
+    <span class="pill pill-o">🤖 AI Tools</span>
+    <span class="pill pill-g">🎨 Portfolio</span>
   </div>
 </div>
 
-<!-- ── 1 AGENDA ── -->
-<div class="slide phase-0" data-phase="0">
-  <div class="slide-tag">ภาพรวม 60 นาที</div>
-  <h2 class="slide-title">3 เฟส — เส้นทางวันนี้</h2>
-  <div class="divider div-blue"></div>
-  <div class="phase-row">
-    <div class="phase-block" style="background:rgba(124,58,237,0.15);border:1px solid rgba(167,139,250,0.25);">
-      <div class="phase-time">Phase 1 · 25 นาที</div>
-      <h4 class="hl-purple">🔓 ถอดรหัส SOP</h4>
-      <p>บรรยาย 5 นาที → กิจกรรม 2 อัน (20 นาที)</p>
+<!-- 1 · INTRO -->
+<div class="s bg0">
+  <div class="av">👨‍🏫</div>
+  <div class="avname">นายอนุพงศ์ ไชยบุตร</div>
+  <div class="avrole">ครู · โรงเรียนวังกระแสวิทยาคม · จังหวัดนครพนม</div>
+</div>
+
+<!-- 2 · กำหนดการ -->
+<div class="s bg0" style="padding:48px 72px;">
+  <div class="eyebrow">วันศุกร์ที่ 3 กรกฎาคม 2569 · โรงเรียนมุกดาวิทยานุกูล</div>
+  <h2 class="title" style="margin-bottom:10px;">รูปแบบกิจกรรมวันนี้</h2>
+  <div class="acc acc-b" style="margin-bottom:14px;"></div>
+
+  <!-- Top timeline -->
+  <div style="display:flex;align-items:center;gap:0;width:100%;max-width:860px;margin-bottom:16px;">
+    <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 14px;flex-shrink:0;text-align:center;">
+      <div style="font-size:.6rem;opacity:.35;margin-bottom:2px;">08:00</div>
+      <div style="font-size:.72rem;font-weight:700;">ลงทะเบียน<br>& พิธีเปิด</div>
     </div>
-    <div class="phase-sep">▶</div>
-    <div class="phase-block" style="background:rgba(249,115,22,0.12);border:1px solid rgba(251,146,60,0.25);">
-      <div class="phase-time">Phase 2 · 25 นาที</div>
-      <h4 class="hl-orange">🤖 AI ผู้ช่วยทำ Port</h4>
-      <p>บรรยาย 10 นาที → กิจกรรม 1 อัน (15 นาที)</p>
+    <div style="height:1px;background:rgba(255,255,255,.1);flex:1;"></div>
+    <div style="background:rgba(109,40,217,.15);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:9px 14px;flex-shrink:0;text-align:center;">
+      <div style="font-size:.6rem;color:#a78bfa;opacity:.7;margin-bottom:2px;">09:00 – 11:35</div>
+      <div style="font-size:.72rem;font-weight:700;color:#c4b5fd;">วนฐาน 3 รอบ<br>รอบละ 45 นาที</div>
     </div>
-    <div class="phase-sep">▶</div>
-    <div class="phase-block" style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);">
-      <div class="phase-time">Phase 3 · 10 นาที</div>
-      <h4 class="hl-green">💬 Q&amp;A &amp; Wrap Up</h4>
-      <p>ถาม-ตอบ · แจก Prompt ฟรี</p>
+    <div style="height:1px;background:rgba(255,255,255,.1);flex:1;"></div>
+    <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 14px;flex-shrink:0;text-align:center;">
+      <div style="font-size:.6rem;opacity:.35;margin-bottom:2px;">12:00</div>
+      <div style="font-size:.72rem;font-weight:700;">Workshop<br>& บ่าย</div>
     </div>
   </div>
-  <p style="margin-top:18px;font-size:0.82rem;opacity:0.45;">🎯 3 กิจกรรม Active Learning แทรกในแต่ละเฟส</p>
-</div>
 
-<!-- ═══════════ PHASE 1 ═══════════ -->
-
-<!-- ── 2 PHASE 1 INTRO ── -->
-<div class="slide phase-1" data-phase="1">
-  <div class="phase-badge badge-p1">Phase 1</div>
-  <div class="phase-intro-num">1</div>
-  <div class="slide-tag">5 นาทีแรก · บรรยาย</div>
-  <h1 class="main-title"><span class="hl-purple">SOP</span> คืออะไร?<br>ทำไมเขียนส่ง ๆ มหาลัยถึงคัดออก</h1>
-  <div class="divider div-purple"></div>
-  <p class="subtitle">Resume บอกว่า "ทำอะไร" — SOP บอกว่า "คิดอย่างไร"</p>
-</div>
-
-<!-- ── 3 4 BLOCKS ── -->
-<div class="slide phase-1" data-phase="1">
-  <div class="phase-badge badge-p1">Phase 1 · บรรยาย</div>
-  <div class="lecture-tag">📖 5 นาที</div>
-  <h2 class="slide-title">4 บล็อกสติ๊กเกอร์<br><span class="hl-purple">ประกอบร่าง SOP ให้ปัง</span></h2>
-  <div class="divider div-purple"></div>
-  <div class="card-grid card-grid-4" style="max-width:960px;">
-    <div class="card card-purple">
-      <div class="card-num">1</div>
-      <div class="card-icon">✨</div>
-      <h3>แรงบันดาลใจ</h3>
-      <p>เรื่องเล่าที่จุดประกายให้เดินเส้นทางนี้</p>
+  <!-- Rotation grid -->
+  <div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:6px;width:100%;max-width:860px;">
+    <!-- Header row -->
+    <div></div>
+    <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:9px 10px;text-align:center;">
+      <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;opacity:.38;text-transform:uppercase;margin-bottom:3px;">ฐาน 1</div>
+      <div style="font-size:.76rem;font-weight:700;">รู้จัก TCAS</div>
+      <div style="font-size:.64rem;opacity:.42;margin-top:2px;">ณัฐพงศ์</div>
     </div>
-    <div class="card" style="background:rgba(236,72,153,0.15);border:1px solid rgba(244,114,182,0.25);">
-      <div class="card-num">2</div>
-      <div class="card-icon">🏆</div>
-      <h3>ต้นทุน / กิจกรรม</h3>
-      <p>ค่าย โครงงาน ประสบการณ์ที่สั่งสมมา</p>
+    <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:9px 10px;text-align:center;">
+      <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;opacity:.38;text-transform:uppercase;margin-bottom:3px;">ฐาน 2</div>
+      <div style="font-size:.76rem;font-weight:700;">Mood & Tone & Canva</div>
+      <div style="font-size:.64rem;opacity:.42;margin-top:2px;">กันตวีร์</div>
     </div>
-    <div class="card card-blue">
-      <div class="card-num">3</div>
-      <div class="card-icon">🎯</div>
-      <h3>ทำไมต้องที่นี่?</h3>
-      <p>จุดเชื่อมระหว่างตัวเองกับคณะที่เลือก</p>
+    <div style="background:rgba(109,40,217,.2);border:2px solid rgba(139,92,246,.45);border-radius:9px;padding:9px 10px;text-align:center;">
+      <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;color:#a78bfa;text-transform:uppercase;margin-bottom:3px;">ฐาน 3 · เรา</div>
+      <div style="font-size:.72rem;font-weight:700;color:#c4b5fd;">SOP & AI ในบทบาทผู้ช่วยในการทำพอร์ต</div>
+      <div style="font-size:.64rem;color:#a78bfa;opacity:.7;margin-top:2px;">อนุพงศ์</div>
     </div>
-    <div class="card card-green">
-      <div class="card-num">4</div>
-      <div class="card-icon">🚀</div>
-      <h3>เป้าหมายอนาคต</h3>
-      <p>วิสัยทัศน์หลังเรียนจบ สร้างอะไรให้สังคม</p>
+    <!-- Round 1 -->
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding-right:8px;">
+      <div style="text-align:right;"><div style="font-size:.6rem;opacity:.35;">09:00</div><div style="font-size:.7rem;font-weight:700;opacity:.6;">รอบ 1</div></div>
     </div>
+    <div style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#67e8f9;">กลุ่ม A</span></div>
+    <div style="background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#fdba74;">กลุ่ม B</span></div>
+    <div style="background:rgba(109,40,217,.16);border:1px solid rgba(139,92,246,.3);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#c4b5fd;">กลุ่ม C</span></div>
+    <!-- Round 2 -->
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding-right:8px;">
+      <div style="text-align:right;"><div style="font-size:.6rem;opacity:.35;">09:50</div><div style="font-size:.7rem;font-weight:700;opacity:.6;">รอบ 2</div></div>
+    </div>
+    <div style="background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#fdba74;">กลุ่ม B</span></div>
+    <div style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#c4b5fd;">กลุ่ม C</span></div>
+    <div style="background:rgba(109,40,217,.16);border:1px solid rgba(139,92,246,.3);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#67e8f9;">กลุ่ม A</span></div>
+    <!-- Round 3 -->
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding-right:8px;">
+      <div style="text-align:right;"><div style="font-size:.6rem;opacity:.35;">10:40</div><div style="font-size:.7rem;font-weight:700;opacity:.6;">รอบ 3</div></div>
+    </div>
+    <div style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#c4b5fd;">กลุ่ม C</span></div>
+    <div style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#67e8f9;">กลุ่ม A</span></div>
+    <div style="background:rgba(109,40,217,.16);border:1px solid rgba(139,92,246,.3);border-radius:9px;padding:8px;text-align:center;"><span style="font-size:.88rem;font-weight:800;color:#fdba74;">กลุ่ม B</span></div>
   </div>
-  <p class="subtitle" style="margin-top:18px;font-size:0.85rem;">
-    <span class="hl-yellow">Show, Don't Tell</span> — เล่าให้เห็นภาพ อย่าแค่อวดอ้างด้วยคำคุณศัพท์
-  </p>
+  <p class="caption" style="margin-top:12px;">แต่ละรอบ 45 นาที · เดินทางระหว่างฐาน 5 นาที · ทุกกลุ่มได้ครบทั้ง 3 ฐาน</p>
 </div>
 
-<!-- ── 4 ACTIVITY 1 ── -->
-<div class="slide activity-slide act-purple" data-phase="1">
-  <div class="activity-badge abadge-purple">🎯 กิจกรรมที่ 1</div>
-  <div class="timer-chip">⏱ 10 นาที</div>
-  <div class="act-no">Elevator Pitch</div>
-  <h2 class="act-title"><span class="hl-purple">30-Second</span><br>Elevator Pitch</h2>
-  <p style="font-size:0.9rem;opacity:0.55;margin-bottom:20px;">จับคู่กับเพื่อนข้าง ๆ · ผลัดกันพูด · ห้ามพูดแค่ชื่อกิจกรรม</p>
-  <div class="act-steps">
-    <div class="act-step">
-      <div class="act-step-num num-purple">1</div>
-      <div class="act-step-body">
-        <h4>สมมติสถานการณ์</h4>
-        <p>คุณติดอยู่ในลิฟต์กับ <strong style="color:#c4b5fd;">คณบดีของคณะที่อยากเข้า</strong> มีเวลา 30 วินาที</p>
-      </div>
-    </div>
-    <div class="act-step">
-      <div class="act-step-num num-purple">2</div>
-      <div class="act-step-body">
-        <h4>บอกให้ได้ว่า "ทำไมคณะนี้ต้องรับฉัน"</h4>
-        <p>ต้องพูดจุดเด่นสูงสุด 1 อย่าง — ห้ามพูดว่า "ผมเป็นคนขยัน" ต้องยกเหตุการณ์จริง</p>
-      </div>
-    </div>
-    <div class="act-step">
-      <div class="act-step-num num-purple">3</div>
-      <div class="act-step-body">
-        <h4>สลับกันพูด → แลกคอมเมนต์</h4>
-        <p>คนละ 30 วิ (รวม 1 นาที) แล้วบอกเพื่อนว่าประโยคไหน "เห็นภาพ" ที่สุด</p>
-      </div>
-    </div>
-  </div>
+<!-- ══════════ PHASE 1 ══════════ -->
+
+<!-- 3 · P1 INTRO -->
+<div class="s bg1">
+  <div class="pbig">1</div>
+  <div class="eyebrow">Phase 1</div>
+  <h1 class="hero">ถอดรหัส<br><span class="vp">SOP</span></h1>
+  <div class="acc acc-v"></div>
+  <p class="body">Resume บอกว่า "ทำอะไร"<br>SOP บอกว่า <strong class="vp">"คิดอย่างไร"</strong></p>
 </div>
 
-<!-- ── 5 ACTIVITY 2 ── -->
-<div class="slide activity-slide act-purple" data-phase="1">
-  <div class="activity-badge abadge-purple">🎯 กิจกรรมที่ 2</div>
-  <div class="timer-chip">⏱ 10 นาที</div>
-  <div class="act-no">Case Study</div>
-  <h2 class="act-title"><span class="hl-purple">SOP แย่</span> vs <span class="hl-green">SOP ปัง</span></h2>
-  <p style="font-size:0.9rem;opacity:0.55;margin-bottom:16px;">อ่านแล้วโหวต — แล้วบอกเหตุผล</p>
-  <div class="compare-grid" style="max-width:800px;">
-    <div class="compare-box" style="background:rgba(239,68,68,0.12);border:1px solid rgba(248,113,113,0.25);">
-      <div class="compare-label" style="color:#f87171;">❌ แบบ A — ง่วง</div>
-      <div class="compare-example" style="color:#fca5a5;">
-        "ผมเป็นคนมีความรับผิดชอบสูง ชอบเรียนรู้สิ่งใหม่ ๆ และมีความมุ่งมั่นอย่างแน่วแน่ในการศึกษาด้านนี้ อยากได้รับโอกาสนี้มาก..."
-      </div>
-    </div>
-    <div class="compare-vs">VS</div>
-    <div class="compare-box" style="background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);">
-      <div class="compare-label" style="color:#34d399;">✅ แบบ B — จำได้</div>
-      <div class="compare-example" style="color:#a7f3d0;">
-        "ตอนอายุ 15 ผมล้มเหลวในการแข่งขันโอลิมปิกฟิสิกส์ แต่ความพ่ายแพ้ครั้งนั้นทำให้ผมนั่งทบทวน 3 ชั่วโมง แล้วออกแบบแผนการเรียนใหม่ทั้งหมด..."
-      </div>
-    </div>
-  </div>
-  <div class="act-highlight act-highlight-purple" style="margin-top:14px;">
-    💬 <strong>สุ่มถาม 1-2 คน:</strong> "ทำไมฝั่ง B ถึงน่าเลือกกว่า?" → สรุปเข้า Do's &amp; Don'ts
-  </div>
-</div>
-
-<!-- ═══════════ PHASE 2 ═══════════ -->
-
-<!-- ── 6 PHASE 2 INTRO ── -->
-<div class="slide phase-2" data-phase="2">
-  <div class="phase-badge badge-p2">Phase 2</div>
-  <div class="phase-intro-num" style="color:#f97316;">2</div>
-  <div class="slide-tag">เครื่องมือ</div>
-  <h1 class="main-title"><span class="hl-orange">AI</span> ผู้ช่วยทำ Port<br><span style="font-size:0.6em;font-weight:300;opacity:0.7;">Co-Pilot ไม่ใช่ Ghostwriter</span></h1>
-  <div class="divider div-orange"></div>
-  <p class="subtitle">Mindset · Prompt · กิจกรรม The Story Behind the Badge</p>
-</div>
-
-<!-- ── 7 AI MINDSET ── -->
-<div class="slide phase-2" data-phase="2">
-  <div class="phase-badge badge-p2">Phase 2 · บรรยาย</div>
-  <div class="lecture-tag">📖 5 นาที</div>
-  <h2 class="slide-title">AI: <span class="hl-orange">Co-Pilot</span> ไม่ใช่ Ghostwriter</h2>
-  <div class="divider div-orange"></div>
-  <div class="card-grid card-grid-2" style="max-width:820px;">
-    <div>
-      <p style="font-size:0.8rem;opacity:0.55;margin-bottom:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">✅ AI ช่วยได้</p>
-      <ul class="check-list">
-        <li class="check-do"><span class="check-icon">🧠</span><span>Brainstorm ไอเดียและโครงร่าง</span></li>
-        <li class="check-do"><span class="check-icon">✍️</span><span>เรียบเรียงและขัดเกลาภาษา</span></li>
-        <li class="check-do"><span class="check-icon">🔍</span><span>ตรวจ Grammar &amp; Flow</span></li>
+<!-- 4 · GOAL SETTING -->
+<div class="s bg1">
+  <div class="eyebrow">ก่อนเริ่มเขียน SOP</div>
+  <h2 class="title">ตั้งเป้าหมาย<br><span class="vp">ก่อนเตรียมตัว</span></h2>
+  <div class="acc acc-v"></div>
+  <div class="goal-grid">
+    <div class="goal-box cp">
+      <h3 style="color:#a78bfa;">🎯 มีเป้าหมายชัดแล้ว</h3>
+      <ul>
+        <li>✅ ไม่ต้องสมัครหลายที่ — <strong>พุ่งได้เลย</strong></li>
+        <li>✅ เก็บผลงานตรงกับคณะที่เล็งไว้</li>
+        <li>✅ SOP เขียนได้ชัดเจนและมีพลัง</li>
+        <li>✅ ประหยัดเวลา ประหยัดพลังงาน</li>
       </ul>
     </div>
-    <div>
-      <p style="font-size:0.8rem;opacity:0.55;margin-bottom:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">❌ AI ทำแทนไม่ได้</p>
-      <ul class="check-list">
-        <li class="check-dont"><span class="check-icon">❤️</span><span>เล่าประสบการณ์จริงของคุณ</span></li>
-        <li class="check-dont"><span class="check-icon">😰</span><span>แสดงหยาดเหงื่อและความพยายาม</span></li>
-        <li class="check-dont"><span class="check-icon">⚠️</span><span>หลีกเลี่ยง AI Detector ของมหาวิทยาลัย</span></li>
+    <div class="goal-box cd">
+      <h3 style="opacity:.75;">🔍 ยังไม่มีเป้าหมาย</h3>
+      <ul>
+        <li style="opacity:.7;">💛 ก็ไม่ผิด — เริ่มสำรวจตัวเองได้เลย</li>
+        <li style="opacity:.7;">💛 เก็บผลงานหลากหลาย ค่อยเลือกทีหลัง</li>
+        <li style="opacity:.7;">💛 ลองถาม AI ช่วยค้นหาสิ่งที่ชอบ</li>
+        <li style="opacity:.7;">💛 เป้าหมายค่อย ๆ ชัดขึ้นจากประสบการณ์</li>
       </ul>
     </div>
   </div>
+  <p class="caption" style="margin-top:14px;font-size:.8rem;">ยิ่งรู้จักตัวเองเร็ว ยิ่งมีเวลาเตรียมตัวได้ลึกกว่า</p>
 </div>
 
-<!-- ── 8 PROMPT TEMPLATE ── -->
-<div class="slide phase-2" data-phase="2">
-  <div class="phase-badge badge-p2">Phase 2 · บรรยาย</div>
-  <div class="lecture-tag">📖 5 นาที</div>
-  <h2 class="slide-title">🔑 สูตรลับสั่ง AI<br><span class="hl-orange" style="font-size:0.7em;font-weight:400;">แจกฟรี — เอาไปใช้ในกิจกรรมได้เลย</span></h2>
-  <div class="divider div-orange"></div>
-  <div class="prompt-box">
-    <div class="label">📋 Prompt Template · วางโครงร่าง SOP จากข้อมูลดิบ</div>
-    <p>
-      "ฉันกำลังเตรียมตัวเข้าคณะ <span class="bracket">[ชื่อคณะ]</span> มหาวิทยาลัย <span class="bracket">[ชื่อมหาลัย]</span><br>
-      1. แรงบันดาลใจ: <span class="bracket">[เรื่องเล่าสั้น ๆ ที่เพิ่งแชร์กับเพื่อน]</span><br>
-      2. กิจกรรมที่ทำ: <span class="bracket">[ค่าย/โครงงาน/เกียรติบัตร]</span><br>
-      3. เป้าหมายอนาคต: <span class="bracket">[เรียนจบอยากทำอะไร]</span><br><br>
-      ช่วยวาง <strong>Outline SOP 4 ย่อหน้า</strong> ใช้เทคนิค Show, Don't Tell
-      <strong>ยังไม่ต้องเขียนเนื้อหาเต็ม</strong>"
-    </p>
+<!-- 5 · 4 BLOCKS -->
+<div class="s bg1">
+  <h2 class="title">4 บล็อก<br><span class="vp">ประกอบร่าง SOP ให้ปัง</span></h2>
+  <div class="acc acc-v"></div>
+  <div class="grid g4" style="max-width:920px;">
+    <div class="card cp"><div class="card-n">1</div><div class="card-i">✨</div><h3>แรงบันดาลใจ</h3><p>เรื่องเล่าที่จุดประกายให้เดินเส้นทางนี้</p></div>
+    <div class="card cpi"><div class="card-n">2</div><div class="card-i">🏆</div><h3>ต้นทุน / กิจกรรม</h3><p>ค่าย โครงงาน ประสบการณ์ที่สั่งสมมา</p></div>
+    <div class="card cb"><div class="card-n">3</div><div class="card-i">🎯</div><h3>ทำไมต้องที่นี่?</h3><p>จุดเชื่อมระหว่างตัวเองกับคณะที่เลือก</p></div>
+    <div class="card cg"><div class="card-n">4</div><div class="card-i">🚀</div><h3>เป้าหมายอนาคต</h3><p>วิสัยทัศน์หลังเรียนจบ สร้างอะไรให้สังคม</p></div>
   </div>
-  <p style="font-size:0.78rem;opacity:0.45;margin-top:12px;">💡 ป้อนสิ่งที่เพิ่งเล่าให้เพื่อนฟังในกิจกรรมที่ 3 ลงไปเป็น "ข้อมูลดิบ" ได้เลย</p>
 </div>
 
-<!-- ── 9 ACTIVITY 3 ── -->
-<div class="slide activity-slide act-orange" data-phase="2">
-  <div class="activity-badge abadge-orange">🎯 กิจกรรมที่ 3</div>
-  <div class="timer-chip">⏱ 15 นาที</div>
-  <div class="act-no">The Story Behind the Badge</div>
-  <h2 class="act-title">เรื่องเล่า<span class="hl-orange">เบื้องหลัง</span>ผลงาน</h2>
-  <p style="font-size:0.88rem;opacity:0.55;margin-bottom:16px;">หยิบรูปผลงาน / เกียรติบัตรในมือถือ 1 อย่าง → แชร์กับกลุ่ม 3 ข้อ</p>
-  <div class="act-steps">
-    <div class="act-step">
-      <div class="act-step-num num-orange">1</div>
-      <div class="act-step-body">
-        <h4>💥 พังตรงไหน?</h4>
-        <p>ระหว่างทำกิจกรรมนั้น เจออุปสรรคหรือล้มเหลวตรงไหนบ้าง?</p>
+<!-- 6 · SHOW DON'T TELL -->
+<div class="s bg1">
+  <div class="eyebrow">หลักการสำคัญก่อนเขียน SOP</div>
+  <h2 class="title"><span class="vp">Show,</span> Don't Tell</h2>
+  <div class="acc acc-v"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:840px;margin-top:4px;">
+    <div style="background:rgba(185,28,28,.1);border:1px solid rgba(239,68,68,.2);border-radius:16px;padding:26px 28px;text-align:left;">
+      <div style="font-size:.62rem;font-weight:700;letter-spacing:.16em;color:#f87171;text-transform:uppercase;margin-bottom:14px;">❌ แค่บอก</div>
+      <p style="font-size:clamp(1.05rem,1.8vw,1.3rem);line-height:1.75;opacity:.72;">"ผมเป็นคนขยัน<br>มีวินัย และรับผิดชอบ"</p>
+    </div>
+    <div style="background:rgba(6,95,70,.14);border:1px solid rgba(16,185,129,.28);border-radius:16px;padding:26px 28px;text-align:left;">
+      <div style="font-size:.62rem;font-weight:700;letter-spacing:.16em;color:#34d399;text-transform:uppercase;margin-bottom:14px;">✅ เล่าให้เห็นภาพ</div>
+      <p style="font-size:clamp(1.05rem,1.8vw,1.3rem);line-height:1.75;opacity:.9;">"ผมตั้งนาฬิกาตี 5 ทุกวันมาสี่ปี ก่อนไปโรงเรียน ต้องตักน้ำใส่โอ่งให้ครบก่อนถึงจะออกได้"</p>
+    </div>
+  </div>
+  <p style="font-size:.86rem;opacity:.36;margin-top:18px;">กรรมการอ่าน SOP ร้อยฉบับต่อวัน — ฉบับที่จำได้คือฉบับที่ "เห็นภาพ"</p>
+</div>
+
+<!-- 7 · SOP DISCUSSION 1 -->
+<div class="s bg1" style="padding:44px 56px;">
+  <div class="eyebrow" style="margin-bottom:10px;">SOP คู่ที่ 1 · แรงบันดาลใจ &nbsp;—&nbsp; ฝั่งไหนเขียนได้ดีกว่า?</div>
+  <div class="disc-wrap" style="height:340px;">
+    <div class="disc-side disc-side-a">
+      <div class="disc-label">A</div>
+      <div class="disc-text">
+        "ผมสนใจด้านการแพทย์มาตั้งแต่เด็ก เพราะครูแนะแนวบอกว่าผลการเรียนผมดีพอที่จะลองสมัคร และครอบครัวก็อยากให้มีอาชีพที่มั่นคงในอนาคต"
       </div>
     </div>
-    <div class="act-step">
-      <div class="act-step-num num-orange">2</div>
-      <div class="act-step-body">
-        <h4>🔧 แก้ยังไง?</h4>
-        <p>คุณจัดการกับปัญหานั้นอย่างไร? ใครช่วย? ตัดสินใจอะไรบ้าง?</p>
-      </div>
-    </div>
-    <div class="act-step">
-      <div class="act-step-num num-orange">3</div>
-      <div class="act-step-body">
-        <h4>💡 ได้เรียนรู้อะไร?</h4>
-        <p>บทเรียนจากครั้งนั้นเปลี่ยนวิธีคิดหรือทิศทางชีวิตอย่างไร?</p>
+    <div class="disc-divider"></div>
+    <div class="disc-side disc-side-b">
+      <div class="disc-label">B</div>
+      <div class="disc-text">
+        "ตอนอยู่ ม.2 ยายป่วยหนักกลางดึก ไม่มีรถ — พ่อต้องโทรขอรถกระบะเพื่อนบ้านพาไปโรงพยาบาลมุกดาหารที่อยู่ห่างออกไปสี่สิบกิโล ผมนั่งประคองยายอยู่บนพื้นรถตลอดทาง คืนนั้นผมรู้ว่าอยากเป็นหมอ ไม่ใช่เพราะเกรด แต่เพราะไม่อยากให้ใครรู้สึกแบบคืนนั้นอีกเลย"
       </div>
     </div>
   </div>
-  <div class="act-highlight act-highlight-orange" style="margin-top:12px;">
-    🤖 <strong>ต่อด้วย AI:</strong> นำสิ่งที่เพิ่งเล่าป้อนเข้า Prompt ในมือถือ → ให้ AI สกัดเป็นโครงร่าง SOP สด ๆ ในห้องเลย
+  <p class="disc-q">💬 คิดว่าฝั่งไหนน่าสนใจกว่า? &nbsp;·&nbsp; เพราะอะไร?</p>
+</div>
+
+<!-- 8 · SOP DISCUSSION 2 -->
+<div class="s bg1" style="padding:44px 56px;">
+  <div class="eyebrow" style="margin-bottom:10px;">SOP คู่ที่ 2 · ต้นทุน / กิจกรรม &nbsp;—&nbsp; ฝั่งไหนเขียนได้ดีกว่า?</div>
+  <div class="disc-wrap" style="height:340px;">
+    <div class="disc-side disc-side-a">
+      <div class="disc-label">A</div>
+      <div class="disc-text">
+        "ผมมีความขยันหมั่นเพียร มีวินัยในตัวเอง และสามารถทำงานร่วมกับผู้อื่นได้เป็นอย่างดี ซึ่งพิสูจน์ได้จากผลการเรียนและกิจกรรมต่าง ๆ ที่ผ่านมา"
+      </div>
+    </div>
+    <div class="disc-divider"></div>
+    <div class="disc-side disc-side-b">
+      <div class="disc-label">B</div>
+      <div class="disc-text">
+        "ค่ายแพทย์ที่ขอนแก่น มีกิจกรรมวัดความดันเลือด ทุกคนในกลุ่มมือสั่น แต่มือผมนิ่ง เพราะตั้งแต่ ป.5 ผมช่วยพ่อฉีดยาให้หมูทุกเดือน วันนั้นผมถึงได้รู้ว่า สิ่งที่โตมากับมัน บางทีมันคือจุดแข็งที่ไม่มีในหนังสือเรียน"
+      </div>
+    </div>
+  </div>
+  <p class="disc-q">💬 คิดว่าฝั่งไหนน่าสนใจกว่า? &nbsp;·&nbsp; เพราะอะไร?</p>
+</div>
+
+<!-- 9 · SOP DISCUSSION 3 -->
+<div class="s bg1" style="padding:44px 56px;">
+  <div class="eyebrow" style="margin-bottom:10px;">SOP คู่ที่ 3 · เป้าหมายอนาคต &nbsp;—&nbsp; ฝั่งไหนเขียนได้ดีกว่า?</div>
+  <div class="disc-wrap" style="height:340px;">
+    <div class="disc-side disc-side-a">
+      <div class="disc-label">A</div>
+      <div class="disc-text">
+        "หลังจบการศึกษา ผมตั้งใจจะนำความรู้กลับมาพัฒนาชุมชนและประเทศชาติ เพื่อให้สังคมไทยมีคุณภาพชีวิตที่ดีขึ้นในทุกมิติ"
+      </div>
+    </div>
+    <div class="disc-divider"></div>
+    <div class="disc-side disc-side-b">
+      <div class="disc-label">B</div>
+      <div class="disc-text">
+        "ผมอยากเปิดคลินิกที่อำเภอดอนตาล เพราะตอนนี้คนแก่ในหมู่บ้านต้องตื่นตี 4 คิวรถสองแถวเพื่อไปโรงพยาบาลมุกดาหาร บางคนไม่ไปเพราะกลัวเสียค่าเดินทาง — ถ้าผมกลับมาได้ อย่างน้อยยายผมจะได้ไม่ต้องนั่งรถร้อน ๆ คนเดียวอีก"
+      </div>
+    </div>
+  </div>
+  <p class="disc-q">💬 คิดว่าฝั่งไหนน่าสนใจกว่า? &nbsp;·&nbsp; เพราะอะไร?</p>
+</div>
+
+<!-- 9 · CHECKLIST -->
+<div class="s bg1">
+  <h2 class="title">✅ Checklist<br><span style="font-weight:300;font-size:.7em;opacity:.6;">ก่อนกด Submit</span></h2>
+  <div class="acc acc-v"></div>
+  <div class="grid g2" style="max-width:780px;">
+    <ul class="cklist">
+      <li class="li-g"><span class="li-i">✅</span><span><strong>ความยาวไม่เกินกำหนด</strong> — กระชับ ไม่ซ้ำซาก</span></li>
+      <li class="li-g"><span class="li-i">✅</span><span><strong>ไม่มีชื่อมหาลัยอื่นหลงเหลือ</strong> — ระวัง Copy-Paste</span></li>
+      <li class="li-g"><span class="li-i">✅</span><span><strong>ให้คนอื่นอ่านแล้ว Feedback</strong> — อย่างน้อย 1 คน</span></li>
+    </ul>
+    <ul class="cklist">
+      <li class="li-r"><span class="li-i">❌</span><span><strong>ยังมีประโยค Generic</strong> — "ผมรักการเรียน"</span></li>
+      <li class="li-r"><span class="li-i">❌</span><span><strong>AI เขียนทั้งหมด</strong> — ต้องมีเสียงของตัวเอง</span></li>
+      <li class="li-r"><span class="li-i">❌</span><span><strong>Grammar ผิด</strong> — ใช้ AI ช่วยตรวจได้</span></li>
+    </ul>
   </div>
 </div>
 
-<!-- ── 10 DESIGN MAGIC ── -->
-<div class="slide phase-2" data-phase="2">
-  <div class="phase-badge badge-p2">Phase 2 · บรรยายสรุป</div>
-  <div class="lecture-tag">📖 5 นาที</div>
-  <h2 class="slide-title">AI ตกแต่ง: <span class="hl-orange">คุม Mood &amp; Tone</span><br><span style="font-weight:300;font-size:0.7em;opacity:0.7;">พอร์ตให้เข้าตา</span></h2>
-  <div class="divider div-orange"></div>
-  <div class="step-row">
-    <div class="step-block">
-      <div class="step-icon">🎨</div>
-      <h4>Canva AI</h4>
-      <p>Magic Design สร้างเลย์เอาต์จากธีม</p>
+<!-- ══════════ PHASE 2 ══════════ -->
+
+<!-- 10 · P2 INTRO -->
+<div class="s bg2">
+  <div class="pbig">2</div>
+  <div class="eyebrow">Phase 2</div>
+  <h1 class="hero"><span class="vo">AI</span><br>ผู้ช่วยทำพอร์ต</h1>
+  <div class="acc acc-o"></div>
+  <p class="body"><strong class="vo">Co-Pilot</strong> — ไม่ใช่ Ghostwriter</p>
+</div>
+
+<!-- 11 · AI MINDSET -->
+<div class="s bg2">
+  <h2 class="title">AI ช่วยได้แค่ไหน?</h2>
+  <div class="acc acc-o"></div>
+  <div class="grid g2" style="max-width:780px;">
+    <div>
+      <p style="font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.42;margin-bottom:9px;">✅ AI ช่วยได้</p>
+      <ul class="cklist">
+        <li class="li-g"><span class="li-i">🧠</span><span>Brainstorm ไอเดียและโครงร่าง</span></li>
+        <li class="li-g"><span class="li-i">✍️</span><span>เรียบเรียงและขัดเกลาภาษา</span></li>
+        <li class="li-g"><span class="li-i">🔍</span><span>ตรวจ Grammar &amp; Flow</span></li>
+      </ul>
     </div>
-    <div class="step-arrow">→</div>
-    <div class="step-block">
-      <div class="step-icon">🖼️</div>
-      <h4>Adobe Firefly</h4>
-      <p>สร้าง Background &amp; Asset ตาม Style</p>
+    <div>
+      <p style="font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.42;margin-bottom:9px;">❌ AI ทำแทนไม่ได้</p>
+      <ul class="cklist">
+        <li class="li-r"><span class="li-i">❤️</span><span>เล่าประสบการณ์จริงของคุณ</span></li>
+        <li class="li-r"><span class="li-i">😰</span><span>แสดงหยาดเหงื่อและความพยายาม</span></li>
+        <li class="li-r"><span class="li-i">⚠️</span><span>ผ่าน AI Detector ของมหาวิทยาลัย</span></li>
+      </ul>
     </div>
-    <div class="step-arrow">→</div>
-    <div class="step-block">
-      <div class="step-icon">🌈</div>
-      <h4>Coolors</h4>
-      <p>Color Palette จาก Keyword ของคณะ</p>
-    </div>
-    <div class="step-arrow">→</div>
-    <div class="step-block">
-      <div class="step-icon">✍️</div>
-      <h4>ChatGPT / Claude</h4>
-      <p>ถาม Mood &amp; Tone เหมาะกับคณะ</p>
-    </div>
-  </div>
-  <div style="margin-top:20px;padding:12px 22px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.22);border-radius:12px;max-width:820px;width:100%;">
-    <p style="font-size:0.88rem;color:#fde68a;">💡 ลองถาม: "คณะแพทย์ควรใช้ Tone อะไร?" → AI แนะนำสี ฟอนต์ น้ำหนักได้ทันที</p>
   </div>
 </div>
 
-<!-- ═══════════ PHASE 3 ═══════════ -->
-
-<!-- ── 11 Q&A ── -->
-<div class="slide phase-3" data-phase="3">
-  <div class="phase-badge badge-p3">Phase 3</div>
-  <h1 class="main-title" style="font-size:clamp(2rem,4vw,3.2rem);">💬 เคลียร์ทุกข้อสงสัย</h1>
-  <div class="divider div-green"></div>
-  <p class="subtitle">เปิดเวทีให้ถาม — โดยเฉพาะข้อสงสัยจากการลองใช้ AI เมื่อกี้</p>
-  <div class="pill-row" style="margin-top:28px;">
-    <span class="pill pill-purple">📝 SOP เขียนยังไง?</span>
-    <span class="pill pill-orange">🤖 AI ใช้ฟรีได้ที่ไหน?</span>
-    <span class="pill pill-green">🎨 พอร์ตต้องมีอะไรบ้าง?</span>
-    <span class="pill pill-blue">📅 เริ่มเตรียมเมื่อไหร่?</span>
+<!-- 12 · AI CAUTION -->
+<div class="s bg2">
+  <div class="eyebrow">⚠️ ข้อควรระวัง</div>
+  <h2 class="title">ใช้ AI ผิดวิธี<br><span class="vo" style="font-weight:300;font-size:.72em;">มีโทษมากกว่าประโยชน์</span></h2>
+  <div class="acc acc-o"></div>
+  <div class="grid g3" style="max-width:840px;">
+    <div class="card cr"><div class="card-i">🖼️</div><h3 style="color:#fca5a5;">ภาพลิขสิทธิ์ / รูปคณะ</h3><p>ห้าม Gen AI เลียนแบบ logo หรือภาพสถาบัน ถือเป็นละเมิดลิขสิทธิ์</p></div>
+    <div class="card cr"><div class="card-i">🤖</div><h3 style="color:#fca5a5;">ภาษา "หุ่นยนต์"</h3><p>ประโยคที่ formal เกิน ซ้ำคำ ไม่มีอารมณ์ — กรรมการจับได้ทันที</p></div>
+    <div class="card cr"><div class="card-i">🎭</div><h3 style="color:#fca5a5;">ตัวตนหายไป</h3><p>พึ่ง AI เขียนทั้งหมดจนไม่มีเสียงของตัวเอง — SOP ฟังดูเหมือนทุกคน</p></div>
+    <div class="card cr"><div class="card-i">🔍</div><h3 style="color:#fca5a5;">AI Detector</h3><p>มหาวิทยาลัยหลายแห่งใช้ Turnitin AI Detection และ GPTZero ตรวจ</p></div>
+    <div class="card cr"><div class="card-i">🌀</div><h3 style="color:#fca5a5;">AI Hallucination</h3><p>AI อาจสร้างข้อมูล ชื่อ หรือสถิติที่ไม่มีจริง — ต้องตรวจสอบทุกครั้ง</p></div>
+    <div class="card cr"><div class="card-i">🔒</div><h3 style="color:#fca5a5;">ความเป็นส่วนตัว</h3><p>ระวังป้อนข้อมูลส่วนตัวอ่อนไหวเข้า AI สาธารณะ</p></div>
   </div>
 </div>
 
-<!-- ── 12 WRAP UP ── -->
-<div class="slide phase-3" data-phase="3">
-  <div class="phase-badge badge-p3">Phase 3 · Wrap Up</div>
-  <div class="slide-tag">✨ Take Away</div>
-  <div class="big-quote">
+<!-- 13 · AI COMPARISON -->
+<div class="s bg2">
+  <h2 class="title">เลือก AI ตัวไหน?</h2>
+  <div class="acc acc-o"></div>
+  <div class="ait">
+    <div class="aic" style="background:rgba(16,163,127,.14);border:1px solid rgba(16,163,127,.28);">
+      <div class="aih"><div class="ail" style="background:rgba(16,163,127,.28);">🤖</div><h3 style="color:#6ee7b7;">ChatGPT</h3></div>
+      <span class="aitag" style="background:rgba(16,163,127,.18);color:#6ee7b7;">ฟรี / Pro</span>
+      <ul class="aipts"><li>Brainstorm ไอเดียได้ดีมาก</li><li>Creative writing เก่ง</li><li>ใช้ง่าย เหมาะมือใหม่</li><li>ข้อมูลอาจไม่ Real-time</li></ul>
+    </div>
+    <div class="aic" style="background:rgba(66,133,244,.14);border:1px solid rgba(66,133,244,.28);">
+      <div class="aih"><div class="ail" style="background:rgba(66,133,244,.28);">✨</div><h3 style="color:#93c5fd;">Gemini</h3></div>
+      <span class="aitag" style="background:rgba(66,133,244,.18);color:#93c5fd;">ฟรี · ใน Google</span>
+      <ul class="aipts"><li>ค้นข้อมูล Real-time ได้</li><li>เชื่อม Google Docs/Drive</li><li>ดีสำหรับค้นข้อมูลคณะ</li><li>Creative สู้ ChatGPT ยาก</li></ul>
+    </div>
+    <div class="aic" style="background:rgba(201,120,75,.14);border:1px solid rgba(201,120,75,.28);">
+      <div class="aih"><div class="ail" style="background:rgba(201,120,75,.28);">🧠</div><h3 style="color:#fdba74;">Claude</h3></div>
+      <span class="aitag" style="background:rgba(201,120,75,.18);color:#fdba74;">ฟรี / Pro</span>
+      <ul class="aipts"><li>เขียนยาว เรียบเรียงได้ดี</li><li>Feedback ตรงจุด</li><li>เก่ง Editing &amp; Analysis</li><li>เหมาะ Revise SOP Draft</li></ul>
+    </div>
+  </div>
+  <p class="caption">💡 ใช้หลายตัวร่วมกัน — Gemini หาข้อมูล · ChatGPT Draft · Claude ขัดเกลา</p>
+</div>
+
+<!-- 14 · PROMPT -->
+<div class="s bg2">
+  <h2 class="title">✍️ ทดลอง Prompt<br><span class="vo" style="font-weight:300;font-size:.7em;">วางโครงร่าง SOP จากข้อมูลดิบ</span></h2>
+  <div class="acc acc-o"></div>
+  <div class="pbox">
+    <div class="plabel">Prompt · วางโครงร่าง SOP จากข้อมูลดิบ</div>
+    <p>"ฉันกำลังเตรียมตัวเข้าคณะ <span class="pbr">[ชื่อคณะ]</span> มหาวิทยาลัย <span class="pbr">[ชื่อมหาลัย]</span><br>
+    1. แรงบันดาลใจ: <span class="pbr">[เรื่องเล่าสั้น ๆ]</span><br>
+    2. กิจกรรมที่ทำ: <span class="pbr">[ค่าย/โครงงาน/เกียรติบัตร]</span><br>
+    3. เป้าหมายอนาคต: <span class="pbr">[เรียนจบอยากทำอะไร]</span><br><br>
+    ช่วยวาง <strong>Outline SOP 4 ย่อหน้า</strong> ใช้เทคนิค Show, Don't Tell <strong>ยังไม่ต้องเขียนเนื้อหาเต็ม</strong>"</p>
+  </div>
+</div>
+
+<!-- 16 · MORE PROMPTS -->
+<div class="s bg2">
+  <h2 class="title">Prompt เพิ่มเติม</h2>
+  <div class="acc acc-o"></div>
+  <div class="grid g2" style="max-width:780px;">
+    <div class="card co"><div class="card-i">💼</div><h3>ตั้งชื่อโปรเจกต์</h3><p style="font-family:monospace;font-size:.75rem;color:#fdba74;margin-top:4px;">"ตั้งชื่อโปรเจกต์ [อธิบาย] ให้เป็นมืออาชีพ 5 ตัวเลือก"</p></div>
+    <div class="card co"><div class="card-i">🔎</div><h3>ตรวจ SOP Draft</h3><p style="font-family:monospace;font-size:.75rem;color:#fdba74;margin-top:4px;">"ตรวจ SOP นี้ [วาง SOP] ชี้จุดที่ดู 'หุ่นยนต์เกินไป'"</p></div>
+    <div class="card co"><div class="card-i">🎨</div><h3>Mood &amp; Tone พอร์ต</h3><p style="font-family:monospace;font-size:.75rem;color:#fdba74;margin-top:4px;">"แนะนำ Mood &amp; Tone + ชุดสีสำหรับพอร์ตคณะ [ชื่อ]"</p></div>
+    <div class="card co"><div class="card-i">📝</div><h3>Hook ย่อหน้าแรก</h3><p style="font-family:monospace;font-size:.75rem;color:#fdba74;margin-top:4px;">"เขียนประโยคเปิด SOP จากเหตุการณ์นี้ [เล่า 2–3 บรรทัด]"</p></div>
+  </div>
+</div>
+
+<!-- 17 · ACTIVITY 3 -->
+<div class="s" style="background:radial-gradient(ellipse 100% 60% at 50% 0%,rgba(194,65,12,.18),transparent 65%),#080810;">
+  <div class="eyebrow" style="color:#f97316;opacity:.8;">Activity</div>
+  <h2 class="title">The Story<br><span class="vo">Behind the Badge</span></h2>
+  <div class="acc acc-o"></div>
+  <p style="font-size:.86rem;opacity:.48;margin-bottom:14px;">หยิบรูปผลงาน / เกียรติบัตรในมือถือ 1 อย่าง → แชร์กับกลุ่ม</p>
+  <div class="act-wrap">
+    <div class="act-row"><div class="act-num an-o">1</div><div><h4>💥 พังตรงไหน?</h4><p>ระหว่างทำกิจกรรมนั้น เจออุปสรรคหรือล้มเหลวตรงไหน?</p></div></div>
+    <div class="act-row"><div class="act-num an-o">2</div><div><h4>🔧 แก้ยังไง?</h4><p>จัดการกับปัญหาอย่างไร? ตัดสินใจอะไรบ้าง?</p></div></div>
+    <div class="act-row"><div class="act-num an-o">3</div><div><h4>💡 ได้เรียนรู้อะไร?</h4><p>บทเรียนนั้นเปลี่ยนวิธีคิดหรือทิศทางชีวิตอย่างไร?</p></div></div>
+    <div class="act-row"><div class="act-num an-o">4</div><div><h4>🤖 ป้อนเข้า AI</h4><p>นำสิ่งที่เล่าใส่เข้า Prompt → ให้ AI สกัดเป็นโครงร่าง SOP</p></div></div>
+  </div>
+</div>
+
+<!-- ══════════ PHASE 3 ══════════ -->
+
+<!-- 20 · Q&A -->
+<div class="s bg3">
+  <h1 class="hero">💬 ถาม<br><span class="vg">ได้เลย</span></h1>
+  <div class="acc acc-g"></div>
+  <div class="pills">
+    <span class="pill pill-p">📝 SOP เขียนยังไง?</span>
+    <span class="pill pill-o">🤖 AI ใช้ฟรีได้ที่ไหน?</span>
+    <span class="pill pill-g">🎨 พอร์ตต้องมีอะไร?</span>
+    <span class="pill pill-b">📅 เริ่มเตรียมเมื่อไหร่?</span>
+  </div>
+</div>
+
+<!-- 22 · WRAP UP -->
+<div class="s bg3">
+  <div class="eyebrow">Take Away</div>
+  <div class="bq">
     "พอร์ตที่ดีที่สุด<br>
-    คือพอร์ตที่ <span class="hl-green">เล่าเรื่องของคุณ</span><br>
+    คือพอร์ตที่ <span class="vg">เล่าเรื่องของเรา</span><br>
     ได้จริงที่สุด"
   </div>
-  <div class="divider div-green" style="margin-top:28px;"></div>
-  <p class="subtitle" style="margin-bottom:22px;">
-    AI ช่วยให้พอร์ตสวยและภาษาสละสลวยได้<br>
-    แต่ <strong class="hl-yellow">AI เล่า 'หัวใจและหยาดเหงื่อ' ของคุณแทนไม่ได้</strong>
-  </p>
-  <div class="pill-row">
-    <span class="pill pill-purple">📥 สแกน QR รับ Prompt ฟรี</span>
-    <span class="pill pill-green">🙌 โชคดีทุกคน!</span>
+  <div class="acc acc-g" style="margin-top:26px;"></div>
+  <p class="body">AI ช่วยให้พอร์ตสวยและภาษาสละสลวยได้<br>แต่ <strong class="vy">AI เล่า 'ประสบการณ์' ของเราแทนไม่ได้</strong></p>
+  <div class="pills" style="margin-top:18px;">
+    <span class="pill pill-p">📥 สแกน QR รับ Prompt ฟรี</span>
+    <span class="pill pill-g">🙌 โชคดีทุกคน!</span>
   </div>
 </div>
 
-</div><!-- /slideshow -->
-
-<!-- PROGRESS BAR -->
-<div id="progress-bar-outer">
-  <div id="progress-bar-p1" style="width:0"></div>
-  <div id="progress-bar-p2" style="width:0;display:none"></div>
-  <div id="progress-bar-p3" style="width:0;display:none"></div>
 </div>
 
-<!-- PHASE DOTS -->
-<div id="phase-dots">
-  <div class="pdot pdot-p1 active" title="Phase 1: SOP"></div>
-  <div class="pdot pdot-p2" title="Phase 2: AI"></div>
-  <div class="pdot pdot-p3" title="Phase 3: Q&A"></div>
+<!-- Progress -->
+<div id="pbo">
+  <div id="pb1" style="width:0"></div>
+  <div id="pb2" style="width:0;display:none"></div>
+  <div id="pb3" style="width:0;display:none"></div>
 </div>
-
-<!-- NAV -->
+<div id="dots">
+  <div class="dot d1 on"></div>
+  <div class="dot d2"></div>
+  <div class="dot d3"></div>
+</div>
 <div id="nav">
-  <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled title="ก่อนหน้า (←)">◀</button>
-  <span id="slide-counter">1 / 13</span>
-  <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)" title="ถัดไป (→)">▶</button>
-  <button id="fs-btn" onclick="toggleFullscreen()" title="เต็มจอ (F)">⛶</button>
+  <button class="nb" id="pb" onclick="go(-1)" disabled>◀</button>
+  <span id="ctr">1 / 23</span>
+  <button class="nb" id="nb" onclick="go(1)">▶</button>
+  <button id="fsb" onclick="fs()" title="F">⛶</button>
 </div>
 
 <script>
-  const slides = document.querySelectorAll('.slide');
-  const total = slides.length;
-  let current = 0, animating = false;
+  const ss=document.querySelectorAll('.s'),n=ss.length;
+  let c=0,busy=false;
+  // Phase 1: 3-10, Phase 2: 11-16 (AI Mindset→Caution→Compare→Prompt→MorePrompts→Activity), Phase 3: 17-18
+  const ph={p1:[3,10],p2:[11,16],p3:[17,18]};
 
-  // Phase 1: slides 2–5, Phase 2: slides 6–10, Phase 3: slides 11–12
-  const phases = { p1:[2,5], p2:[6,10], p3:[11,12] };
-
-  function updateUI() {
-    document.getElementById('slide-counter').textContent = (current+1)+' / '+total;
-    document.getElementById('prevBtn').disabled = current === 0;
-    document.getElementById('nextBtn').disabled = current === total-1;
-
-    const b1=document.getElementById('progress-bar-p1');
-    const b2=document.getElementById('progress-bar-p2');
-    const b3=document.getElementById('progress-bar-p3');
+  function ui(){
+    document.getElementById('ctr').textContent=(c+1)+' / '+n;
+    document.getElementById('pb').disabled=c===0;
+    document.getElementById('nb').disabled=c===n-1;
+    const b1=document.getElementById('pb1'),b2=document.getElementById('pb2'),b3=document.getElementById('pb3');
     [b1,b2,b3].forEach(b=>{b.style.display='none';b.style.width='0';});
-    document.querySelectorAll('.pdot').forEach(d=>d.classList.remove('active'));
-
-    if (current>=phases.p1[0]&&current<=phases.p1[1]) {
-      const pct=((current-phases.p1[0]+1)/(phases.p1[1]-phases.p1[0]+1))*100;
-      b1.style.display='block'; b1.style.width=pct+'%';
-      document.querySelectorAll('.pdot')[0].classList.add('active');
-    } else if (current>=phases.p2[0]&&current<=phases.p2[1]) {
-      const pct=((current-phases.p2[0]+1)/(phases.p2[1]-phases.p2[0]+1))*100;
-      b2.style.display='block'; b2.style.width=pct+'%';
-      document.querySelectorAll('.pdot')[1].classList.add('active');
-    } else if (current>=phases.p3[0]&&current<=phases.p3[1]) {
-      const pct=((current-phases.p3[0]+1)/(phases.p3[1]-phases.p3[0]+1))*100;
-      b3.style.display='block'; b3.style.width=pct+'%';
-      document.querySelectorAll('.pdot')[2].classList.add('active');
-    }
+    document.querySelectorAll('.dot').forEach(d=>d.classList.remove('on'));
+    const dots=document.querySelectorAll('.dot');
+    const chk=(bar,r,dot)=>{if(c>=r[0]&&c<=r[1]){bar.style.display='block';bar.style.width=((c-r[0]+1)/(r[1]-r[0]+1)*100)+'%';dot.classList.add('on');}};
+    chk(b1,ph.p1,dots[0]);chk(b2,ph.p2,dots[1]);chk(b3,ph.p3,dots[2]);
   }
 
-  function changeSlide(dir) {
-    const next = current+dir;
-    if (next<0||next>=total||animating) return;
-    animating = true;
-    slides[current].classList.remove('active');
-    slides[current].classList.add('exit');
+  function go(d){
+    const nx=c+d;
+    if(nx<0||nx>=n||busy)return;
+    busy=true;
+    ss[c].classList.remove('on');ss[c].classList.add('out');
     setTimeout(()=>{
-      slides[current].classList.remove('exit');
-      current = next;
-      slides[current].classList.add('active');
-      updateUI();
-      setTimeout(()=>{ animating=false; },450);
+      ss[c].classList.remove('out');c=nx;ss[c].classList.add('on');
+      ui();setTimeout(()=>{busy=false;},420);
     },200);
   }
 
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(()=>{});
-    } else { document.exitFullscreen(); }
+  function qa(el,ok){
+    document.querySelectorAll('.qopt').forEach(o=>o.style.pointerEvents='none');
+    el.classList.add(ok?'qok':'qno');
+    if(!ok)document.querySelectorAll('.qopt')[1].classList.add('qok');
+    const f=document.getElementById('qf');
+    f.textContent=ok?'✅ ถูกต้อง! ข้อ B เล่าเหตุการณ์ให้เห็นภาพ — นี่คือ Show, Don\'t Tell':'❌ ข้อ A ใช้คำคุณศัพท์ล้วน · ข้อ B เล่าเหตุการณ์จริง';
+    f.style.color=ok?'#34d399':'#fb923c';f.style.opacity='1';
   }
-  document.addEventListener('fullscreenchange',()=>{
-    const btn=document.getElementById('fs-btn');
-    btn.textContent = document.fullscreenElement ? '✕' : '⛶';
-  });
 
+  function fs(){
+    if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen();
+  }
+  document.addEventListener('fullscreenchange',()=>{document.getElementById('fsb').textContent=document.fullscreenElement?'✕':'⛶';});
   document.addEventListener('keydown',e=>{
-    if (e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();changeSlide(1);}
-    if (e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();changeSlide(-1);}
-    if (e.key==='f'||e.key==='F'){toggleFullscreen();}
+    if(['ArrowRight','ArrowDown',' '].includes(e.key)){e.preventDefault();go(1);}
+    if(['ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();go(-1);}
+    if(e.key==='f'||e.key==='F')fs();
   });
-
-  let touchX=0;
-  document.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;});
-  document.addEventListener('touchend',e=>{
-    const dx=touchX-e.changedTouches[0].clientX;
-    if(Math.abs(dx)>50) changeSlide(dx>0?1:-1);
-  });
-
-  updateUI();
+  let tx=0;
+  document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;});
+  document.addEventListener('touchend',e=>{const dx=tx-e.changedTouches[0].clientX;if(Math.abs(dx)>50)go(dx>0?1:-1);});
+  ui();
 </script>
 </body>
 </html>
