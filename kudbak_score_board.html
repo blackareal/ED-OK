@@ -231,6 +231,43 @@ footer {
 .positive { color: #22c55e; }
 .negative { color: #ef4444; }
 .neutral  { color: #334155; }
+
+/* ── VOTE RESULTS TAB ── */
+#view-vote.active { display: flex; gap: 20px; padding: 16px 20px; overflow: hidden; }
+.vote-res-panel { flex: 0 0 52%; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+.vote-poster-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+
+.vr-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.vr-color-lbl { width: 90px; font-size: 0.9rem; font-weight: 800; flex-shrink: 0; }
+.vr-track { flex: 1; background: #050a14; border-radius: 4px; overflow: hidden; height: 32px; }
+.vr-fill {
+  height: 100%; border-radius: 4px; display: flex; align-items: center;
+  padding-left: 8px; font-size: 0.8rem; font-weight: 700;
+  color: rgba(255,255,255,0.85); transition: width .7s ease;
+  min-width: 0;
+}
+.vr-cnt { font-size: 1.2rem; font-weight: 900; min-width: 36px; text-align: right; }
+.vr-total { font-size: 0.65rem; color: #1e3a5f; margin-top: 4px; }
+
+/* poster grid */
+.sb-poster-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+  flex: 1;
+}
+.sb-poster-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 0; }
+.sb-poster-slot-lbl { font-size: 0.65rem; font-weight: 700; }
+.sb-poster-img {
+  width: 100%; flex: 1; min-height: 80px; max-height: 320px;
+  aspect-ratio: 210 / 297;
+  background: #07111f; border: 1px dashed #0f2040;
+  border-radius: 4px; overflow: hidden; position: relative;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.sb-poster-img img { width: 100%; height: 100%; object-fit: contain; }
+.sb-poster-img input[type=file] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.sb-poster-no-img { font-size: 1.8rem; color: #0f2040; }
 </style>
 </head>
 <body>
@@ -250,6 +287,7 @@ footer {
 <div class="tab-nav">
   <button class="tab-btn active" id="tab-btn-scoreboard" onclick="switchTab('scoreboard')">🏆 ภาพรวมคะแนน</button>
   <button class="tab-btn" id="tab-btn-wallet" onclick="switchTab('wallet')">👜 กระเป๋าตัง</button>
+  <button class="tab-btn" id="tab-btn-vote" onclick="switchTab('vote')">🗳️ ผลโหวตโปสเตอร์</button>
 </div>
 
 <!-- ─── VIEW: SCOREBOARD ─── -->
@@ -317,6 +355,26 @@ footer {
   <div class="wallet-grid" id="wallet-grid">
     <div style="color:#1e293b; font-size:.9rem; padding:20px; grid-column:1/-1">กำลังโหลดข้อมูล...</div>
   </div>
+</div>
+
+<!-- ─── VIEW: VOTE RESULTS ─── -->
+<div class="view-pane" id="view-vote">
+
+  <!-- ซ้าย: ผลโหวต -->
+  <div class="vote-res-panel">
+    <div class="panel-title">🗳️ ผลโหวตโปสเตอร์ — การจัดการขยะ</div>
+    <div id="vote-bars">
+      <div style="color:#1e293b; font-size:.9rem;">กำลังโหลด...</div>
+    </div>
+    <div class="vr-total" id="vote-total"></div>
+  </div>
+
+  <!-- ขวา: โปสเตอร์ A4 portrait -->
+  <div class="vote-poster-panel">
+    <div class="panel-title">🖼️ โปสเตอร์นักเรียน <span style="font-size:0.6rem; color:#1e3a5f; font-weight:400;">(คลิกที่รูปเพื่ออัปโหลด)</span></div>
+    <div class="sb-poster-grid" id="sb-poster-grid"><!-- render by JS --></div>
+  </div>
+
 </div>
 
 <!-- ─── TICKER ─── -->
@@ -652,6 +710,7 @@ async function refresh() {
   const s = await fetchRemoteState();
   renderScoreboard(s);
   if (currentTab === 'wallet') renderWallet(s);
+  if (currentTab === 'vote')   renderVoteResults(s);
   document.getElementById('t-updated').textContent =
     'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour12:false });
 }
@@ -674,6 +733,88 @@ function switchTab(name) {
   document.getElementById('view-' + name).classList.add('active');
   document.getElementById('tab-btn-' + name).classList.add('active');
   if (name === 'wallet') renderWallet(remoteState);
+  if (name === 'vote')   renderVoteResults(remoteState);
+}
+
+// ═══════════════════════════════════════════════════════
+//  VOTE RESULTS + POSTERS
+// ═══════════════════════════════════════════════════════
+let sbPosterImages = {};
+
+function loadSbPosters() {
+  try { sbPosterImages = JSON.parse(localStorage.getItem('campPosterImages') || '{}'); }
+  catch(e) {}
+}
+function saveSbPosters() {
+  localStorage.setItem('campPosterImages', JSON.stringify(sbPosterImages));
+}
+
+function renderVoteResults(s) {
+  s = s || remoteState;
+  const votes = s.votes ?? [];
+
+  // count per color
+  const counts = {};
+  COLOR_DEFS.forEach(c => counts[c.id] = 0);
+  votes.forEach(v => { if (v.votedFor in counts) counts[v.votedFor]++; });
+
+  const total = votes.length;
+  const maxCount = Math.max(...Object.values(counts), 1);
+
+  const barsEl = document.getElementById('vote-bars');
+  if (barsEl) {
+    const sorted = [...COLOR_DEFS].sort((a, b) => counts[b.id] - counts[a.id]);
+    barsEl.innerHTML = sorted.map(c => {
+      const cnt = counts[c.id];
+      const pct = maxCount > 0 ? Math.round(cnt / maxCount * 100) : 0;
+      return `
+        <div class="vr-row">
+          <div class="vr-color-lbl" style="color:${c.hex}">${c.emoji} ${c.label}</div>
+          <div class="vr-track">
+            <div class="vr-fill" style="width:${pct}%; background:${c.hex}44; border-right: 2px solid ${c.hex}">
+              ${cnt > 0 ? cnt + ' คะแนน' : ''}
+            </div>
+          </div>
+          <div class="vr-cnt" style="color:${c.hex}">${cnt}</div>
+        </div>`;
+    }).join('');
+  }
+
+  const totalEl = document.getElementById('vote-total');
+  if (totalEl) totalEl.textContent = `รวม ${total} คะแนน`;
+
+  renderSbPosters();
+}
+
+function renderSbPosters() {
+  loadSbPosters();
+  const grid = document.getElementById('sb-poster-grid');
+  if (!grid) return;
+  grid.innerHTML = COLOR_DEFS.map(c => {
+    const img = sbPosterImages[c.id];
+    return `
+      <div class="sb-poster-slot">
+        <div class="sb-poster-slot-lbl" style="color:${c.hex}">${c.emoji} ${c.label}</div>
+        <div class="sb-poster-img">
+          ${img
+            ? `<img src="${img}" alt="โปสเตอร์ ${c.label}" />`
+            : `<span class="sb-poster-no-img">${c.emoji}</span>`}
+          <input type="file" accept="image/*" onchange="handleSbPosterUpload('${c.id}', this)" title="อัปโหลดโปสเตอร์สี${c.label}" />
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function handleSbPosterUpload(colorId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    sbPosterImages[colorId] = e.target.result;
+    saveSbPosters();
+    renderSbPosters();
+  };
+  reader.readAsDataURL(file);
 }
 
 // ═══════════════════════════════════════════════════════
