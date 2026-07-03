@@ -169,6 +169,89 @@
     header { flex-direction: column; align-items: flex-start; }
   }
 
+  /* ── VOTE TAB ── */
+  #tab-vote { max-width: 100% !important; padding: 0; }
+  .vote-top-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px; background: #1e293b;
+    border-bottom: 1px solid #334155; flex-wrap: wrap;
+  }
+  .vote-color-label { font-size: 0.85rem; color: #94a3b8; white-space: nowrap; }
+  .vote-color-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .vote-color-btn {
+    padding: 8px 14px; border: 2px solid #334155;
+    border-radius: 24px; background: #0f172a;
+    color: #94a3b8; font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+  }
+  .vote-color-btn.selected { background: #1e293b; }
+
+  .vote-poster-bar {
+    display: flex; gap: 12px; padding: 12px 20px;
+    background: #07111f; border-bottom: 1px solid #0f172a;
+    overflow-x: auto; flex-wrap: wrap;
+  }
+  .vote-poster-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .vote-poster-label { font-size: 0.65rem; color: #475569; }
+  .vote-poster-thumb {
+    width: 60px; height: 85px; border: 1px dashed #334155;
+    border-radius: 4px; overflow: hidden;
+    background: #1e293b; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .vote-poster-thumb img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .vote-poster-thumb img.has-img { display: block; }
+  .vote-poster-thumb .upload-hint { font-size: 1.5rem; color: #475569; }
+  .vote-poster-input { display: none; }
+  .vote-poster-name { font-size: 0.6rem; color: #334155; text-align: center; max-width: 60px; }
+
+  .vote-idle-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 60vh; gap: 14px;
+  }
+  .vote-idle-icon { font-size: 4rem; }
+  .vote-idle-text { font-size: 1.3rem; font-weight: 700; color: #334155; }
+  .vote-idle-hint { font-size: 0.9rem; color: #1e3a5f; }
+
+  .vote-btn-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 14px; padding: 14px;
+  }
+  .vote-btn {
+    border: 3px solid #1e293b; border-radius: 16px;
+    background: #0a1628; cursor: pointer;
+    display: flex; flex-direction: column; overflow: hidden;
+    transition: transform .15s, border-color .2s;
+    min-height: 260px;
+  }
+  .vote-btn:hover { border-color: currentColor; }
+  .vote-btn:active { transform: scale(0.96); }
+  .vb-poster {
+    flex: 1; background: #07111f;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .vb-poster img { width: 100%; height: 100%; object-fit: contain; }
+  .vb-no-poster { font-size: 3.5rem; }
+  .vb-label {
+    padding: 16px; font-size: 1.5rem; font-weight: 800;
+    text-align: center; background: #0f172a; letter-spacing: 1px;
+    border-top: 1px solid #1e293b;
+  }
+
+  .vote-success-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(5, 10, 20, 0.96); z-index: 999;
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+  }
+  .vote-success-overlay.show { display: flex; }
+  .vote-success-big { font-size: 6rem; }
+  .vote-success-msg { font-size: 2.2rem; font-weight: 800; color: #22c55e; text-align: center; }
+  .vote-countdown-num { font-size: 4rem; font-weight: 900; color: #1e3a5f; }
+  .vote-next-hint { font-size: 1rem; color: #475569; }
+
   .confirm-box {
     background: #0f172a; border: 1px solid #3b82f6; border-radius: 10px; padding: 16px; margin-top: 16px;
     display: none;
@@ -209,6 +292,7 @@
   <button onclick="showTab('setup')">⚙️ ตั้งค่า</button>
   <button class="active" onclick="showTab('award')">🎖️ บันทึกรางวัล</button>
   <button onclick="showTab('bonus')">⭐ คะแนนพิเศษ</button>
+  <button onclick="showTab('vote')">🗳️ โหวตโปสเตอร์</button>
   <button onclick="showTab('wallets')">👜 กระเป๋าเงิน</button>
   <button onclick="showTab('leaderboard')">🏆 ผลสรุป</button>
   <button onclick="showTab('history')">📋 ประวัติ</button>
@@ -368,6 +452,43 @@
     <div style="margin-top:16px;">
       <button class="btn btn-success" onclick="confirmBonus()">⭐ บันทึกคะแนนพิเศษ</button>
     </div>
+  </div>
+</div>
+
+<!-- TAB: โหวตโปสเตอร์ -->
+<div class="tab" id="tab-vote">
+
+  <!-- ── แถบบน: สต๊าฟเลือกสีที่กำลังโหวต ── -->
+  <div class="vote-top-bar">
+    <span class="vote-color-label">กลุ่มที่กำลังโหวต:</span>
+    <div class="vote-color-btns" id="vote-color-btns"><!-- render by JS --></div>
+    <button class="btn btn-sm" onclick="togglePosterUpload()" style="margin-left:auto; background:#1e3a5f; color:#93c5fd; border:1px solid #3b82f6">🖼️ จัดการโปสเตอร์</button>
+    <button class="btn btn-danger btn-sm" onclick="doResetVotes()">🔄 รีเซ็ตโหวต</button>
+  </div>
+
+  <!-- ── แถบอัปโหลดโปสเตอร์ (ซ่อนไว้) ── -->
+  <div id="vote-poster-bar" class="vote-poster-bar" style="display:none">
+    <!-- render by JS -->
+  </div>
+
+  <!-- ── เนื้อหาหลัก ── -->
+  <div id="vote-main">
+    <div class="vote-idle-screen" id="vote-idle">
+      <div class="vote-idle-icon">🗳️</div>
+      <div class="vote-idle-text">เลือกกลุ่มที่กำลังโหวต</div>
+      <div class="vote-idle-hint">กดปุ่มสีด้านบน (วิทยากรเลือก)</div>
+    </div>
+    <div class="vote-btn-grid" id="vote-btn-grid" style="display:none">
+      <!-- 4 ปุ่มโหวต render by JS -->
+    </div>
+  </div>
+
+  <!-- ── Success overlay ── -->
+  <div class="vote-success-overlay" id="vote-success">
+    <div class="vote-success-big">✅</div>
+    <div class="vote-success-msg" id="vote-success-msg">บันทึกโหวตแล้ว!</div>
+    <div class="vote-countdown-num" id="vote-countdown">3</div>
+    <div class="vote-next-hint">คนถัดไปรอสักครู่...</div>
   </div>
 </div>
 
@@ -995,6 +1116,147 @@ function confirmBonus() {
   renderHistory();
 }
 
+// ======================== VOTE SYSTEM ========================
+let voteActiveColor = null;
+let posterImages    = {};
+let voteCountdownTimer = null;
+
+function loadPosterImages() {
+  try { posterImages = JSON.parse(localStorage.getItem('campPosterImages') || '{}'); }
+  catch(e) {}
+}
+function savePosterImages() {
+  localStorage.setItem('campPosterImages', JSON.stringify(posterImages));
+}
+
+function initVoteTab() {
+  loadPosterImages();
+  renderVoteColorBtns();
+  renderVotePosterBar();
+}
+
+function renderVoteColorBtns() {
+  const c = document.getElementById('vote-color-btns');
+  if (!c) return;
+  c.innerHTML = COLOR_GROUPS.map(g => {
+    const active = voteActiveColor === g.color;
+    return `<button class="vote-color-btn ${active ? 'selected' : ''}"
+      style="${active ? 'border-color:' + g.hex + ';color:' + g.hex : ''}"
+      onclick="selectVoterColor('${g.color}')">${g.emoji} สี${g.color}</button>`;
+  }).join('');
+}
+
+function renderVotePosterBar() {
+  const bar = document.getElementById('vote-poster-bar');
+  if (!bar) return;
+  bar.innerHTML = COLOR_GROUPS.map(g => {
+    const img = posterImages[g.color];
+    return `
+      <div class="vote-poster-item">
+        <div class="vote-poster-label" style="color:${g.hex}">${g.emoji} สี${g.color}</div>
+        <div class="vote-poster-thumb" onclick="triggerPosterInput('${g.color}')">
+          ${img ? `<img src="${img}" class="has-img" />` : `<span class="upload-hint">+</span>`}
+        </div>
+        <input type="file" accept="image/*" class="vote-poster-input"
+          id="poster-input-${g.color}"
+          onchange="handlePosterUpload('${g.color}', this)" />
+        <div class="vote-poster-name">${img ? '✅ มีรูปแล้ว' : 'ยังไม่มีรูป'}</div>
+      </div>`;
+  }).join('');
+}
+
+function triggerPosterInput(color) {
+  document.getElementById('poster-input-' + color)?.click();
+}
+
+function handlePosterUpload(color, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    posterImages[color] = e.target.result;
+    savePosterImages();
+    renderVotePosterBar();
+    if (voteActiveColor) renderVoteBtns();
+  };
+  reader.readAsDataURL(file);
+}
+
+function togglePosterUpload() {
+  const bar = document.getElementById('vote-poster-bar');
+  if (!bar) return;
+  bar.style.display = bar.style.display === 'none' ? 'flex' : 'none';
+}
+
+function selectVoterColor(color) {
+  voteActiveColor = color;
+  renderVoteColorBtns();
+  document.getElementById('vote-idle').style.display = 'none';
+  document.getElementById('vote-btn-grid').style.display = 'grid';
+  renderVoteBtns();
+}
+
+function renderVoteBtns() {
+  const grid = document.getElementById('vote-btn-grid');
+  if (!grid) return;
+  const others = COLOR_GROUPS.filter(g => g.color !== voteActiveColor);
+  grid.innerHTML = others.map(g => {
+    const img = posterImages[g.color];
+    return `
+      <button class="vote-btn" style="border-color:${g.hex}33"
+        onclick="submitVote('${g.color}', this)"
+        onmouseenter="this.style.borderColor='${g.hex}'"
+        onmouseleave="this.style.borderColor='${g.hex}33'">
+        <div class="vb-poster">
+          ${img
+            ? `<img src="${img}" alt="โปสเตอร์สี${g.color}" />`
+            : `<span class="vb-no-poster">${g.emoji}</span>`}
+        </div>
+        <div class="vb-label" style="color:${g.hex}">${g.emoji} สี${g.color}</div>
+      </button>`;
+  }).join('');
+}
+
+async function submitVote(votedFor) {
+  if (!voteActiveColor) return;
+
+  const vote = {
+    id: Date.now() + '',
+    voterColor: voteActiveColor,
+    votedFor,
+    timestamp: new Date().toISOString(),
+  };
+
+  // show success overlay
+  const successEl  = document.getElementById('vote-success');
+  const msgEl      = document.getElementById('vote-success-msg');
+  const countEl    = document.getElementById('vote-countdown');
+  const voted = COLOR_GROUPS.find(g => g.color === votedFor);
+  msgEl.innerHTML  = `โหวตให้ <span style="color:${voted?.hex ?? '#22c55e'}">${voted?.emoji ?? ''} สี${votedFor}</span> แล้ว!`;
+  successEl.classList.add('show');
+
+  let count = 3;
+  countEl.textContent = count;
+  if (voteCountdownTimer) clearInterval(voteCountdownTimer);
+  voteCountdownTimer = setInterval(() => {
+    count--;
+    countEl.textContent = count;
+    if (count <= 0) {
+      clearInterval(voteCountdownTimer);
+      successEl.classList.remove('show');
+    }
+  }, 1000);
+
+  // sync to Sheets
+  apiCall('addVote', { data: vote });
+}
+
+async function doResetVotes() {
+  if (!confirm('รีเซ็ตผลโหวตทั้งหมด? (ลบออกจาก Google Sheets ด้วย)')) return;
+  await apiCall('resetVotes');
+  showToast('🔄 รีเซ็ตโหวตเรียบร้อย');
+}
+
 // ======================== TABS ========================
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1002,11 +1264,12 @@ function showTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   event.target.classList.add('active');
 
-  if (name === 'wallets') refreshWallets();
+  if (name === 'wallets')    refreshWallets();
   if (name === 'leaderboard') refreshLeaderboard();
-  if (name === 'history') renderHistory();
-  if (name === 'award') updatePriceDisplays();
-  if (name === 'bonus') updateBonusPrices();
+  if (name === 'history')    renderHistory();
+  if (name === 'award')      updatePriceDisplays();
+  if (name === 'bonus')      updateBonusPrices();
+  if (name === 'vote')       initVoteTab();
 }
 
 // ======================== INIT ========================
