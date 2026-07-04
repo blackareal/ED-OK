@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scoreboard · ค่ายพัฒนาศักยภาพฯ</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -268,6 +269,49 @@ footer {
 .sb-poster-img img { width: 100%; height: 100%; object-fit: contain; }
 .sb-poster-img input[type=file] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
 .sb-poster-no-img { font-size: 1.8rem; color: #0f2040; }
+
+/* ── SCHEDULE TAB ── */
+#view-schedule.active { display: flex; gap: 20px; align-items: flex-start; padding: 16px 20px; overflow-y: auto; }
+.sched-main { flex: 1; min-width: 0; }
+.sched-qr-col { flex-shrink: 0; width: 172px; }
+
+.sched-grid {
+  display: grid;
+  grid-template-columns: 56px repeat(5, 1fr);
+  gap: 5px;
+}
+.sched-corner { }
+.sched-hdr {
+  background: #050a14; border: 1px solid #0a1628;
+  border-radius: 6px; padding: 7px 4px;
+  font-size: 0.68rem; font-weight: 700; color: #1e3a5f;
+  text-align: center; letter-spacing: 1px; text-transform: uppercase;
+}
+.sched-rnd-lbl {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: #1e3a5f;
+  writing-mode: vertical-lr; text-orientation: mixed;
+  letter-spacing: 2px;
+}
+.sched-cell {
+  background: #07111f; border: 1px solid #0a1e38;
+  border-radius: 8px; padding: 10px 6px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 5px; text-align: center;
+  transition: background .2s;
+}
+.sched-cell:hover { background: #0a1e38; }
+.sched-team-name { font-size: 0.82rem; font-weight: 800; letter-spacing: 0.3px; }
+.sched-vs-dot { font-size: 0.55rem; color: #1e3a5f; }
+
+.qr-wrap {
+  background: white; border-radius: 8px; padding: 8px;
+  display: inline-block; margin-bottom: 8px;
+}
+.qr-url-txt {
+  font-size: 0.58rem; color: #1e3a5f; word-break: break-all;
+  line-height: 1.4;
+}
 </style>
 </head>
 <body>
@@ -288,6 +332,7 @@ footer {
   <button class="tab-btn active" id="tab-btn-scoreboard" onclick="switchTab('scoreboard')">🏆 ภาพรวมคะแนน</button>
   <button class="tab-btn" id="tab-btn-wallet" onclick="switchTab('wallet')">👜 กระเป๋าตัง</button>
   <button class="tab-btn" id="tab-btn-vote" onclick="switchTab('vote')">🗳️ ผลโหวตโปสเตอร์</button>
+  <button class="tab-btn" id="tab-btn-schedule" onclick="switchTab('schedule')">📋 ตารางเข้าฐาน</button>
 </div>
 
 <!-- ─── VIEW: SCOREBOARD ─── -->
@@ -373,6 +418,24 @@ footer {
   <div class="vote-poster-panel">
     <div class="panel-title">🖼️ โปสเตอร์นักเรียน <span style="font-size:0.6rem; color:#1e3a5f; font-weight:400;">(คลิกที่รูปเพื่ออัปโหลด)</span></div>
     <div class="sb-poster-grid" id="sb-poster-grid"><!-- render by JS --></div>
+  </div>
+
+</div>
+
+<!-- ─── VIEW: SCHEDULE ─── -->
+<div class="view-pane" id="view-schedule">
+
+  <!-- ตารางเข้าฐาน -->
+  <div class="sched-main">
+    <div class="panel-title">📋 ตารางเข้าฐาน — ค่ายพัฒนาศักยภาพผู้เรียนฯ</div>
+    <div class="sched-grid" id="sched-grid"><!-- render by JS --></div>
+  </div>
+
+  <!-- QR + URL -->
+  <div class="sched-qr-col">
+    <div class="panel-title">📱 QR เข้าหน้านี้</div>
+    <div class="qr-wrap"><div id="qr-code"></div></div>
+    <div class="qr-url-txt" id="qr-url-txt"></div>
   </div>
 
 </div>
@@ -732,8 +795,9 @@ function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   document.getElementById('tab-btn-' + name).classList.add('active');
-  if (name === 'wallet') renderWallet(remoteState);
-  if (name === 'vote')   renderVoteResults(remoteState);
+  if (name === 'wallet')   renderWallet(remoteState);
+  if (name === 'vote')     renderVoteResults(remoteState);
+  if (name === 'schedule') { renderSchedule(); initQR(); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -904,6 +968,89 @@ function renderWallet(s) {
   }).join('');
 
   grid.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCHEDULE
+// ═══════════════════════════════════════════════════════
+const SCHEDULE = [
+  { round: 1, matchups: [
+    { station: 1, teams: ['เหลือง-A', 'ฟ้า-A'] },
+    { station: 2, teams: ['เหลือง-B', 'แดง-A'] },
+    { station: 3, teams: ['ส้ม-A', 'เขียว-A'] },
+    { station: 4, teams: ['ส้ม-B', 'ฟ้า-B'] },
+    { station: 5, teams: ['แดง-B', 'เขียว-B'] },
+  ]},
+  { round: 2, matchups: [
+    { station: 1, teams: ['เหลือง-A', 'แดง-B'] },
+    { station: 2, teams: ['เหลือง-B', 'ส้ม-A'] },
+    { station: 3, teams: ['ฟ้า-A', 'เขียว-B'] },
+    { station: 4, teams: ['ฟ้า-B', 'เขียว-A'] },
+    { station: 5, teams: ['ส้ม-B', 'แดง-A'] },
+  ]},
+  { round: 3, matchups: [
+    { station: 1, teams: ['เหลือง-A', 'เขียว-A'] },
+    { station: 2, teams: ['เหลือง-B', 'ฟ้า-B'] },
+    { station: 3, teams: ['ฟ้า-A', 'แดง-A'] },
+    { station: 4, teams: ['แดง-B', 'ส้ม-A'] },
+    { station: 5, teams: ['ส้ม-B', 'เขียว-B'] },
+  ]},
+  { round: 4, matchups: [
+    { station: 1, teams: ['เหลือง-A', 'ส้ม-B'] },
+    { station: 2, teams: ['เหลือง-B', 'เขียว-B'] },
+    { station: 3, teams: ['ฟ้า-A', 'ส้ม-A'] },
+    { station: 4, teams: ['แดง-B', 'ฟ้า-B'] },
+    { station: 5, teams: ['เขียว-A', 'แดง-A'] },
+  ]},
+];
+
+function teamDef(teamId) {
+  const colorId = teamId.split('-')[0];
+  return COLOR_DEFS.find(c => c.id === colorId);
+}
+
+function renderSchedule() {
+  const grid = document.getElementById('sched-grid');
+  if (!grid) return;
+
+  let html = '<div class="sched-corner"></div>';
+  for (let s = 1; s <= 5; s++) {
+    html += `<div class="sched-hdr">ฐาน ${s}</div>`;
+  }
+
+  SCHEDULE.forEach(r => {
+    html += `<div class="sched-rnd-lbl">รอบ ${r.round}</div>`;
+    for (let s = 1; s <= 5; s++) {
+      const m = r.matchups.find(x => x.station === s);
+      if (!m) { html += '<div class="sched-cell"></div>'; continue; }
+      const [t1, t2] = m.teams;
+      const c1 = teamDef(t1), c2 = teamDef(t2);
+      html += `
+        <div class="sched-cell">
+          <div class="sched-team-name" style="color:${c1?.hex ?? '#e2e8f0'}">${c1?.emoji ?? ''} ${t1}</div>
+          <div class="sched-vs-dot">⚔️</div>
+          <div class="sched-team-name" style="color:${c2?.hex ?? '#e2e8f0'}">${c2?.emoji ?? ''} ${t2}</div>
+        </div>`;
+    }
+  });
+
+  grid.innerHTML = html;
+}
+
+let qrGenerated = false;
+function initQR() {
+  if (qrGenerated) return;
+  const url = window.location.href.split('?')[0].split('#')[0];
+  const urlEl = document.getElementById('qr-url-txt');
+  const qrEl  = document.getElementById('qr-code');
+  if (urlEl) urlEl.textContent = url;
+  if (qrEl && typeof QRCode !== 'undefined') {
+    qrEl.innerHTML = '';
+    new QRCode(qrEl, { text: url, width: 156, height: 156,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M });
+    qrGenerated = true;
+  }
 }
 
 // ── Init ──────────────────────────────────────────────
