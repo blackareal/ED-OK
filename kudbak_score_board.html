@@ -312,6 +312,37 @@ footer {
   font-size: 0.58rem; color: #1e3a5f; word-break: break-all;
   line-height: 1.4;
 }
+
+/* ── TEAM VIEW ── */
+.view-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+.vtgl-btn {
+  padding: 5px 14px; border: 1px solid #0f2040; border-radius: 20px;
+  background: transparent; color: #334155; font-size: 0.75rem;
+  font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.vtgl-btn.active { background: #0f2547; color: #93c5fd; border-color: #1d4ed8; }
+
+.team-sched-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+}
+.team-col { display: flex; flex-direction: column; gap: 6px; }
+.team-card {
+  background: #07111f; border: 1px solid #0a1e38;
+  border-radius: 8px; padding: 8px 10px;
+}
+.team-card-hdr {
+  font-size: 0.85rem; font-weight: 800; margin-bottom: 6px;
+  padding-bottom: 5px; border-bottom: 1px solid #0a1628;
+}
+.team-card-row {
+  display: flex; align-items: baseline; gap: 5px;
+  padding: 3px 0; border-top: 1px solid #050a14;
+}
+.tcr-rnd  { font-size: 0.6rem; color: #1e3a5f; min-width: 30px; flex-shrink: 0; }
+.tcr-base { font-size: 0.68rem; font-weight: 700; color: #475569; min-width: 32px; flex-shrink: 0; }
+.tcr-name { font-size: 0.62rem; color: #1e3a5f; flex: 1; }
+.tcr-vs   { font-size: 0.55rem; color: #1e293b; flex-shrink: 0; }
+.tcr-opp  { font-size: 0.75rem; font-weight: 800; }
 </style>
 </head>
 <body>
@@ -319,7 +350,7 @@ footer {
 <header>
   <div>
     <div class="camp-name">🏕️ ค่ายพัฒนาศักยภาพผู้เรียนส่งเสริมทักษะกระบวนการเรียนรู้ทางสังคมศึกษา</div>
-    <div class="camp-sub">4 กรกฎาคม 2569 · ห้องประชุมปั้นฝันอัจฉริยะ โรงเรียนกุดบากพัฒนาศึกษา จ.สกลนคร</div>
+    <div class="camp-sub">4 กรกฎาคม 2569 · ห้องประชุมปั้นฝันอัจฉริยะ โรงเรียนกุดบากพัฒนาศึกษา</div>
   </div>
   <div class="clock-wrap">
     <div class="clock" id="clock">--:--:--</div>
@@ -427,8 +458,14 @@ footer {
 
   <!-- ตารางเข้าฐาน -->
   <div class="sched-main">
-    <div class="panel-title">📋 ตารางเข้าฐาน — ค่ายพัฒนาศักยภาพผู้เรียนฯ</div>
-    <div class="sched-grid" id="sched-grid"><!-- render by JS --></div>
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px;">
+      <div class="panel-title" style="margin:0">📋 ตารางเข้าฐาน</div>
+      <div class="view-toggle">
+        <button class="vtgl-btn active" id="vtgl-team" onclick="setSchedView('team')">👥 ตามทีม</button>
+        <button class="vtgl-btn" id="vtgl-station" onclick="setSchedView('station')">🏫 ตามฐาน</button>
+      </div>
+    </div>
+    <div id="sched-grid"><!-- render by JS --></div>
   </div>
 
   <!-- QR + URL -->
@@ -1004,20 +1041,82 @@ const SCHEDULE = [
   ]},
 ];
 
+const STATION_NAMES = [
+  '',
+  'หน้าที่พลเมือง (พี่ไดซ์)',
+  'เศรษฐศาสตร์ (พี่โจ้)',
+  'ประวัติศาสตร์ (พี่หนุ่ม)',
+  'ภูมิศาสตร์ (พี่โจ้จิ)',
+  'ศาสนาฯ (พี่จุ้นจ้าน)',
+];
+const STATION_SHORT = ['','หน้าที่พลเมือง','เศรษฐศาสตร์','ประวัติศาสตร์','ภูมิศาสตร์','ศาสนาฯ'];
+
 function teamDef(teamId) {
   const colorId = teamId.split('-')[0];
   return COLOR_DEFS.find(c => c.id === colorId);
 }
 
+function buildTeamSchedule() {
+  const map = {};
+  SCHEDULE.forEach(r => {
+    r.matchups.forEach(m => {
+      const [t1, t2] = m.teams;
+      if (!map[t1]) map[t1] = [];
+      if (!map[t2]) map[t2] = [];
+      map[t1].push({ round: r.round, station: m.station, opponent: t2 });
+      map[t2].push({ round: r.round, station: m.station, opponent: t1 });
+    });
+  });
+  return map;
+}
+
+let schedView = 'team';
+function setSchedView(v) {
+  schedView = v;
+  document.querySelectorAll('.vtgl-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('vtgl-' + v).classList.add('active');
+  renderSchedule();
+}
+
 function renderSchedule() {
   const grid = document.getElementById('sched-grid');
   if (!grid) return;
+  schedView === 'team' ? renderTeamView(grid) : renderStationView(grid);
+}
 
-  let html = '<div class="sched-corner"></div>';
+function renderTeamView(grid) {
+  const tsched = buildTeamSchedule();
+  let html = '<div class="team-sched-grid">';
+  COLOR_DEFS.forEach(c => {
+    html += '<div class="team-col">';
+    ['A', 'B'].forEach(sub => {
+      const tid = c.id + '-' + sub;
+      const rounds = (tsched[tid] || []).sort((a, b) => a.round - b.round);
+      html += `<div class="team-card" style="border-color:${c.hex}55">
+        <div class="team-card-hdr" style="color:${c.hex}">${c.emoji} ${c.label} ${sub}</div>`;
+      rounds.forEach(r => {
+        const opp = teamDef(r.opponent);
+        html += `<div class="team-card-row">
+          <div class="tcr-rnd">รอบ ${r.round}</div>
+          <div class="tcr-base">ฐาน ${r.station}</div>
+          <div class="tcr-name">${STATION_SHORT[r.station]}</div>
+          <div class="tcr-vs">vs</div>
+          <div class="tcr-opp" style="color:${opp?.hex ?? '#e2e8f0'}">${opp?.emoji ?? ''} ${r.opponent}</div>
+        </div>`;
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function renderStationView(grid) {
+  let html = '<div class="sched-grid"><div class="sched-corner"></div>';
   for (let s = 1; s <= 5; s++) {
-    html += `<div class="sched-hdr">ฐาน ${s}</div>`;
+    html += `<div class="sched-hdr">ฐาน ${s} · ${STATION_SHORT[s]}<br><span style="font-size:0.55rem;color:#1e3a5f;font-weight:400">${STATION_NAMES[s].split('(')[1]?.replace(')','') ?? ''}</span></div>`;
   }
-
   SCHEDULE.forEach(r => {
     html += `<div class="sched-rnd-lbl">รอบ ${r.round}</div>`;
     for (let s = 1; s <= 5; s++) {
@@ -1025,15 +1124,14 @@ function renderSchedule() {
       if (!m) { html += '<div class="sched-cell"></div>'; continue; }
       const [t1, t2] = m.teams;
       const c1 = teamDef(t1), c2 = teamDef(t2);
-      html += `
-        <div class="sched-cell">
-          <div class="sched-team-name" style="color:${c1?.hex ?? '#e2e8f0'}">${c1?.emoji ?? ''} ${t1}</div>
-          <div class="sched-vs-dot">⚔️</div>
-          <div class="sched-team-name" style="color:${c2?.hex ?? '#e2e8f0'}">${c2?.emoji ?? ''} ${t2}</div>
-        </div>`;
+      html += `<div class="sched-cell">
+        <div class="sched-team-name" style="color:${c1?.hex ?? '#e2e8f0'}">${c1?.emoji ?? ''} ${t1}</div>
+        <div class="sched-vs-dot">⚔️</div>
+        <div class="sched-team-name" style="color:${c2?.hex ?? '#e2e8f0'}">${c2?.emoji ?? ''} ${t2}</div>
+      </div>`;
     }
   });
-
+  html += '</div>';
   grid.innerHTML = html;
 }
 
