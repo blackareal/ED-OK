@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ค่ายคณิตศาสตร์ · เต่างอย</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0d0d;
+    color: #fff;
+    font-family: 'Sarabun', sans-serif;
+    padding: 30px 20px 60px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    margin-bottom: 36px;
+  }
+
+  /* Tab */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+
+  .tab {
+    padding: 10px 28px;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid #333;
+    background: #1a1a1a;
+    color: #888;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .tab.active-A { border-color: #e63946; background: #e63946; color: #fff; }
+  .tab.active-B { border-color: #457b9d; background: #457b9d; color: #fff; }
+  .tab.active-N { border-color: #2a9d8f; background: #2a9d8f; color: #fff; }
+  .tab.active-C { border-color: #e9c46a; background: #e9c46a; color: #111; }
+  .tab.active-D { border-color: #a8dadc; background: #a8dadc; color: #111; }
+  .tab.active-S { border-color: #fff; background: #fff; color: #111; }
+
+  /* Schedule timeline */
+  .timeline {
+    max-width: 680px;
+    margin: 0 auto;
+    position: relative;
+    padding-left: 28px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #e63946, #457b9d, #e9c46a, #a8dadc);
+  }
+
+  .tl-item {
+    position: relative;
+    margin-bottom: 28px;
+    background: #111;
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+
+  .tl-dot {
+    position: absolute;
+    left: -24px;
+    top: 20px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid #0d0d0d;
+  }
+
+  .tl-time {
+    font-size: 0.75rem;
+    color: #666;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .tl-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .tl-desc {
+    font-size: 0.9rem;
+    color: #aaa;
+    line-height: 1.6;
+  }
+
+  .tl-badge {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  /* Round 4 panel */
+  .r4-solo {
+    max-width: 680px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .r4-solo .big-icon { font-size: 4rem; margin-bottom: 16px; }
+
+  .r4-desc {
+    background: #111;
+    border: 2px solid #a8dadc;
+    border-radius: 16px;
+    padding: 28px;
+    color: #ccc;
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  .r4-desc strong { color: #a8dadc; }
+
+  /* Numbers grid */
+  .num-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 12px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .num-card {
+    background: #1a1a1a;
+    border: 2px solid #e63946;
+    border-radius: 10px;
+    padding: 14px 8px;
+    text-align: center;
+  }
+
+  .num-card .seq {
+    font-size: 0.6rem;
+    color: #555;
+    margin-bottom: 4px;
+  }
+
+  .num-card .big {
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #e63946;
+  }
+
+  .nums-stats {
+    text-align: center;
+    color: #555;
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+  }
+
+  .nums-stats span { color: #e63946; font-weight: 700; }
+
+  /* Round panels */
+  .round { display: none; }
+  .round.visible { display: block; }
+
+  /* Time badge */
+  .time-badge {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .time-badge .time {
+    display: inline-block;
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 12px 32px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+  }
+
+  .time-badge .label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 4px;
+    letter-spacing: 2px;
+  }
+
+  /* Sides layout */
+  .sides {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 700px) {
+    .sides { grid-template-columns: 1fr; }
+  }
+
+  .side-panel {
+    background: #111;
+    border-radius: 16px;
+    padding: 20px;
+    border: 2px solid #222;
+  }
+
+  .side-panel.redSide { border-color: #e63946; }
+  .side-panel.blueSide { border-color: #457b9d; }
+
+  .side-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #222;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .side-title span { font-size: 0.8rem; font-weight: 400; color: #888; }
+  .redSide .side-title { color: #e63946; }
+  .blueSide .side-title { color: #457b9d; }
+
+  .groups-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .group-card {
+    background: #1a1a1a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border-left: 4px solid #333;
+  }
+
+  .redSide .group-card { border-left-color: #e63946; }
+  .blueSide .group-card { border-left-color: #457b9d; }
+
+  .group-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .num-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .num-chip {
+    background: #252525;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #ddd;
+  }
+
+  .redSide .num-chip { color: #f4a0a6; }
+  .blueSide .num-chip { color: #90c4db; }
+
+  /* switch notice */
+  .switch-notice {
+    text-align: center;
+    margin: 28px auto;
+    max-width: 600px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 14px 20px;
+    color: #aaa;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+  }
+
+  .switch-notice strong { color: #fff; }
+
+  /* Round 3 grid */
+  .r3-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 700px) {
+    .r3-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .r3-card {
+    background: #111;
+    border: 2px solid #e9c46a;
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .r3-card .r3-label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #e9c46a;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .r3-card .num-row { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .r3-card .num-chip {
+    background: #1e1e1e;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #e9c46a;
+  }
+</style>
+</head>
+<body>
+
+<h1>▣ ตารางกลุ่มค่าย</h1>
+<p class="subtitle">โรงเรียนเต่างอยพัฒนศึกษา · ม.ปลาย 90 คน</p>
+
+<div class="tabs" style="flex-wrap:wrap;">
+  <button class="tab active-S" id="tab-sched" onclick="show('schedule','S')">📋 กำหนดการ</button>
+  <button class="tab" id="tab0" onclick="show('numbers','N')">▣ เลขรหัส 90 คน</button>
+  <button class="tab" id="tab1" onclick="show('r1','A')">รอบที่ 1 · 09:45</button>
+  <button class="tab" id="tab2" onclick="show('r2','B')">รอบที่ 2 · 10:15</button>
+  <button class="tab" id="tab3" onclick="show('r3','C')">รอบที่ 3 · 11:00</button>
+  <button class="tab" id="tab4" onclick="show('r4','D')">รอบที่ 4 · 11:30</button>
+</div>
+
+<!-- NUMBERS -->
+<div class="round" id="numbers">
+  <div class="nums-stats">เลขรหัสผู้เข้าร่วมทั้งหมด <span>90</span> คน · สุ่มแบบไม่ซ้ำ</div>
+  <div class="num-grid" id="numGrid"></div>
+</div>
+
+<!-- ROUND 1 -->
+<div class="round" id="r1">
+  <div class="time-badge">
+    <div class="time">09:45 — 10:15</div>
+    <div class="label">รอบที่ 1 · 30 นาที</div>
+  </div>
+
+  <div class="sides">
+    <!-- Side A: Block -->
+    <div class="side-panel redSide">
+      <div class="side-title">🔴 ฝั่ง A · ฐาน Block <span>45 คน / 4 กลุ่ม</span></div>
+      <div class="groups-grid">
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A1 · 12 คน</div>
+          <div class="num-row">
+            <span class="num-chip">029</span><span class="num-chip">049</span><span class="num-chip">057</span><span class="num-chip">249</span><span class="num-chip">278</span><span class="num-chip">285</span><span class="num-chip">388</span><span class="num-chip">495</span><span class="num-chip">681</span><span class="num-chip">784</span><span class="num-chip">804</span><span class="num-chip">843</span>
+          </div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A2 · 11 คน</div>
+          <div class="num-row">
+            <span class="num-chip">244</span><span class="num-chip">347</span><span class="num-chip">429</span><span class="num-chip">458</span><span class="num-chip">486</span><span class="num-chip">592</span><span class="num-chip">619</span><span class="num-chip">725</span><span class="num-chip">738</span><span class="num-chip">837</span><span class="num-chip">975</span>
+          </div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A3 · 11 คน</div>
+          <div class="num-row">
+            <span class="num-chip">013</span><span class="num-chip">087</span><span class="num-chip">186</span><span class="num-chip">330</span><span class="num-chip">397</span><span class="num-chip">609</span><span class="num-chip">659</span><span class="num-chip">705</span><span class="num-chip">836</span><span class="num-chip">878</span><span class="num-chip">949</span>
+          </div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A4 · 11 คน</div>
+          <div class="num-row">
+            <span class="num-chip">005</span><span class="num-chip">103</span><span class="num-chip">411</span><span class="num-chip">520</span><span class="num-chip">528</span><span class="num-chip">544</span><span class="num-chip">765</span><span class="num-chip">801</span><span class="num-chip">855</span><span class="num-chip">934</span><span class="num-chip">972</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Side B: 9 stations -->
+    <div class="side-panel blueSide">
+      <div class="side-title">🔵 ฝั่ง B · ฐาน 9 กลุ่ม <span>45 คน / 9 กลุ่ม × 5</span></div>
+      <div class="groups-grid">
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B1 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">016</span><span class="num-chip">506</span><span class="num-chip">549</span><span class="num-chip">852</span><span class="num-chip">956</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B2 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">369</span><span class="num-chip">483</span><span class="num-chip">749</span><span class="num-chip">850</span><span class="num-chip">888</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B3 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">257</span><span class="num-chip">548</span><span class="num-chip">553</span><span class="num-chip">882</span><span class="num-chip">959</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B4 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">106</span><span class="num-chip">385</span><span class="num-chip">469</span><span class="num-chip">648</span><span class="num-chip">971</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B5 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">006</span><span class="num-chip">075</span><span class="num-chip">297</span><span class="num-chip">474</span><span class="num-chip">867</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B6 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">360</span><span class="num-chip">476</span><span class="num-chip">492</span><span class="num-chip">524</span><span class="num-chip">899</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B7 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">053</span><span class="num-chip">154</span><span class="num-chip">762</span><span class="num-chip">810</span><span class="num-chip">901</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B8 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">179</span><span class="num-chip">466</span><span class="num-chip">568</span><span class="num-chip">685</span><span class="num-chip">967</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B9 · 5 คน</div>
+          <div class="num-row"><span class="num-chip">043</span><span class="num-chip">358</span><span class="num-chip">539</span><span class="num-chip">675</span><span class="num-chip">938</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROUND 2 -->
+<div class="round" id="r2">
+  <div class="time-badge">
+    <div class="time">10:15 — 10:45</div>
+    <div class="label">รอบที่ 2 · สลับฝั่ง + สลับกลุ่ม</div>
+  </div>
+
+  <div class="switch-notice">
+    ⇄ ฝั่ง A ย้ายไปฐาน 9 กลุ่ม · ฝั่ง B ย้ายไปฐาน Block<br>
+    <strong>กลุ่มถูกสับใหม่แบบสุ่ม</strong>
+  </div>
+
+  <div class="sides">
+    <!-- Side A รอบ 2 → ไปฐาน 9 กลุ่ม -->
+    <div class="side-panel redSide">
+      <div class="side-title">🔴 ฝั่ง A (เดิม) → ฐาน 9 กลุ่ม <span>45 คน / 9 กลุ่ม × 5</span></div>
+      <div class="groups-grid">
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A1' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">087</span><span class="num-chip">244</span><span class="num-chip">397</span><span class="num-chip">609</span><span class="num-chip">705</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A2' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">013</span><span class="num-chip">285</span><span class="num-chip">330</span><span class="num-chip">347</span><span class="num-chip">784</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A3' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">005</span><span class="num-chip">057</span><span class="num-chip">388</span><span class="num-chip">486</span><span class="num-chip">592</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A4' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">049</span><span class="num-chip">619</span><span class="num-chip">765</span><span class="num-chip">804</span><span class="num-chip">836</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A5' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">458</span><span class="num-chip">528</span><span class="num-chip">843</span><span class="num-chip">855</span><span class="num-chip">934</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A6' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">429</span><span class="num-chip">544</span><span class="num-chip">801</span><span class="num-chip">972</span><span class="num-chip">975</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A7' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">249</span><span class="num-chip">411</span><span class="num-chip">495</span><span class="num-chip">725</span><span class="num-chip">738</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A8' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">103</span><span class="num-chip">278</span><span class="num-chip">520</span><span class="num-chip">659</span><span class="num-chip">949</span></div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม A9' · 5 คน</div>
+          <div class="num-row"><span class="num-chip">029</span><span class="num-chip">186</span><span class="num-chip">681</span><span class="num-chip">837</span><span class="num-chip">878</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Side B รอบ 2 → ไปฐาน Block -->
+    <div class="side-panel blueSide">
+      <div class="side-title">🔵 ฝั่ง B (เดิม) → ฐาน Block <span>45 คน / 4 กลุ่ม</span></div>
+      <div class="groups-grid">
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B1' · 12 คน</div>
+          <div class="num-row">
+            <span class="num-chip">006</span><span class="num-chip">016</span><span class="num-chip">297</span><span class="num-chip">476</span><span class="num-chip">549</span><span class="num-chip">850</span><span class="num-chip">852</span><span class="num-chip">867</span><span class="num-chip">899</span><span class="num-chip">901</span><span class="num-chip">938</span><span class="num-chip">967</span>
+          </div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B2' · 11 คน</div>
+          <div class="num-row">
+            <span class="num-chip">043</span><span class="num-chip">257</span><span class="num-chip">385</span><span class="num-chip">466</span><span class="num-chip">469</span><span class="num-chip">524</span><span class="num-chip">568</span><span class="num-chip">685</span><span class="num-chip">810</span><span class="num-chip">888</span><span class="num-chip">956</span>
+          </div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B3' · 11 คน</div>
+          <div class="num-row">
+            <span class="num-chip">075</span><span class="num-chip">106</span><span class="num-chip">154</span><span class="num-chip">358</span><span class="num-chip">360</span><span class="num-chip">492</span><span class="num-chip">506</span><span class="num-chip">648</span><span class="num-chip">675</span><span class="num-chip">749</span><span class="num-chip">762</span>
+          </div>
+        </div>
+        <div class="group-card">
+          <div class="group-label">กลุ่ม B4' · 11 คน</div>
+          <div class="num-row">
+            <span class="num-chip">053</span><span class="num-chip">179</span><span class="num-chip">369</span><span class="num-chip">474</span><span class="num-chip">483</span><span class="num-chip">539</span><span class="num-chip">548</span><span class="num-chip">553</span><span class="num-chip">882</span><span class="num-chip">959</span><span class="num-chip">971</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div class="round visible" id="schedule" >
+  <div class="time-badge">
+    <div class="time" style="font-size:1.2rem;letter-spacing:2px;">ค่ายคณิตศาสตร์ · โรงเรียนเต่างอยพัฒนศึกษา</div>
+    <div class="label">กำหนดการกิจกรรม ม.ปลาย 90 คน</div>
+  </div>
+
+  <div class="timeline">
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#888;"></div>
+      <div class="tl-time">08:30 — 09:00</div>
+      <div class="tl-title" style="color:#aaa;">ลงทะเบียน / นันทนาการ</div>
+      <div class="tl-desc">รับเลขรหัสประจำตัว · นันทนาการทำความรู้จัก</div>
+      <span class="tl-badge" style="background:#88888822;color:#888;">90 คน · 30 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#888;"></div>
+      <div class="tl-time">09:00 — 09:15</div>
+      <div class="tl-title" style="color:#aaa;">พิธีเปิด</div>
+      <div class="tl-desc">—</div>
+      <span class="tl-badge" style="background:#88888822;color:#888;">90 คน · 15 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#888;"></div>
+      <div class="tl-time">09:15 — 09:45</div>
+      <div class="tl-title" style="color:#aaa;">นันทนาการ / อธิบายกติกา</div>
+      <div class="tl-desc">📦 ซองน้ำตาลไม่ขยาย 50 ซอง</div>
+      <span class="tl-badge" style="background:#88888822;color:#888;">90 คน · 30 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#e63946;"></div>
+      <div class="tl-time">09:45 — 10:15</div>
+      <div class="tl-title" style="color:#e63946;">รอบที่ 1 · Block + Math Cups (พร้อมกัน)</div>
+      <div class="tl-desc">
+        🔴 <strong style="color:#fff;">ฝั่ง A</strong> → Block · 4 กลุ่ม (11–12 คน) · อุปกรณ์: แล็กซีน<br>
+        🔵 <strong style="color:#fff;">ฝั่ง B</strong> → Math Cups · 9 กลุ่ม × 5 คน · แก้วกระดาษ 270 ใบ (9 ชุด เลข 1–30)
+      </div>
+      <span class="tl-badge" style="background:#e6394622;color:#e63946;">45+45 คน · 30 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#457b9d;"></div>
+      <div class="tl-time">10:15 — 10:45</div>
+      <div class="tl-title" style="color:#457b9d;">รอบที่ 2 · สลับฝั่ง + สลับกลุ่ม</div>
+      <div class="tl-desc">
+        🔴 ฝั่ง A → Math Cups · สับกลุ่มใหม่ 9 กลุ่ม × 5 คน<br>
+        🔵 ฝั่ง B → Block · สับกลุ่มใหม่ 4 กลุ่ม (11–12 คน)
+      </div>
+      <span class="tl-badge" style="background:#457b9d22;color:#457b9d;">45+45 คน · 30 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#555;"></div>
+      <div class="tl-time">10:45 — 11:00</div>
+      <div class="tl-title" style="color:#777;">☕ พักเบรกช่วงเช้า</div>
+      <div class="tl-desc">—</div>
+      <span class="tl-badge" style="background:#55555522;color:#666;">15 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#e9c46a;"></div>
+      <div class="tl-time">11:00 — 11:30</div>
+      <div class="tl-title" style="color:#e9c46a;">รอบที่ 3 · Number</div>
+      <div class="tl-desc">กิจกรรมเดี่ยว ทำรายบุคคล · ไม่มีอุปกรณ์</div>
+      <span class="tl-badge" style="background:#e9c46a22;color:#e9c46a;">90 คน · 30 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#a8dadc;"></div>
+      <div class="tl-time">11:30 — 12:00</div>
+      <div class="tl-title" style="color:#a8dadc;">รอบที่ 4 · Mathematics Human Code</div>
+      <div class="tl-desc">ทั้ง 90 คนรวมกัน แบ่ง 6 กลุ่ม × 15 คน · 📦 ฟาง 4 ม้วน 4 สี</div>
+      <span class="tl-badge" style="background:#a8dadc22;color:#a8dadc;">90 คน · 30 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#555;"></div>
+      <div class="tl-time">12:00 — 13:00</div>
+      <div class="tl-title" style="color:#777;">🍱 พักรับประทานอาหารกลางวัน</div>
+      <div class="tl-desc">—</div>
+      <span class="tl-badge" style="background:#55555522;color:#666;">60 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#f4a261;"></div>
+      <div class="tl-time">13:00 — 14:00</div>
+      <div class="tl-title" style="color:#f4a261;">กิจกรรมเซลฟี่คณิตศาสตร์</div>
+      <div class="tl-desc">📦 ซองน้ำตาลไม่ขยาย 10 ซอง · กระดาษ A4 2 รีม · กระดาษปก 1 ห่อ · กระดาษสติ๊กเกอร์ 1 ห่อ</div>
+      <span class="tl-badge" style="background:#f4a26122;color:#f4a261;">90 คน · 60 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#2a9d8f;"></div>
+      <div class="tl-time">14:00 — 15:00</div>
+      <div class="tl-title" style="color:#2a9d8f;">กิจกรรมบูรณาการ STEM</div>
+      <div class="tl-desc">📦 กรรไกรเล็กกลุ่มละ 1 · หลอดกลุ่มละ 100 · เทปหนังไก่กลุ่มละ 2 ม้วนเล็ก · 9 กลุ่ม</div>
+      <span class="tl-badge" style="background:#2a9d8f22;color:#2a9d8f;">90 คน · 60 นาที</span>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot" style="background:#e76f51;"></div>
+      <div class="tl-time">15:00 — 16:30</div>
+      <div class="tl-title" style="color:#e76f51;">นันทนาการและสรุปกิจกรรม</div>
+      <div class="tl-desc">📦 ลูกโป่ง 200 ลูก · แป้ง 2 แพ็ค 6 ขวด · หนังยางครึ่งโล</div>
+      <span class="tl-badge" style="background:#e76f5122;color:#e76f51;">90 คน · 90 นาที</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ROUND 3 -->
+<div class="round" id="r3">
+  <div class="time-badge">
+    <div class="time" style="color:#e9c46a;">11:00 — 11:30</div>
+    <div class="label">รอบที่ 3 · Number · กิจกรรมเดี่ยว</div>
+  </div>
+
+  <div class="switch-notice">
+    นักเรียน <strong>90 คน</strong> ทำกิจกรรมรายบุคคล · ไม่มีอุปกรณ์
+  </div>
+
+  <div class="r3-grid" style="display:none;">
+    <div class="r3-card">
+      <div class="r3-label">กลุ่ม 1 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip">553</span><span class="num-chip">801</span><span class="num-chip">005</span><span class="num-chip">949</span><span class="num-chip">249</span><span class="num-chip">483</span><span class="num-chip">469</span><span class="num-chip">057</span><span class="num-chip">725</span><span class="num-chip">049</span><span class="num-chip">852</span><span class="num-chip">804</span><span class="num-chip">837</span><span class="num-chip">075</span><span class="num-chip">784</span>
+      </div>
+    </div>
+    <div class="r3-card">
+      <div class="r3-label">กลุ่ม 2 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip">899</span><span class="num-chip">619</span><span class="num-chip">544</span><span class="num-chip">901</span><span class="num-chip">474</span><span class="num-chip">888</span><span class="num-chip">609</span><span class="num-chip">429</span><span class="num-chip">738</span><span class="num-chip">867</span><span class="num-chip">843</span><span class="num-chip">548</span><span class="num-chip">486</span><span class="num-chip">278</span><span class="num-chip">549</span>
+      </div>
+    </div>
+    <div class="r3-card">
+      <div class="r3-label">กลุ่ม 3 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip">836</span><span class="num-chip">466</span><span class="num-chip">476</span><span class="num-chip">053</span><span class="num-chip">369</span><span class="num-chip">749</span><span class="num-chip">539</span><span class="num-chip">492</span><span class="num-chip">186</span><span class="num-chip">458</span><span class="num-chip">520</span><span class="num-chip">528</span><span class="num-chip">762</span><span class="num-chip">087</span><span class="num-chip">592</span>
+      </div>
+    </div>
+    <div class="r3-card">
+      <div class="r3-label">กลุ่ม 4 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip">006</span><span class="num-chip">244</span><span class="num-chip">506</span><span class="num-chip">855</span><span class="num-chip">179</span><span class="num-chip">411</span><span class="num-chip">705</span><span class="num-chip">681</span><span class="num-chip">397</span><span class="num-chip">029</span><span class="num-chip">659</span><span class="num-chip">347</span><span class="num-chip">285</span><span class="num-chip">043</span><span class="num-chip">967</span>
+      </div>
+    </div>
+    <div class="r3-card">
+      <div class="r3-label">กลุ่ม 5 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip">106</span><span class="num-chip">882</span><span class="num-chip">103</span><span class="num-chip">648</span><span class="num-chip">013</span><span class="num-chip">938</span><span class="num-chip">685</span><span class="num-chip">850</span><span class="num-chip">154</span><span class="num-chip">975</span><span class="num-chip">524</span><span class="num-chip">016</span><span class="num-chip">330</span><span class="num-chip">360</span><span class="num-chip">765</span>
+      </div>
+    </div>
+    <div class="r3-card">
+      <div class="r3-label">กลุ่ม 6 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip">971</span><span class="num-chip">878</span><span class="num-chip">675</span><span class="num-chip">568</span><span class="num-chip">959</span><span class="num-chip">810</span><span class="num-chip">388</span><span class="num-chip">385</span><span class="num-chip">358</span><span class="num-chip">495</span><span class="num-chip">934</span><span class="num-chip">972</span><span class="num-chip">297</span><span class="num-chip">257</span><span class="num-chip">956</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROUND 4 -->
+<div class="round" id="r4">
+  <div class="time-badge">
+    <div class="time" style="color:#a8dadc;">11:30 — 12:00</div>
+    <div class="label">รอบที่ 4 · Mathematics Human Code · 90 คนรวมกัน</div>
+  </div>
+
+  <div class="switch-notice">
+    ทั้ง 90 คนมารวมกัน → แบ่ง <strong>6 กลุ่ม × 15 คน</strong> สุ่มใหม่ · 📦 ฟาง 4 ม้วน 4 สี
+  </div>
+
+  <div class="r3-grid">
+    <div class="r3-card" style="border-color:#a8dadc;">
+      <div class="r3-label" style="color:#a8dadc;">กลุ่ม 1 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip" style="color:#a8dadc;">005</span><span class="num-chip" style="color:#a8dadc;">049</span><span class="num-chip" style="color:#a8dadc;">057</span><span class="num-chip" style="color:#a8dadc;">075</span><span class="num-chip" style="color:#a8dadc;">249</span><span class="num-chip" style="color:#a8dadc;">469</span><span class="num-chip" style="color:#a8dadc;">483</span><span class="num-chip" style="color:#a8dadc;">553</span><span class="num-chip" style="color:#a8dadc;">725</span><span class="num-chip" style="color:#a8dadc;">784</span><span class="num-chip" style="color:#a8dadc;">801</span><span class="num-chip" style="color:#a8dadc;">804</span><span class="num-chip" style="color:#a8dadc;">837</span><span class="num-chip" style="color:#a8dadc;">852</span><span class="num-chip" style="color:#a8dadc;">949</span>
+      </div>
+    </div>
+    <div class="r3-card" style="border-color:#a8dadc;">
+      <div class="r3-label" style="color:#a8dadc;">กลุ่ม 2 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip" style="color:#a8dadc;">278</span><span class="num-chip" style="color:#a8dadc;">429</span><span class="num-chip" style="color:#a8dadc;">474</span><span class="num-chip" style="color:#a8dadc;">486</span><span class="num-chip" style="color:#a8dadc;">544</span><span class="num-chip" style="color:#a8dadc;">548</span><span class="num-chip" style="color:#a8dadc;">549</span><span class="num-chip" style="color:#a8dadc;">609</span><span class="num-chip" style="color:#a8dadc;">619</span><span class="num-chip" style="color:#a8dadc;">738</span><span class="num-chip" style="color:#a8dadc;">843</span><span class="num-chip" style="color:#a8dadc;">867</span><span class="num-chip" style="color:#a8dadc;">888</span><span class="num-chip" style="color:#a8dadc;">899</span><span class="num-chip" style="color:#a8dadc;">901</span>
+      </div>
+    </div>
+    <div class="r3-card" style="border-color:#a8dadc;">
+      <div class="r3-label" style="color:#a8dadc;">กลุ่ม 3 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip" style="color:#a8dadc;">053</span><span class="num-chip" style="color:#a8dadc;">087</span><span class="num-chip" style="color:#a8dadc;">186</span><span class="num-chip" style="color:#a8dadc;">369</span><span class="num-chip" style="color:#a8dadc;">458</span><span class="num-chip" style="color:#a8dadc;">466</span><span class="num-chip" style="color:#a8dadc;">476</span><span class="num-chip" style="color:#a8dadc;">492</span><span class="num-chip" style="color:#a8dadc;">520</span><span class="num-chip" style="color:#a8dadc;">528</span><span class="num-chip" style="color:#a8dadc;">539</span><span class="num-chip" style="color:#a8dadc;">592</span><span class="num-chip" style="color:#a8dadc;">749</span><span class="num-chip" style="color:#a8dadc;">762</span><span class="num-chip" style="color:#a8dadc;">836</span>
+      </div>
+    </div>
+    <div class="r3-card" style="border-color:#a8dadc;">
+      <div class="r3-label" style="color:#a8dadc;">กลุ่ม 4 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip" style="color:#a8dadc;">006</span><span class="num-chip" style="color:#a8dadc;">029</span><span class="num-chip" style="color:#a8dadc;">043</span><span class="num-chip" style="color:#a8dadc;">179</span><span class="num-chip" style="color:#a8dadc;">244</span><span class="num-chip" style="color:#a8dadc;">285</span><span class="num-chip" style="color:#a8dadc;">347</span><span class="num-chip" style="color:#a8dadc;">397</span><span class="num-chip" style="color:#a8dadc;">411</span><span class="num-chip" style="color:#a8dadc;">506</span><span class="num-chip" style="color:#a8dadc;">659</span><span class="num-chip" style="color:#a8dadc;">681</span><span class="num-chip" style="color:#a8dadc;">705</span><span class="num-chip" style="color:#a8dadc;">855</span><span class="num-chip" style="color:#a8dadc;">967</span>
+      </div>
+    </div>
+    <div class="r3-card" style="border-color:#a8dadc;">
+      <div class="r3-label" style="color:#a8dadc;">กลุ่ม 5 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip" style="color:#a8dadc;">013</span><span class="num-chip" style="color:#a8dadc;">016</span><span class="num-chip" style="color:#a8dadc;">103</span><span class="num-chip" style="color:#a8dadc;">106</span><span class="num-chip" style="color:#a8dadc;">154</span><span class="num-chip" style="color:#a8dadc;">330</span><span class="num-chip" style="color:#a8dadc;">360</span><span class="num-chip" style="color:#a8dadc;">524</span><span class="num-chip" style="color:#a8dadc;">648</span><span class="num-chip" style="color:#a8dadc;">685</span><span class="num-chip" style="color:#a8dadc;">765</span><span class="num-chip" style="color:#a8dadc;">850</span><span class="num-chip" style="color:#a8dadc;">882</span><span class="num-chip" style="color:#a8dadc;">938</span><span class="num-chip" style="color:#a8dadc;">975</span>
+      </div>
+    </div>
+    <div class="r3-card" style="border-color:#a8dadc;">
+      <div class="r3-label" style="color:#a8dadc;">กลุ่ม 6 · 15 คน</div>
+      <div class="num-row">
+        <span class="num-chip" style="color:#a8dadc;">257</span><span class="num-chip" style="color:#a8dadc;">297</span><span class="num-chip" style="color:#a8dadc;">358</span><span class="num-chip" style="color:#a8dadc;">385</span><span class="num-chip" style="color:#a8dadc;">388</span><span class="num-chip" style="color:#a8dadc;">495</span><span class="num-chip" style="color:#a8dadc;">568</span><span class="num-chip" style="color:#a8dadc;">675</span><span class="num-chip" style="color:#a8dadc;">810</span><span class="num-chip" style="color:#a8dadc;">878</span><span class="num-chip" style="color:#a8dadc;">934</span><span class="num-chip" style="color:#a8dadc;">956</span><span class="num-chip" style="color:#a8dadc;">959</span><span class="num-chip" style="color:#a8dadc;">971</span><span class="num-chip" style="color:#a8dadc;">972</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const numbers = [
+  "005","006","013","016","029","043","049","053","057","075",
+  "087","103","106","154","179","186","244","249","257","278",
+  "285","297","330","347","358","360","369","385","388","397",
+  "411","429","458","466","469","474","476","483","486","492",
+  "495","506","520","524","528","539","544","548","549","553",
+  "568","592","609","619","648","659","675","681","685","705",
+  "725","738","749","762","765","784","801","804","810","836",
+  "837","843","850","852","855","867","878","882","888","899",
+  "901","934","938","949","956","959","967","971","972","975"
+];
+
+const grid = document.getElementById('numGrid');
+numbers.forEach((n, i) => {
+  grid.innerHTML += `<div class="num-card"><div class="seq">#${String(i+1).padStart(2,'0')}</div><div class="big">${n}</div></div>`;
+});
+
+function show(panel, color) {
+  document.querySelectorAll('.round').forEach(r => r.classList.remove('visible'));
+  document.getElementById(panel).classList.add('visible');
+  document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
+  const map = { 'schedule': 'tab-sched', 'numbers': 'tab0', 'r1': 'tab1', 'r2': 'tab2', 'r3': 'tab3', 'r4': 'tab4' };
+  document.getElementById(map[panel]).classList.add('active-' + color);
+}
+</script>
+
+</body>
+</html>
