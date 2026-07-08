@@ -255,36 +255,28 @@
 
   <!-- แท็ป 1: รวมทั้งหมด -->
   <section class="tab-panel active" id="panel-all">
-    <input type="text" class="search-box" data-target="all-main,all-reserve" placeholder="ค้นหาชื่อ-สกุล...">
-    <div class="section-title"><h2>รายชื่อตัวจริง</h2><span class="badge main" id="count-all-main">0 / 240</span></div>
-    <div class="table-wrap" id="table-all-main"></div>
-    <div class="section-title"><h2>รายชื่อสำรอง</h2><span class="badge reserve" id="count-all-reserve">0 / 30</span></div>
-    <div class="table-wrap" id="table-all-reserve"></div>
+    <input type="text" class="search-box" data-target="all" placeholder="ค้นหาชื่อ-สกุล...">
+    <div class="section-title"><h2>รายชื่อผู้สมัคร</h2><span class="badge main" id="count-all-main">ตัวจริง 0/240</span><span class="badge reserve" id="count-all-reserve">สำรอง 0/30</span></div>
+    <div class="table-wrap" id="table-all"></div>
   </section>
 
   <!-- แท็ป 2-4: รายชั้น -->
   <section class="tab-panel" id="panel-m4">
-    <input type="text" class="search-box" data-target="m4-main,m4-reserve" placeholder="ค้นหาชื่อ-สกุล (ม.4)...">
-    <div class="section-title"><h2>ตัวจริง ม.4</h2><span class="badge main" id="count-m4-main">0 / 80</span></div>
-    <div class="table-wrap" id="table-m4-main"></div>
-    <div class="section-title"><h2>สำรอง ม.4</h2><span class="badge reserve" id="count-m4-reserve">0 / 10</span></div>
-    <div class="table-wrap" id="table-m4-reserve"></div>
+    <input type="text" class="search-box" data-target="m4" placeholder="ค้นหาชื่อ-สกุล (ม.4)...">
+    <div class="section-title"><h2>รายชื่อ ม.4</h2><span class="badge main" id="count-m4-main">ตัวจริง 0/80</span><span class="badge reserve" id="count-m4-reserve">สำรอง 0/10</span></div>
+    <div class="table-wrap" id="table-m4"></div>
   </section>
 
   <section class="tab-panel" id="panel-m5">
-    <input type="text" class="search-box" data-target="m5-main,m5-reserve" placeholder="ค้นหาชื่อ-สกุล (ม.5)...">
-    <div class="section-title"><h2>ตัวจริง ม.5</h2><span class="badge main" id="count-m5-main">0 / 80</span></div>
-    <div class="table-wrap" id="table-m5-main"></div>
-    <div class="section-title"><h2>สำรอง ม.5</h2><span class="badge reserve" id="count-m5-reserve">0 / 10</span></div>
-    <div class="table-wrap" id="table-m5-reserve"></div>
+    <input type="text" class="search-box" data-target="m5" placeholder="ค้นหาชื่อ-สกุล (ม.5)...">
+    <div class="section-title"><h2>รายชื่อ ม.5</h2><span class="badge main" id="count-m5-main">ตัวจริง 0/80</span><span class="badge reserve" id="count-m5-reserve">สำรอง 0/10</span></div>
+    <div class="table-wrap" id="table-m5"></div>
   </section>
 
   <section class="tab-panel" id="panel-m6">
-    <input type="text" class="search-box" data-target="m6-main,m6-reserve" placeholder="ค้นหาชื่อ-สกุล (ม.6)...">
-    <div class="section-title"><h2>ตัวจริง ม.6</h2><span class="badge main" id="count-m6-main">0 / 80</span></div>
-    <div class="table-wrap" id="table-m6-main"></div>
-    <div class="section-title"><h2>สำรอง ม.6</h2><span class="badge reserve" id="count-m6-reserve">0 / 10</span></div>
-    <div class="table-wrap" id="table-m6-reserve"></div>
+    <input type="text" class="search-box" data-target="m6" placeholder="ค้นหาชื่อ-สกุล (ม.6)...">
+    <div class="section-title"><h2>รายชื่อ ม.6</h2><span class="badge main" id="count-m6-main">ตัวจริง 0/80</span><span class="badge reserve" id="count-m6-reserve">สำรอง 0/10</span></div>
+    <div class="table-wrap" id="table-m6"></div>
   </section>
 
 </div>
@@ -333,7 +325,7 @@ const CAMP_CONFIG = {
 };
 /* ============================================================ */
 
-const state = { data: {} }; // state.data[gradeKey] = { main:[...], reserve:[...], columns:[...], error: null }
+const state = { data: {} }; // state.data[gradeKey] = { main:[...], reserve:[...], all:[...], error: null }
 
 function fetchCsv(url){
   return new Promise((resolve, reject) => {
@@ -359,22 +351,34 @@ function splitMainReserve(rows, mainSlots, reserveSlots){
   };
 }
 
-function renderTable(containerId, rows, extraCols){
+// หาคอลัมน์จากหัวตารางในชีตโดยจับคำสำคัญ เพื่อรองรับกรณีหัวคอลัมน์ของแต่ละระดับชั้นเขียนต่างกันเล็กน้อย
+// (เช่น "ห้อง ชั้น ม.4" / "ห้อง ชั้น ม.5" / "ห้อง ชั้น ม.6")
+function findColKey(row, keyword){
+  return Object.keys(row).find(k => k.indexOf(keyword) !== -1);
+}
+
+function buildDisplayName(row){
+  const titleKey = findColKey(row, 'คำนำหน้า');
+  const nameKey = Object.keys(row).find(k => k.indexOf('สกุล') !== -1);
+  const title = titleKey ? String(row[titleKey] || '').trim() : '';
+  const name = nameKey ? String(row[nameKey] || '').trim() : '';
+  return (title + name).trim();
+}
+
+function buildRoom(row){
+  const roomKey = findColKey(row, 'ห้อง');
+  return roomKey ? String(row[roomKey] || '').trim() : '';
+}
+
+function renderTable(containerId, rows){
   const el = document.getElementById(containerId);
   if(!rows || rows.length === 0){
     el.innerHTML = '<div class="empty-state">ยังไม่มีรายชื่อในส่วนนี้</div>';
     return;
   }
-  const dataCols = Object.keys(rows[0]).filter(c => c.trim() !== '');
-  const cols = ['ลำดับ', ...(extraCols || []), ...dataCols, 'สถานะ'];
-  let html = '<table><thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+  let html = '<table><thead><tr><th>ลำดับ</th><th>ชื่อ-สกุล</th><th>ห้อง</th><th>สถานะ</th></tr></thead><tbody>';
   rows.forEach((row) => {
-    html += '<tr>' + cols.map(c => {
-      if(c === 'ลำดับ') return `<td>${row.__rank}</td>`;
-      if(c === 'สถานะ') return `<td class="status-${row.__status}">${row.__status === 'main' ? 'ตัวจริง' : 'สำรอง'}</td>`;
-      if(c === 'ระดับชั้น') return `<td>${row.__grade || ''}</td>`;
-      return `<td>${row[c] !== undefined ? row[c] : ''}</td>`;
-    }).join('') + '</tr>';
+    html += `<tr><td>${row.__rank}</td><td>${row.__name}</td><td>${row.__room}</td><td class="status-${row.__status}">${row.__status === 'main' ? 'ตัวจริง' : 'สำรอง'}</td></tr>`;
   });
   html += '</tbody></table>';
   el.innerHTML = html;
@@ -384,61 +388,64 @@ function renderErrorTable(containerId, message){
   document.getElementById(containerId).innerHTML = `<div class="error-state">${message}</div>`;
 }
 
-function tagRows(rows, gradeLabel, status, rankOffset){
-  return rows.map((r, i) => ({ ...r, __grade: gradeLabel, __status: status, __rank: rankOffset + i + 1 }));
+function tagRows(rows, status, rankOffset){
+  return rows.map((r, i) => ({
+    __status: status,
+    __rank: rankOffset + i + 1,
+    __name: buildDisplayName(r),
+    __room: buildRoom(r)
+  }));
 }
 
 async function loadGrade(gradeCfg){
   try{
     const rows = await fetchCsv(gradeCfg.csvUrl);
     const { main, reserve } = splitMainReserve(rows, gradeCfg.mainSlots, gradeCfg.reserveSlots);
+    const mainTagged = tagRows(main, 'main', 0);
+    const reserveTagged = tagRows(reserve, 'reserve', gradeCfg.mainSlots);
     state.data[gradeCfg.key] = {
-      main: tagRows(main, gradeCfg.label, 'main', 0),
-      reserve: tagRows(reserve, gradeCfg.label, 'reserve', 0),
+      main: mainTagged,
+      reserve: reserveTagged,
+      all: mainTagged.concat(reserveTagged),
       error: null
     };
   }catch(e){
-    state.data[gradeCfg.key] = { main: [], reserve: [], error: e.message === 'NO_URL' ? 'NO_URL' : 'FETCH_ERROR' };
+    state.data[gradeCfg.key] = { main: [], reserve: [], all: [], error: e.message === 'NO_URL' ? 'NO_URL' : 'FETCH_ERROR' };
   }
 }
 
 function renderGradeTab(gradeCfg){
   const d = state.data[gradeCfg.key];
-  const mainId = `table-${gradeCfg.key}-main`;
-  const reserveId = `table-${gradeCfg.key}-reserve`;
+  const tableId = `table-${gradeCfg.key}`;
   if(d.error === 'NO_URL'){
-    renderErrorTable(mainId, `ยังไม่ได้เชื่อมต่อข้อมูลของระดับชั้น ${gradeCfg.label} (รอลิงก์ข้อมูลจากทางโรงเรียน)`);
-    renderErrorTable(reserveId, `ยังไม่ได้เชื่อมต่อข้อมูลของระดับชั้น ${gradeCfg.label}`);
+    renderErrorTable(tableId, `ยังไม่ได้เชื่อมต่อข้อมูลของระดับชั้น ${gradeCfg.label} (รอลิงก์ข้อมูลจากทางโรงเรียน)`);
   }else if(d.error === 'FETCH_ERROR'){
-    renderErrorTable(mainId, `โหลดข้อมูลของระดับชั้น ${gradeCfg.label} ไม่สำเร็จ กรุณาตรวจสอบลิงก์ข้อมูล`);
-    renderErrorTable(reserveId, `โหลดข้อมูลไม่สำเร็จ`);
+    renderErrorTable(tableId, `โหลดข้อมูลของระดับชั้น ${gradeCfg.label} ไม่สำเร็จ กรุณาตรวจสอบลิงก์ข้อมูล`);
   }else{
-    renderTable(mainId, d.main);
-    renderTable(reserveId, d.reserve);
+    renderTable(tableId, d.all);
   }
-  document.getElementById(`count-${gradeCfg.key}-main`).textContent = `${d.main.length} / ${gradeCfg.mainSlots}`;
-  document.getElementById(`count-${gradeCfg.key}-reserve`).textContent = `${d.reserve.length} / ${gradeCfg.reserveSlots}`;
+  document.getElementById(`count-${gradeCfg.key}-main`).textContent = `ตัวจริง ${d.main.length}/${gradeCfg.mainSlots}`;
+  document.getElementById(`count-${gradeCfg.key}-reserve`).textContent = `สำรอง ${d.reserve.length}/${gradeCfg.reserveSlots}`;
 }
 
 function renderAllTab(){
-  const allMain = [];
-  const allReserve = [];
+  const allRows = [];
+  let mainCount = 0, reserveCount = 0;
   CAMP_CONFIG.grades.forEach(g => {
     const d = state.data[g.key];
     if(d && !d.error){
-      allMain.push(...d.main);
-      allReserve.push(...d.reserve);
+      allRows.push(...d.all);
+      mainCount += d.main.length;
+      reserveCount += d.reserve.length;
     }
   });
-  if(allMain.length === 0 && allReserve.length === 0){
-    renderErrorTable('table-all-main', 'ยังไม่มีข้อมูลผู้สมัคร (รอเชื่อมต่อลิงก์ข้อมูลของแต่ละระดับชั้น)');
-    renderErrorTable('table-all-reserve', 'ยังไม่มีข้อมูลสำรอง');
+  if(allRows.length === 0){
+    renderErrorTable('table-all', 'ยังไม่มีข้อมูลผู้สมัคร (รอเชื่อมต่อลิงก์ข้อมูลของแต่ละระดับชั้น)');
   }else{
-    renderTable('table-all-main', allMain, ['ระดับชั้น']);
-    renderTable('table-all-reserve', allReserve, ['ระดับชั้น']);
+    renderTable('table-all', allRows);
   }
-  document.getElementById('count-all-main').textContent = `${allMain.length} / ${CAMP_CONFIG.totalMainSlots}`;
-  document.getElementById('count-all-reserve').textContent = `${allReserve.length} / ${CAMP_CONFIG.totalReserveSlots}`;
+  document.getElementById('count-all-main').textContent = `ตัวจริง ${mainCount}/${CAMP_CONFIG.totalMainSlots}`;
+  document.getElementById('count-all-reserve').textContent = `สำรอง ${reserveCount}/${CAMP_CONFIG.totalReserveSlots}`;
 }
 
 function renderSummaryBar(){
@@ -499,4 +506,4 @@ loadAll();
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
