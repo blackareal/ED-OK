@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWP Math Camp12 - รายชื่อผู้เข้าร่วมค่าย | โรงเรียนสุวรรณภูมิพิทยไพศาล</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root{
+    --navy:#0f2647;
+    --navy-dark:#0a1a33;
+    --gold:#d4af37;
+    --gold-dark:#b8932c;
+    --bg:#f4f6fa;
+    --card:#ffffff;
+    --border:#e1e6ee;
+    --text:#1c2534;
+    --muted:#6b7686;
+    --green:#1f8a4c;
+    --green-bg:#e8f7ee;
+    --amber:#b5750a;
+    --amber-bg:#fdf3e0;
+    --red:#c23636;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Sarabun','Tahoma',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+  }
+  header.top{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);
+    color:#fff;
+    padding:28px 20px 24px;
+    text-align:center;
+    border-bottom:4px solid var(--gold);
+  }
+  header.top .school{
+    font-size:15px;
+    opacity:0.85;
+    letter-spacing:.5px;
+  }
+  header.top h1{
+    margin:6px 0 4px;
+    font-size:clamp(24px,4vw,34px);
+    font-weight:700;
+  }
+  header.top .sub{
+    font-size:14px;
+    color:var(--gold);
+    font-weight:600;
+  }
+  .container{
+    max-width:1080px;
+    margin:0 auto;
+    padding:20px 16px 60px;
+  }
+  .summary-bar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin:-30px auto 20px;
+    max-width:1080px;
+    padding:0 16px;
+  }
+  .summary-card{
+    flex:1 1 150px;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 4px 14px rgba(15,38,71,0.08);
+    padding:14px 16px;
+    text-align:center;
+    border:1px solid var(--border);
+  }
+  .summary-card .num{
+    font-size:22px;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .summary-card .lbl{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .updated-note{
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  button.refresh{
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    padding:8px 16px;
+    border-radius:8px;
+    font-family:inherit;
+    font-size:13.5px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  button.refresh:hover{background:var(--navy-dark);}
+  button.refresh:disabled{opacity:0.6;cursor:default;}
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    border-bottom:2px solid var(--border);
+    margin-bottom:18px;
+    overflow-x:auto;
+  }
+  .tab-btn{
+    background:none;
+    border:none;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:600;
+    color:var(--muted);
+    padding:10px 18px;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+    white-space:nowrap;
+  }
+  .tab-btn.active{
+    color:var(--navy);
+    border-bottom-color:var(--gold);
+  }
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .section-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:22px 0 10px;
+  }
+  .section-title h2{
+    font-size:17px;
+    margin:0;
+    color:var(--navy);
+  }
+  .badge{
+    font-size:12px;
+    font-weight:700;
+    padding:3px 10px;
+    border-radius:999px;
+  }
+  .badge.main{background:var(--green-bg);color:var(--green);}
+  .badge.reserve{background:var(--amber-bg);color:var(--amber);}
+
+  .search-box{
+    width:100%;
+    padding:9px 14px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:14px;
+    margin-bottom:10px;
+  }
+  .search-box:focus{outline:2px solid var(--gold);border-color:transparent;}
+
+  .table-wrap{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow-x:auto;
+    margin-bottom:8px;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    min-width:480px;
+  }
+  thead th{
+    background:var(--navy);
+    color:#fff;
+    text-align:left;
+    padding:10px 12px;
+    position:sticky;
+    top:0;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:8px 12px;
+    border-bottom:1px solid var(--border);
+  }
+  tbody tr:nth-child(even){background:#f9fafc;}
+  tbody tr:hover{background:var(--green-bg);}
+  td.status-main{color:var(--green);font-weight:600;}
+  td.status-reserve{color:var(--amber);font-weight:600;}
+
+  .empty-state, .error-state{
+    text-align:center;
+    padding:36px 20px;
+    color:var(--muted);
+    background:var(--card);
+    border:1px dashed var(--border);
+    border-radius:var(--radius);
+    font-size:14px;
+  }
+  .error-state{color:var(--red);border-color:#f2c6c6;background:#fdf2f2;}
+
+  footer{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--muted);
+    padding:24px 16px 40px;
+  }
+
+  @media print{
+    header.top, .toolbar, .tabs, .search-box, footer{display:none !important;}
+    .tab-panel{display:block !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="school">โรงเรียนสุวรรณภูมิพิทยไพศาล</div>
+  <h1>SWP Math Camp12</h1>
+  <div class="sub">ประกาศรายชื่อผู้เข้าร่วมค่ายคณิตศาสตร์ · จำกัดจำนวน 240 คน (สำรอง 30 คน)</div>
+</header>
+
+<div class="summary-bar" id="summaryBar">
+  <!-- เติมด้วย JS หลังโหลดข้อมูล -->
+</div>
+
+<div class="container">
+
+  <div class="toolbar">
+    <div class="updated-note" id="updatedNote">ยังไม่ได้โหลดข้อมูล</div>
+    <button class="refresh" id="refreshBtn">↻ โหลดข้อมูลใหม่</button>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="all">รวมทั้งหมด</button>
+    <button class="tab-btn" data-tab="m4">ม.4</button>
+    <button class="tab-btn" data-tab="m5">ม.5</button>
+    <button class="tab-btn" data-tab="m6">ม.6</button>
+  </div>
+
+  <!-- แท็ป 1: รวมทั้งหมด -->
+  <section class="tab-panel active" id="panel-all">
+    <input type="text" class="search-box" data-target="all-main,all-reserve" placeholder="ค้นหาชื่อ-สกุล...">
+    <div class="section-title"><h2>รายชื่อตัวจริง</h2><span class="badge main" id="count-all-main">0 / 240</span></div>
+    <div class="table-wrap" id="table-all-main"></div>
+    <div class="section-title"><h2>รายชื่อสำรอง</h2><span class="badge reserve" id="count-all-reserve">0 / 30</span></div>
+    <div class="table-wrap" id="table-all-reserve"></div>
+  </section>
+
+  <!-- แท็ป 2-4: รายชั้น -->
+  <section class="tab-panel" id="panel-m4">
+    <input type="text" class="search-box" data-target="m4-main,m4-reserve" placeholder="ค้นหาชื่อ-สกุล (ม.4)...">
+    <div class="section-title"><h2>ตัวจริง ม.4</h2><span class="badge main" id="count-m4-main">0 / 80</span></div>
+    <div class="table-wrap" id="table-m4-main"></div>
+    <div class="section-title"><h2>สำรอง ม.4</h2><span class="badge reserve" id="count-m4-reserve">0 / 10</span></div>
+    <div class="table-wrap" id="table-m4-reserve"></div>
+  </section>
+
+  <section class="tab-panel" id="panel-m5">
+    <input type="text" class="search-box" data-target="m5-main,m5-reserve" placeholder="ค้นหาชื่อ-สกุล (ม.5)...">
+    <div class="section-title"><h2>ตัวจริง ม.5</h2><span class="badge main" id="count-m5-main">0 / 80</span></div>
+    <div class="table-wrap" id="table-m5-main"></div>
+    <div class="section-title"><h2>สำรอง ม.5</h2><span class="badge reserve" id="count-m5-reserve">0 / 10</span></div>
+    <div class="table-wrap" id="table-m5-reserve"></div>
+  </section>
+
+  <section class="tab-panel" id="panel-m6">
+    <input type="text" class="search-box" data-target="m6-main,m6-reserve" placeholder="ค้นหาชื่อ-สกุล (ม.6)...">
+    <div class="section-title"><h2>ตัวจริง ม.6</h2><span class="badge main" id="count-m6-main">0 / 80</span></div>
+    <div class="table-wrap" id="table-m6-main"></div>
+    <div class="section-title"><h2>สำรอง ม.6</h2><span class="badge reserve" id="count-m6-reserve">0 / 10</span></div>
+    <div class="table-wrap" id="table-m6-reserve"></div>
+  </section>
+
+</div>
+
+<footer>
+  SWP Math Camp12 · โรงเรียนสุวรรณภูมิพิทยไพศาล · หน้านี้อัปเดตอัตโนมัติจากข้อมูลการสมัครทุกครั้งที่เปิดหน้าเว็บ
+</footer>
+
+<script>
+/* ============================================================
+   CONFIG — ข้อมูลดึงจาก Google Sheet ของแต่ละระดับชั้นโดยตรง
+   (แปลงจากลิงก์ /edit เป็นลิงก์ export CSV ของชีตแรก gid=0)
+   หมายเหตุ: ชีตต้องตั้งค่าแชร์เป็น "ทุกคนที่มีลิงก์ - ดูได้"
+   ไม่เช่นนั้นหน้าเว็บจะดึงข้อมูลไม่ได้ (ขึ้นข้อความ "โหลดข้อมูลไม่สำเร็จ")
+   หากชีตคำตอบไม่ได้อยู่ที่ชีตแรก ให้แก้เลข gid ท้ายลิงก์ให้ตรงกับชีตที่ต้องการ
+   ============================================================ */
+const CAMP_CONFIG = {
+  totalMainSlots: 240,
+  totalReserveSlots: 30,
+  grades: [
+    {
+      key: 'm4',
+      label: 'ม.4',
+      fullLabel: 'ชั้นมัธยมศึกษาปีที่ 4',
+      mainSlots: 80,
+      reserveSlots: 10,
+      csvUrl: 'https://docs.google.com/spreadsheets/d/1ArzwpVJ0W08kL2fhVVLbU1FImVBKX0XxBwOA2yhQrog/export?format=csv&gid=0'
+    },
+    {
+      key: 'm5',
+      label: 'ม.5',
+      fullLabel: 'ชั้นมัธยมศึกษาปีที่ 5',
+      mainSlots: 80,
+      reserveSlots: 10,
+      csvUrl: 'https://docs.google.com/spreadsheets/d/1U7ZVnQlXLS2hFDl_Y4snOK1uT-PkSV1eP91HSPGiPWE/export?format=csv&gid=0'
+    },
+    {
+      key: 'm6',
+      label: 'ม.6',
+      fullLabel: 'ชั้นมัธยมศึกษาปีที่ 6',
+      mainSlots: 80,
+      reserveSlots: 10,
+      csvUrl: 'https://docs.google.com/spreadsheets/d/1ISIA5hu9ktfhlxZaIJ8HEpJLNkyuX2qsPaGPXoFRTNM/export?format=csv&gid=0'
+    }
+  ]
+};
+/* ============================================================ */
+
+const state = { data: {} }; // state.data[gradeKey] = { main:[...], reserve:[...], columns:[...], error: null }
+
+function fetchCsv(url){
+  return new Promise((resolve, reject) => {
+    if(!url || !url.trim()){
+      reject(new Error('NO_URL'));
+      return;
+    }
+    Papa.parse(url, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: (res) => resolve(res.data.filter(r => Object.values(r).some(v => String(v).trim() !== ''))),
+      error: (err) => reject(err)
+    });
+  });
+}
+
+function splitMainReserve(rows, mainSlots, reserveSlots){
+  const limited = rows.slice(0, mainSlots + reserveSlots);
+  return {
+    main: limited.slice(0, mainSlots),
+    reserve: limited.slice(mainSlots, mainSlots + reserveSlots)
+  };
+}
+
+function renderTable(containerId, rows, extraCols){
+  const el = document.getElementById(containerId);
+  if(!rows || rows.length === 0){
+    el.innerHTML = '<div class="empty-state">ยังไม่มีรายชื่อในส่วนนี้</div>';
+    return;
+  }
+  const dataCols = Object.keys(rows[0]).filter(c => c.trim() !== '');
+  const cols = ['ลำดับ', ...(extraCols || []), ...dataCols, 'สถานะ'];
+  let html = '<table><thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach((row) => {
+    html += '<tr>' + cols.map(c => {
+      if(c === 'ลำดับ') return `<td>${row.__rank}</td>`;
+      if(c === 'สถานะ') return `<td class="status-${row.__status}">${row.__status === 'main' ? 'ตัวจริง' : 'สำรอง'}</td>`;
+      if(c === 'ระดับชั้น') return `<td>${row.__grade || ''}</td>`;
+      return `<td>${row[c] !== undefined ? row[c] : ''}</td>`;
+    }).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function renderErrorTable(containerId, message){
+  document.getElementById(containerId).innerHTML = `<div class="error-state">${message}</div>`;
+}
+
+function tagRows(rows, gradeLabel, status, rankOffset){
+  return rows.map((r, i) => ({ ...r, __grade: gradeLabel, __status: status, __rank: rankOffset + i + 1 }));
+}
+
+async function loadGrade(gradeCfg){
+  try{
+    const rows = await fetchCsv(gradeCfg.csvUrl);
+    const { main, reserve } = splitMainReserve(rows, gradeCfg.mainSlots, gradeCfg.reserveSlots);
+    state.data[gradeCfg.key] = {
+      main: tagRows(main, gradeCfg.label, 'main', 0),
+      reserve: tagRows(reserve, gradeCfg.label, 'reserve', 0),
+      error: null
+    };
+  }catch(e){
+    state.data[gradeCfg.key] = { main: [], reserve: [], error: e.message === 'NO_URL' ? 'NO_URL' : 'FETCH_ERROR' };
+  }
+}
+
+function renderGradeTab(gradeCfg){
+  const d = state.data[gradeCfg.key];
+  const mainId = `table-${gradeCfg.key}-main`;
+  const reserveId = `table-${gradeCfg.key}-reserve`;
+  if(d.error === 'NO_URL'){
+    renderErrorTable(mainId, `ยังไม่ได้เชื่อมต่อข้อมูลของระดับชั้น ${gradeCfg.label} (รอลิงก์ข้อมูลจากทางโรงเรียน)`);
+    renderErrorTable(reserveId, `ยังไม่ได้เชื่อมต่อข้อมูลของระดับชั้น ${gradeCfg.label}`);
+  }else if(d.error === 'FETCH_ERROR'){
+    renderErrorTable(mainId, `โหลดข้อมูลของระดับชั้น ${gradeCfg.label} ไม่สำเร็จ กรุณาตรวจสอบลิงก์ข้อมูล`);
+    renderErrorTable(reserveId, `โหลดข้อมูลไม่สำเร็จ`);
+  }else{
+    renderTable(mainId, d.main);
+    renderTable(reserveId, d.reserve);
+  }
+  document.getElementById(`count-${gradeCfg.key}-main`).textContent = `${d.main.length} / ${gradeCfg.mainSlots}`;
+  document.getElementById(`count-${gradeCfg.key}-reserve`).textContent = `${d.reserve.length} / ${gradeCfg.reserveSlots}`;
+}
+
+function renderAllTab(){
+  const allMain = [];
+  const allReserve = [];
+  CAMP_CONFIG.grades.forEach(g => {
+    const d = state.data[g.key];
+    if(d && !d.error){
+      allMain.push(...d.main);
+      allReserve.push(...d.reserve);
+    }
+  });
+  if(allMain.length === 0 && allReserve.length === 0){
+    renderErrorTable('table-all-main', 'ยังไม่มีข้อมูลผู้สมัคร (รอเชื่อมต่อลิงก์ข้อมูลของแต่ละระดับชั้น)');
+    renderErrorTable('table-all-reserve', 'ยังไม่มีข้อมูลสำรอง');
+  }else{
+    renderTable('table-all-main', allMain, ['ระดับชั้น']);
+    renderTable('table-all-reserve', allReserve, ['ระดับชั้น']);
+  }
+  document.getElementById('count-all-main').textContent = `${allMain.length} / ${CAMP_CONFIG.totalMainSlots}`;
+  document.getElementById('count-all-reserve').textContent = `${allReserve.length} / ${CAMP_CONFIG.totalReserveSlots}`;
+}
+
+function renderSummaryBar(){
+  const el = document.getElementById('summaryBar');
+  const cards = CAMP_CONFIG.grades.map(g => ({
+    num: `${(state.data[g.key]?.main.length || 0)}/${g.mainSlots}`,
+    lbl: g.fullLabel
+  }));
+  el.innerHTML = cards.map(c => `<div class="summary-card"><div class="lbl">${c.lbl}</div><div class="num">${c.num}</div></div>`).join('');
+}
+
+async function loadAll(){
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังโหลด...';
+  document.getElementById('updatedNote').textContent = 'กำลังโหลดข้อมูล...';
+
+  await Promise.all(CAMP_CONFIG.grades.map(loadGrade));
+
+  CAMP_CONFIG.grades.forEach(renderGradeTab);
+  renderAllTab();
+  renderSummaryBar();
+
+  const now = new Date();
+  document.getElementById('updatedNote').textContent = 'อัปเดตล่าสุด: ' + now.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+  btn.disabled = false;
+  btn.textContent = '↻ โหลดข้อมูลใหม่';
+}
+
+/* ---- Tabs ---- */
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+});
+
+/* ---- Search ---- */
+document.querySelectorAll('.search-box').forEach(input => {
+  input.addEventListener('input', () => {
+    const targets = input.dataset.target.split(',').map(t => 'table-' + t);
+    const q = input.value.trim().toLowerCase();
+    targets.forEach(tid => {
+      const wrap = document.getElementById(tid);
+      const rows = wrap.querySelectorAll('tbody tr');
+      rows.forEach(tr => {
+        tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  });
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadAll);
+
+loadAll();
+</script>
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
