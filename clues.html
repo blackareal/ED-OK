@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คำใบ้ - Selfie Vocab Run</title>
+<style>
+  :root {
+    --navy: #1F3864;
+    --gold: #D4A017;
+    --easy: #2E7D32;
+    --medium: #B8860B;
+    --hard: #C0392B;
+    --bg: #F4F6FB;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Leelawadee UI", "Tahoma", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: #1a1a2e;
+    padding-bottom: 6em; /* room for floating submit button */
+  }
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 1.4em 1.2em 1.2em;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  header h1 { margin: 0 0 0.15em; font-size: 1.5rem; }
+  header p { margin: 0; font-size: 0.85rem; color: #C9D6EE; }
+
+  .notice {
+    background: #FFF4D6;
+    border-bottom: 2px solid var(--gold);
+    color: #6B4E00;
+    text-align: center;
+    padding: 0.7em 1em;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .filters {
+    display: flex;
+    gap: 0.5em;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 1em;
+  }
+  .filters button {
+    border: 1px solid #ccc;
+    background: #fff;
+    border-radius: 100px;
+    padding: 0.45em 1.1em;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #444;
+  }
+  .filters button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.9em;
+    padding: 0 1em;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1em 1.1em;
+    box-shadow: 0 2px 10px rgba(20,30,60,0.06);
+    border-left: 6px solid var(--navy);
+  }
+  .card.Easy { border-left-color: var(--easy); }
+  .card.Medium { border-left-color: var(--medium); }
+  .card.Hard { border-left-color: var(--hard); }
+
+  .card-no { color: #99a; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5em; }
+
+  .clue-text { font-size: 0.95rem; line-height: 1.55; color: #333; }
+
+  .emoji-clue { font-size: 3.2rem; text-align: center; margin: 0.3em 0; line-height: 1.2; }
+
+  .hangman { display: flex; flex-wrap: wrap; justify-content: center; margin: 0.5em 0 0.3em; }
+  .tile {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.5em; height: 1.8em; margin: 0 2px;
+    border-bottom: 3px solid var(--navy);
+    font-weight: 800; font-size: 1.05rem; color: #bbb;
+  }
+  .tile.shown { color: var(--navy); }
+  .tile-gap { display: inline-block; width: 0.7em; }
+  .tile-lit {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.5em; font-weight: 800; color: #aab;
+  }
+  .hangman-hint { font-size: 0.75rem; color: #889; text-align: center; }
+
+  .empty { text-align: center; color: #99a; padding: 3em 1em; }
+
+  .submit-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid #ddd;
+    padding: 0.8em 1em;
+    display: flex;
+    justify-content: center;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  }
+  .submit-bar a {
+    background: var(--gold);
+    color: #1a1a1a;
+    text-decoration: none;
+    font-weight: 800;
+    padding: 0.85em 2em;
+    border-radius: 100px;
+    font-size: 1rem;
+    box-shadow: 0 6px 20px rgba(212,160,23,0.4);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📖 คำใบ้ Selfie Vocab Run</h1>
+  <p>สแกน / เดา / ไปถ่ายรูป — เฉลยจะเปิดเผยตอนจบกิจกรรมเท่านั้น</p>
+</header>
+
+<div class="notice">⚠️ ให้ตัวแทนกลุ่มเพียงคนเดียวเท่านั้นเป็นผู้กดปุ่ม "ส่งภาพ" ด้านล่าง</div>
+
+<div class="filters" id="filters">
+  <button data-f="all" class="active">ทั้งหมด</button>
+  <button data-f="Easy">🟢 ง่าย</button>
+  <button data-f="Medium">🟡 กลาง</button>
+  <button data-f="Hard">🔴 ยาก</button>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="empty" id="emptyMsg" style="display:none;">ไม่มีคำใบ้ในหมวดนี้</div>
+
+<div class="submit-bar">
+  <a id="submitLink" href="#" target="_blank" rel="noopener">📤 ส่งภาพเข้า Google Form (ตัวแทนกลุ่มเท่านั้น)</a>
+</div>
+
+<script>
+  // =====================================================================
+  // CONFIG — แก้ลิงก์นี้เป็น Google Form จริงของคุณก่อนใช้งาน
+  // =====================================================================
+  const GOOGLE_FORM_URL = "https://forms.gle/PASTE_YOUR_FORM_LINK_HERE";
+  document.getElementById('submitLink').href = GOOGLE_FORM_URL;
+
+  // =====================================================================
+  // คำใบ้ 32 ข้อ — จงใจ "ไม่" ใส่ชื่อสถานที่/คำศัพท์คำตอบไว้ในหน้านี้
+  // (เฉลยเต็มอยู่ในไฟล์ screen.html แท็บ "เฉลย" สำหรับครูเท่านั้น)
+  // รูปแบบ (type): "riddle" = คำใบ้ข้อความ, "emoji" = ทายจากอิโมจิล้วน,
+  //                "hangman" = ทายตัวอักษรทีละตัว (คำตอบถูกซ่อนไว้ในโค้ด
+  //                เพื่อใช้เฉลยทีละตัวเมื่อกด — เป็นกลไกของเกมโดยตรง)
+  // =====================================================================
+  const clues = [
+    [1,  "Hard",   "riddle",  "🫂 ALL CREW MEMBERS (ANYWHERE) — gather your ENTIRE squad (every member of your own group) for one big selfie together. Any location on campus counts!"],
+    [2,  "Easy",   "hangman", "CANTEEN"],
+    [3,  "Easy",   "riddle",  "Every Monday it watches you struggle to wake up. Salute it like a very tired soldier."],
+    [4,  "Easy",   "emoji",   "🚰"],
+    [5,  "Easy",   "riddle",  "You curse it every day — there’s still no elevator. Strike a superhero pose mid-climb."],
+    [6,  "Easy",   "riddle",  "The first thing you see each morning while pretending to be happy about it. Point at it like a tour guide."],
+    [7,  "Easy",   "riddle",  "Where teachers’ cars silently judge your future parking skills. Pose like a valet."],
+    [8,  "Easy",   "emoji",   "🌳"],
+    [9,  "Medium", "hangman", "LIBRARY"],
+    [10, "Medium", "riddle",  "Walk in with a headache, walk out with a cotton ball and free advice. Fake a dramatic faint."],
+    [11, "Medium", "riddle",  "The first person who always knows you’re late. Give a very serious salute."],
+    [12, "Medium", "hangman", "BASKETBALL COURT"],
+    [13, "Medium", "riddle",  "Nature’s classroom and the mosquito’s five-star restaurant. Smell a flower like it’s a perfume ad."],
+    [14, "Medium", "riddle",  "Where “do re mi” can turn into “please stop.” Air-guitar like a rockstar."],
+    [15, "Medium", "riddle",  "Where this whole camp started before you got sent outside. Strike your best “camp leader” pose."],
+    [16, "Hard",   "hangman", "COMPUTER LAB"],
+    [17, "Hard",   "riddle",  "Where important announcements go to be ignored by everyone. Point at it like you actually read it."],
+    [18, "Hard",   "riddle",  "The final boss room every student avoids. Pose like you’re about to get called in."],
+    [19, "Easy",   "riddle",  "The financial black hole of your allowance. Pose like you just won the lottery from a bag of chips."],
+    [20, "Easy",   "riddle",  "Where odd socks go to disappear forever. Hold up one shoe like it’s crime scene evidence."],
+    [21, "Easy",   "emoji",   "🔔"],
+    [22, "Easy",   "riddle",  "Where you cheer loudest for a game you don’t fully understand. Strike a cheerleader pose."],
+    [23, "Medium", "riddle",  "Where “safety goggles” meet “questionable smells.” Pose like a mad scientist mid-discovery."],
+    [24, "Medium", "riddle",  "Where your stick figures get called “abstract art.” Strike your best gallery-opening pose."],
+    [25, "Medium", "riddle",  "The forbidden zone where teachers mysteriously relax. Peek in like a curious spy."],
+    [26, "Medium", "riddle",  "Where you race your friends every afternoon just for a window seat. Pose like you’re about to sprint."],
+    [27, "Medium", "riddle",  "The unofficial gossip headquarters of the school. Whisper a “secret” dramatically."],
+    [28, "Hard",   "riddle",  "Where the morning announcements come from — and where half the school ignores them. Pose like a news anchor."],
+    [29, "Hard",   "riddle",  "Hopefully the least-used item in school. Give it a respectful salute just in case."],
+    [30, "Hard",   "hangman", "SCHOOL MOTTO SIGN"],
+    [31, "Hard",   "emoji",   "🐕"],
+    [32, "Medium", "riddle",  "Known for saying “I already explained this” at least once a day. Find ANY teacher on campus and take a group selfie together — bonus points if they smile! 🍎"]
+  ];
+
+  const grid = document.getElementById('grid');
+  const emptyMsg = document.getElementById('emptyMsg');
+
+  // เผยตัวอักษรครึ่งหนึ่งของแต่ละคำโดยอัตโนมัติ (ตัวแรกของทุกคำจะถูกเผยเสมอ)
+  // เพื่อให้พอเดาคำตอบได้โดยไม่ต้องกดอะไรเพิ่ม
+  function renderHangman(word) {
+    let tiles = "";
+    let idx = 0;
+    for (const ch of word) {
+      if (ch === " ") {
+        tiles += `<span class="tile-gap"></span>`;
+        idx = 0; // เริ่มนับตัวอักษรใหม่ทุกคำ ให้ตัวแรกของแต่ละคำถูกเผยเสมอ
+      } else if (/[a-zA-Z]/.test(ch)) {
+        const shown = idx % 2 === 0;
+        tiles += `<span class="tile${shown ? ' shown' : ''}">${shown ? ch : "_"}</span>`;
+        idx++;
+      } else {
+        tiles += `<span class="tile-lit">${ch}</span>`;
+      }
+    }
+    return `<div class="hangman">${tiles}</div>`;
+  }
+
+  function render(filter) {
+    grid.innerHTML = "";
+    const items = clues.filter(c => filter === 'all' || c[1] === filter);
+    emptyMsg.style.display = items.length ? 'none' : 'block';
+    for (const [no, level, type, content] of items) {
+      const card = document.createElement('div');
+      card.className = `card ${level}`;
+      let body = "";
+      if (type === "emoji") body = `<div class="emoji-clue">${content}</div>`;
+      else if (type === "hangman") body = renderHangman(content);
+      else body = `<div class="clue-text">${content}</div>`;
+
+      card.innerHTML = `<div class="card-no">ข้อที่ ${no}</div>${body}`;
+      grid.appendChild(card);
+    }
+  }
+
+  document.getElementById('filters').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render(btn.dataset.f);
+  });
+
+  render('all');
+
+  // =====================================================================
+  // (ทางเลือกเสริม) Prefill ชื่อกลุ่มลงในฟอร์มอัตโนมัติ ถ้าลิงก์ที่แจกแต่ละกลุ่ม
+  // มี query string ต่อท้าย เช่น clues.html?group=3
+  // 1) เปิด Google Form ของคุณ -> กด ⋮ -> "รับลิงก์ที่กรอกไว้ล่วงหน้า"
+  // 2) กรอกช่อง "ชื่อกลุ่ม" เป็น "กลุ่ม 3" แล้วกด "รับลิงก์"
+  // 3) คัดลอกพารามิเตอร์ entry.XXXXXXXXX จากลิงก์ที่ได้ มาแทนที่ ENTRY_ID ด้านล่าง
+  //    แล้วเอาคอมเมนต์ออก (ลบ /* กับ */)
+  // ---------------------------------------------------------------------
+  /*
+  const params = new URLSearchParams(window.location.search);
+  const group = params.get('group');
+  if (group) {
+    const url = new URL(GOOGLE_FORM_URL);
+    url.searchParams.set('entry.ENTRY_ID', `กลุ่ม ${group}`);
+    document.getElementById('submitLink').href = url.href;
+  }
+  */
+</script>
+</body>
+</html>
