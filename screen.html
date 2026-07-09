@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selfie Vocab Run - Host Screen</title>
+<meta name="robots" content="noindex, nofollow">
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+  :root {
+    --navy: #1F3864;
+    --gold: #D4A017;
+    --dark-bg: #0F1B33;
+    --light-bg: #F4F6FB;
+    --ok: #2E7D32;
+    --warn: #C0392B;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Leelawadee UI", "Tahoma", "Segoe UI", sans-serif;
+    color: #1a1a2e;
+  }
+
+  /* ---------- Tab bar (floats over every panel) ---------- */
+  .tabbar {
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 50;
+    display: flex;
+    gap: 6px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+    padding: 6px;
+    border-radius: 100px;
+  }
+  .tabbar button {
+    border: none;
+    background: transparent;
+    color: #cfd8ea;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.5em 1em;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .tabbar button.active { background: var(--gold); color: #1a1a1a; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ================= INTRO + TIMER (dark theme) ================= */
+  #panel-intro, #panel-timer {
+    background: radial-gradient(circle at top, #2A4270, var(--dark-bg));
+    color: #fff;
+    min-height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4vw 2vw 2vw;
+  }
+  #panel-intro.active, #panel-timer.active { display: flex; }
+  .inner { width: 100%; max-width: 1400px; text-align: center; }
+
+  h1.title {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    margin: 0 0 0.2em;
+    letter-spacing: 0.03em;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .subtitle { font-size: clamp(1.1rem, 2vw, 1.6rem); color: #C9D6EE; margin-bottom: 1.5em; }
+  .meta { font-size: clamp(0.9rem, 1.4vw, 1.2rem); color: #93A5C9; margin-bottom: 2em; }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2vw;
+    margin-bottom: 2.5em;
+    text-align: left;
+  }
+  .rule-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 1.2em 1.4em;
+  }
+  .rule-card .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2em; height: 2em; border-radius: 50%;
+    background: var(--gold); color: #1a1a1a; font-weight: 700;
+    margin-bottom: 0.5em; font-size: 1rem;
+  }
+  .rule-card p { margin: 0; font-size: clamp(0.95rem, 1.3vw, 1.15rem); line-height: 1.5; }
+
+  .qr-wrap {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 0.8em;
+    background: #fff; border-radius: 24px; padding: 1.5em 2em;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .qr-label { color: #1F3864; font-weight: 700; font-size: clamp(1rem, 1.6vw, 1.3rem); }
+  .qr-url { color: #667; font-size: 0.85rem; word-break: break-all; }
+
+  .start-btn {
+    margin-top: 2em;
+    background: var(--gold);
+    color: #1a1a1a;
+    border: none;
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    font-weight: 700;
+    padding: 0.8em 2.4em;
+    border-radius: 100px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(212,160,23,0.4);
+  }
+
+  .timer-label { font-size: clamp(1.2rem, 2.4vw, 2rem); color: #C9D6EE; margin-bottom: 0.3em; letter-spacing: 0.05em; }
+  .timer-display {
+    font-size: clamp(6rem, 18vw, 14rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin: 0.2em 0 0.4em;
+    text-shadow: 0 6px 30px rgba(0,0,0,0.5);
+  }
+  .timer-display.warning { color: #F2C744; }
+  .timer-display.danger { color: #E85C5C; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
+
+  .timer-controls { display: flex; gap: 1em; justify-content: center; flex-wrap: wrap; margin-top: 1.2em; }
+  .timer-controls button {
+    font-size: clamp(1rem, 1.6vw, 1.3rem);
+    padding: 0.7em 1.8em;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  #btnStartPause { background: var(--gold); color: #1a1a1a; }
+  #btnReset { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+  footer.hint { margin-top: 2.5em; font-size: 0.85rem; color: #6C7EA3; }
+
+  /* ================= DASHBOARD (light theme) ================= */
+  #panel-dashboard { background: var(--light-bg); min-height: 100vh; }
+  #panel-dashboard header {
+    background: var(--navy); color: #fff; padding: 1.2em 1.2em 1.2em 5.5em;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 0.6em;
+  }
+  #panel-dashboard header h2 { margin: 0; font-size: 1.3rem; }
+  #panel-dashboard header .status { font-size: 0.8rem; color: #C9D6EE; }
+  .controls { display: flex; gap: 0.6em; align-items: center; }
+  .controls button, .controls label {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 0.5em 1em;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 1.2em; }
+  .config-warning {
+    background: #FDECEC; border: 1px solid var(--warn); color: #8a1f1f;
+    padding: 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.9rem;
+  }
+  .leaderboard { background: #fff; border-radius: 14px; padding: 1.2em; margin-bottom: 1.5em; box-shadow: 0 2px 10px rgba(20,30,60,0.06); }
+  .leaderboard h3 { margin: 0 0 0.8em; font-size: 1.1rem; color: var(--navy); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.5em 0.6em; border-bottom: 1px solid #eee; }
+  th { color: #778; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
+  tr:first-child td { font-weight: 800; color: var(--navy); }
+  .group-section { margin-bottom: 2em; }
+  .group-title { display: flex; align-items: baseline; gap: 0.6em; margin-bottom: 0.7em; flex-wrap: wrap; }
+  .group-title h4 { margin: 0; color: var(--navy); font-size: 1.15rem; }
+  .group-title .score { color: var(--gold); font-weight: 800; }
+  .group-title .count { color: #99a; font-size: 0.85rem; }
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.8em; }
+  .photo-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(20,30,60,0.08); text-decoration: none; color: inherit; display: block; }
+  .photo-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #eee; display: block; }
+  .photo-card .meta { padding: 0.55em 0.7em; }
+  .photo-card .word { font-weight: 800; font-size: 0.85rem; color: var(--navy); }
+  .photo-card .sub { font-size: 0.72rem; color: #99a; display: flex; justify-content: space-between; margin-top: 0.2em; }
+  .photo-card .confirm-bad { color: var(--warn); font-weight: 700; }
+  .empty { text-align: center; color: #99a; padding: 3em 1em; }
+
+  /* ================= ANSWER KEY (light theme, flip-card list) ================= */
+  #panel-answerkey { background: var(--light-bg); min-height: 100vh; }
+  #panel-answerkey header {
+    background: var(--navy); color: #fff; padding: 1.2em 1.2em 1.2em 5.5em;
+  }
+  #panel-answerkey header h2 { margin: 0; font-size: 1.3rem; }
+  #panel-answerkey header p { margin: 0.2em 0 0; font-size: 0.8rem; color: #C9D6EE; }
+
+  .lvl-badge { font-size: 0.7rem; font-weight: 700; padding: 0.15em 0.5em; border-radius: 100px; color: #fff; white-space: nowrap; display: inline-block; }
+  .lvl-badge.Easy { background: var(--ok); }
+  .lvl-badge.Medium { background: #B8860B; }
+  .lvl-badge.Hard { background: var(--warn); }
+
+  .ak-list { display: flex; flex-direction: column; gap: 0.8em; }
+  .ak-row {
+    display: grid; grid-template-columns: 220px 1fr; gap: 1em;
+    background: #fff; border-radius: 14px; padding: 0.8em; box-shadow: 0 2px 10px rgba(20,30,60,0.06);
+  }
+  @media (max-width: 640px) { .ak-row { grid-template-columns: 1fr; } }
+
+  .flipcard { perspective: 1000px; cursor: pointer; min-height: 150px; }
+  .flipcard-inner {
+    position: relative; width: 100%; height: 100%; min-height: 150px;
+    transition: transform 0.5s; transform-style: preserve-3d;
+  }
+  .flipcard.flipped .flipcard-inner { transform: rotateY(180deg); }
+  .flipcard-front, .flipcard-back {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.4em; padding: 0.8em; border-radius: 12px; text-align: center;
+  }
+  .flipcard-front { background: #F4F6FB; border: 2px dashed #ccd4e0; }
+  .flipcard-back { background: var(--navy); color: #fff; transform: rotateY(180deg); }
+  .ak-no { font-size: 0.7rem; color: #99a; font-weight: 700; }
+  .flipcard-back .ak-no { color: #C9D6EE; }
+  .flipcard-front .clue-text { font-size: 0.78rem; line-height: 1.4; color: #333; }
+  .flipcard-front .emoji-clue { font-size: 2.3rem; margin: 0; }
+  .flipcard-hint { font-size: 0.65rem; color: #aab; }
+  .ak-answer-word { font-size: 1.1rem; font-weight: 800; }
+  .ak-answer-target { font-size: 0.8rem; color: #C9D6EE; }
+
+  .ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; }
+  .ak-photo { width: 72px; text-align: center; text-decoration: none; color: inherit; }
+  .ak-photo img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; background: #eee; display: block; }
+  .ak-photo .grp { font-size: 0.65rem; color: #667; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ak-empty-photos { color: #aab; font-size: 0.85rem; align-self: center; }
+
+  .hangman { display: flex; flex-wrap: wrap; justify-content: center; }
+  .tile {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.3em; height: 1.5em; margin: 0 1px;
+    border-bottom: 3px solid #99a; font-weight: 800; font-size: 0.95rem; color: #bbb;
+  }
+  .tile.shown { color: var(--navy); border-bottom-color: var(--navy); }
+  .tile-gap { display: inline-block; width: 0.6em; }
+</style>
+</head>
+<body>
+
+<div class="tabbar" id="tabbar">
+  <button data-tab="intro" class="active">🎬 แนะนำ</button>
+  <button data-tab="timer">⏱️ จับเวลา</button>
+  <button data-tab="dashboard">🖼️ Dashboard</button>
+  <button data-tab="answerkey">🔑 เฉลย</button>
+</div>
+
+<!-- ============ INTRO PANEL ============ -->
+<div class="panel active" id="panel-intro">
+  <div class="inner">
+    <h1 class="title">📸 SELFIE VOCAB RUN</h1>
+    <div class="subtitle">กิจกรรมถ่ายภาพล่าคำใบ้คำศัพท์รอบโรงเรียน</div>
+    <div class="meta">ค่ายพัฒนาผู้นำด้านภาษาอังกฤษ &nbsp;|&nbsp; โรงเรียนอุดรพิชัยรักษ์พิทยา</div>
+
+    <div class="rules-grid">
+      <div class="rule-card"><div class="num">1</div><p>แบ่งนักเรียนเป็น <b>6 กลุ่ม</b> สแกน QR ด้านล่างเพื่อดูคำใบ้ทั้งหมด <b>32 ข้อ</b></p></div>
+      <div class="rule-card"><div class="num">2</div><p>ไม่บังคับถ่ายให้ครบ ถ่ายให้ได้มากที่สุดภายในเวลาที่กำหนด</p></div>
+      <div class="rule-card"><div class="num">3</div><p>ทุกภาพต้องมี <b>สมาชิกครบทุกคน</b> ในกลุ่มอยู่ในภาพ</p></div>
+      <div class="rule-card"><div class="num">4</div><p>ให้ <b>ตัวแทนกลุ่มเพียงคนเดียว</b> เป็นผู้กดส่งภาพเข้า Google Form</p></div>
+    </div>
+
+    <div class="qr-wrap">
+      <canvas id="qrCanvas"></canvas>
+      <div class="qr-label">📱 สแกนเพื่อดูคำใบ้ทั้งหมด</div>
+      <div class="qr-url" id="qrUrlText"></div>
+    </div>
+    <br>
+    <button class="start-btn" id="btnGoTimer">⏱️ เริ่มจับเวลา 40 นาที</button>
+    <footer class="hint">Selfie Vocab Run · หน้าจอสำหรับฉายในกิจกรรม</footer>
+  </div>
+</div>
+
+<!-- ============ TIMER PANEL ============ -->
+<div class="panel" id="panel-timer">
+  <div class="inner">
+    <div class="timer-label">⏳ เวลาที่เหลือในการถ่ายภาพ</div>
+    <div class="timer-display" id="timerDisplay">40:00</div>
+    <div class="timer-controls">
+      <button id="btnStartPause">▶️ เริ่ม</button>
+      <button id="btnReset">🔄 รีเซ็ต</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD PANEL ============ -->
+<div class="panel" id="panel-dashboard">
+  <header>
+    <div>
+      <h2>🖼️ Dashboard ครู — Selfie Vocab Run</h2>
+      <div class="status" id="statusText">ยังไม่ได้โหลดข้อมูล</div>
+    </div>
+    <div class="controls">
+      <label><input type="checkbox" id="autoRefresh"> รีเฟรชอัตโนมัติ (30s)</label>
+      <button id="btnRefresh">🔄 รีเฟรชตอนนี้</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="config-warning" id="configWarning" style="display:none;"></div>
+    <div class="leaderboard">
+      <h3>🏆 คะแนนรวมแต่ละกลุ่ม</h3>
+      <table>
+        <thead><tr><th>อันดับ</th><th>กลุ่ม</th><th>คะแนน (จาก 32)</th><th>จำนวนไฟล์ภาพที่ส่ง</th></tr></thead>
+        <tbody id="leaderboardBody"><tr><td colspan="4" style="color:#99a;">—</td></tr></tbody>
+      </table>
+    </div>
+    <div id="groups"></div>
+    <div class="empty" id="emptyMsg" style="display:none;">ยังไม่มีภาพส่งเข้ามา</div>
+  </div>
+</div>
+
+<!-- ============ ANSWER KEY PANEL (ครูเท่านั้น) ============ -->
+<div class="panel" id="panel-answerkey">
+  <header>
+    <h2>🔑 เฉลยคำใบ้ทั้ง 32 ข้อ</h2>
+    <p>สำหรับครู/กรรมการเท่านั้น — อย่าฉายแท็บนี้ตอนบรีฟนักเรียน · กดที่การ์ดเพื่อพลิกดูเฉลย</p>
+  </header>
+  <div class="wrap">
+    <div class="ak-list" id="akList"></div>
+  </div>
+</div>
+
+<script>
+  // =====================================================================
+  // TAB SWITCHING
+  // =====================================================================
+  const tabbar = document.getElementById('tabbar');
+  const panels = {
+    intro: document.getElementById('panel-intro'),
+    timer: document.getElementById('panel-timer'),
+    dashboard: document.getElementById('panel-dashboard'),
+    answerkey: document.getElementById('panel-answerkey'),
+  };
+  function showTab(name) {
+    Object.entries(panels).forEach(([k, el]) => el.classList.toggle('active', k === name));
+    tabbar.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    if (name === 'dashboard') loadDashboardData();
+    if (name === 'answerkey') renderAnswerKey();
+  }
+  tabbar.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn) showTab(btn.dataset.tab);
+  });
+  document.getElementById('btnGoTimer').addEventListener('click', () => { showTab('timer'); startTimer(); });
+
+  // =====================================================================
+  // QR CODE (points to clues.html, resolved relative to this page's URL —
+  // works automatically no matter what domain/subfolder this is hosted at)
+  // ห่อด้วย try/catch เพราะไลบรารี QRCode โหลดจาก CDN ภายนอก — ถ้าเน็ตของโรงเรียน
+  // บล็อก CDN นี้ (หรือทดสอบแบบเปิดไฟล์ในเครื่องแล้วโหลดสคริปต์ไม่ติด) จะได้ไม่ทำให้
+  // โค้ดส่วนอื่นทั้งหมดที่อยู่ถัดจากนี้ (ตัวจับเวลา, Dashboard, เฉลย) พังไปด้วย
+  // =====================================================================
+  const cluesUrl = new URL('clues.html', window.location.href).href;
+  document.getElementById('qrUrlText').textContent = cluesUrl;
+  try {
+    if (typeof QRCode === 'undefined') throw new Error('QRCode library failed to load (CDN blocked?)');
+    QRCode.toCanvas(document.getElementById('qrCanvas'), cluesUrl, {
+      width: 260, margin: 1, color: { dark: '#1F3864', light: '#ffffff' }
+    }, (err) => { if (err) console.error(err); });
+  } catch (err) {
+    console.error('QR code generation failed:', err);
+    const qrCanvas = document.getElementById('qrCanvas');
+    qrCanvas.style.display = 'none';
+    const fallback = document.createElement('a');
+    fallback.href = cluesUrl;
+    fallback.textContent = '⚠️ สร้าง QR ไม่สำเร็จ (เน็ตอาจบล็อก CDN) — กดลิงก์นี้แทน';
+    fallback.style.cssText = 'display:block;color:#1F3864;font-weight:700;text-decoration:underline;';
+    qrCanvas.after(fallback);
+  }
+
+  // =====================================================================
+  // COUNTDOWN TIMER (35:00, matches activity schedule)
+  // =====================================================================
+  const TOTAL_SECONDS = 40 * 60;
+  let remaining = TOTAL_SECONDS;
+  let intervalId = null;
+  const display = document.getElementById('timerDisplay');
+  const btnStartPause = document.getElementById('btnStartPause');
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+  function renderTimer() {
+    display.textContent = formatTime(Math.max(remaining, 0));
+    display.classList.toggle('warning', remaining <= 300 && remaining > 60);
+    display.classList.toggle('danger', remaining <= 60);
+  }
+  function tick() {
+    remaining -= 1;
+    renderTimer();
+    if (remaining <= 0) {
+      pauseTimer();
+      display.textContent = "หมดเวลา!";
+      display.classList.add('danger');
+    }
+  }
+  function startTimer() {
+    if (intervalId) return;
+    intervalId = setInterval(tick, 1000);
+    btnStartPause.textContent = '⏸️ หยุดชั่วคราว';
+  }
+  function pauseTimer() {
+    clearInterval(intervalId);
+    intervalId = null;
+    btnStartPause.textContent = '▶️ เริ่ม';
+  }
+  btnStartPause.addEventListener('click', () => intervalId ? pauseTimer() : startTimer());
+  document.getElementById('btnReset').addEventListener('click', () => {
+    pauseTimer();
+    remaining = TOTAL_SECONDS;
+    renderTimer();
+  });
+  renderTimer();
+
+  // =====================================================================
+  // DASHBOARD — CONFIG: วาง URL ของ Google Sheet ที่ Publish เป็น CSV แล้วที่นี่
+  // วิธีได้ลิงก์: เปิด Google Sheet (การตอบกลับของฟอร์ม) -> File/ไฟล์
+  //   -> Share/แชร์ -> Publish to web/เผยแพร่ไปยังเว็บ -> เลือกชีตที่ต้องการ
+  //   -> รูปแบบ CSV -> Publish -> คัดลอกลิงก์มาวางด้านล่าง
+  //
+  // สำคัญ: ไฟล์ภาพที่อัปโหลดผ่าน Google Form จะถูกเก็บใน Google Drive โฟลเดอร์
+  // ของฟอร์มนั้น ต้องตั้งค่าการแชร์โฟลเดอร์เป็น "ทุกคนที่มีลิงก์ - ดูได้" (Anyone
+  // with the link - Viewer) ไม่เช่นนั้นรูปภาพจะขึ้นเป็นไอคอนแตกในหน้านี้
+  // =====================================================================
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSovYsD4AM1mfliCtuORyPXzRgOpvDZ1F5bXQNsNnbWnGXJdlUWrAL588t7rELGDc_bXM9tBNnvNbk7/pub?output=csv";
+
+  // หมายเหตุ: ทุกภาพมีค่า 1 คะแนนเท่ากันหมด ไม่ว่าระดับความยากจะเป็นเท่าไร
+  // (level ยังเก็บไว้เพื่อแสดงผลอ้างอิงเฉย ๆ ไม่ถูกใช้คิดคะแนนอีกต่อไป)
+  const WORD_INFO = {
+    1:["ALL CREW MEMBERS (ANYWHERE)","Hard"], 2:["CANTEEN","Easy"], 3:["FLAGPOLE","Easy"],
+    4:["WATER DISPENSER","Easy"], 5:["STAIRCASE","Easy"], 6:["SCHOOL GATE / SIGN","Easy"],
+    7:["PARKING LOT","Easy"], 8:["BIG SHADY TREE","Easy"], 9:["LIBRARY","Medium"],
+    10:["NURSE’S ROOM","Medium"], 11:["SECURITY BOOTH","Medium"], 12:["BASKETBALL COURT","Medium"],
+    13:["GARDEN","Medium"], 14:["MUSIC ROOM","Medium"], 15:["AUDITORIUM","Medium"],
+    16:["COMPUTER LAB","Hard"], 17:["BULLETIN BOARD","Hard"], 18:["PRINCIPAL’S OFFICE","Hard"],
+    19:["SNACK SHOP / VENDING MACHINE","Easy"], 20:["SHOE RACK / LOCKER","Easy"],
+    21:["SCHOOL BELL / CLOCK","Easy"], 22:["STADIUM SEATING","Easy"],
+    23:["SCIENCE LAB","Medium"], 24:["ART ROOM","Medium"], 25:["STAFF ROOM","Medium"],
+    26:["SCHOOL BUS / DROP-OFF POINT","Medium"], 27:["REST PAVILION","Medium"],
+    28:["AV / BROADCAST ROOM","Hard"], 29:["FIRE EXTINGUISHER STATION","Hard"],
+    30:["SCHOOL MOTTO SIGN","Hard"], 31:["DOG","Hard"], 32:["TEACHER (ANY)","Medium"]
+  };
+
+  // =====================================================================
+  // ANSWER KEY (เฉลยเต็ม) — [no, word, thaiTarget, level, type, whatStudentsSee]
+  // คะแนน: ทุกภาพที่ยืนยันแล้ว = 1 คะแนนเท่ากันหมด (ดู WORD_INFO ด้านบน)
+  // =====================================================================
+  const ANSWER_KEY = [
+    [1,"ALL CREW MEMBERS (ANYWHERE)","สมาชิกในกลุ่มของตัวเองทุกคน (ถ่ายที่ไหนก็ได้)","Hard","riddle","🫂 ALL CREW MEMBERS (ANYWHERE) — gather your ENTIRE squad (every member of your own group) for one big selfie together. Any location on campus counts!"],
+    [2,"CANTEEN","โรงอาหาร","Easy","hangman","เกมทายตัวอักษร (Hangman)"],
+    [3,"FLAGPOLE","เสาธง","Easy","riddle","Every Monday it watches you struggle to wake up. Salute it like a very tired soldier."],
+    [4,"WATER DISPENSER","ตู้กดน้ำ","Easy","emoji","🚰"],
+    [5,"STAIRCASE","บันได","Easy","riddle","You curse it every day — there’s still no elevator. Strike a superhero pose mid-climb."],
+    [6,"SCHOOL GATE / SIGN","ป้ายชื่อโรงเรียน","Easy","riddle","The first thing you see each morning while pretending to be happy about it. Point at it like a tour guide."],
+    [7,"PARKING LOT","ลานจอดรถ","Easy","riddle","Where teachers’ cars silently judge your future parking skills. Pose like a valet."],
+    [8,"BIG SHADY TREE","ต้นไม้ใหญ่","Easy","emoji","🌳"],
+    [9,"LIBRARY","ห้องสมุด","Medium","hangman","เกมทายตัวอักษร (Hangman)"],
+    [10,"NURSE’S ROOM","ห้องพยาบาล","Medium","riddle","Walk in with a headache, walk out with a cotton ball and free advice. Fake a dramatic faint."],
+    [11,"SECURITY BOOTH","ป้อมยาม","Medium","riddle","The first person who always knows you’re late. Give a very serious salute."],
+    [12,"BASKETBALL COURT","สนามบาสเกตบอล","Medium","hangman","เกมทายตัวอักษร (Hangman)"],
+    [13,"GARDEN","สวนหย่อม","Medium","riddle","Nature’s classroom and the mosquito’s five-star restaurant. Smell a flower like it’s a perfume ad."],
+    [14,"MUSIC ROOM","ห้องดนตรี","Medium","riddle","Where “do re mi” can turn into “please stop.” Air-guitar like a rockstar."],
+    [15,"AUDITORIUM","หอประชุม","Medium","riddle","Where this whole camp started before you got sent outside. Strike your best “camp leader” pose."],
+    [16,"COMPUTER LAB","ห้องคอมพิวเตอร์","Hard","hangman","เกมทายตัวอักษร (Hangman)"],
+    [17,"BULLETIN BOARD","บอร์ดประชาสัมพันธ์","Hard","riddle","Where important announcements go to be ignored by everyone. Point at it like you actually read it."],
+    [18,"PRINCIPAL’S OFFICE","หน้าห้องผู้อำนวยการ","Hard","riddle","The final boss room every student avoids. Pose like you’re about to get called in."],
+    [19,"SNACK SHOP / VENDING MACHINE","ร้านค้าสวัสดิการ/ตู้ขายของขบเคี้ยว","Easy","riddle","The financial black hole of your allowance. Pose like you just won the lottery from a bag of chips."],
+    [20,"SHOE RACK / LOCKER","ตู้เก็บรองเท้า","Easy","riddle","Where odd socks go to disappear forever. Hold up one shoe like it’s crime scene evidence."],
+    [21,"SCHOOL BELL / CLOCK","นาฬิกา/กระดิ่งโรงเรียน","Easy","emoji","🔔"],
+    [22,"STADIUM SEATING","อัฒจันทร์","Easy","riddle","Where you cheer loudest for a game you don’t fully understand. Strike a cheerleader pose."],
+    [23,"SCIENCE LAB","ห้องวิทยาศาสตร์","Medium","riddle","Where “safety goggles” meet “questionable smells.” Pose like a mad scientist mid-discovery."],
+    [24,"ART ROOM","ห้องศิลปะ","Medium","riddle","Where your stick figures get called “abstract art.” Strike your best gallery-opening pose."],
+    [25,"STAFF ROOM","หน้าห้องพักครู","Medium","riddle","The forbidden zone where teachers mysteriously relax. Peek in like a curious spy."],
+    [26,"SCHOOL BUS / DROP-OFF POINT","จุดจอดรถรับ-ส่ง","Medium","riddle","Where you race your friends every afternoon just for a window seat. Pose like you’re about to sprint."],
+    [27,"REST PAVILION","ศาลาพักผ่อน","Medium","riddle","The unofficial gossip headquarters of the school. Whisper a “secret” dramatically."],
+    [28,"AV / BROADCAST ROOM","ห้องโสตทัศนศึกษา","Hard","riddle","Where the morning announcements come from — and where half the school ignores them. Pose like a news anchor."],
+    [29,"FIRE EXTINGUISHER STATION","จุดติดตั้งถังดับเพลิง","Hard","riddle","Hopefully the least-used item in school. Give it a respectful salute just in case."],
+    [30,"SCHOOL MOTTO SIGN","ป้ายคำขวัญ/ปรัชญาโรงเรียน","Hard","hangman","เกมทายตัวอักษร (Hangman)"],
+    [31,"DOG","สุนัขในโรงเรียน (ถ้าเจอ ณ จุดใดก็ได้)","Hard","emoji","🐕"],
+    [32,"TEACHER (ANY)","ครูท่านใดก็ได้ในโรงเรียน (คน ไม่ใช่สถานที่)","Medium","riddle","Known for saying “I already explained this” at least once a day. Find ANY teacher on campus and take a group selfie together — bonus points if they smile! 🍎"]
+  ];
+
+  // เผยตัวอักษรครึ่งหนึ่งของคำ (ตัวแรกของทุกคำเผยเสมอ) — ใช้แบบเดียวกับ clues.html
+  function maskWord(word) {
+    let out = "";
+    let idx = 0;
+    for (const ch of word) {
+      if (ch === " ") { out += `<span class="tile-gap"></span>`; idx = 0; }
+      else if (/[a-zA-Z]/.test(ch)) {
+        const shown = idx % 2 === 0;
+        out += `<span class="tile${shown ? ' shown' : ''}">${shown ? ch : "_"}</span>`;
+        idx++;
+      } else {
+        out += ch;
+      }
+    }
+    return out;
+  }
+
+  function akFrontContent(type, word, seen) {
+    if (type === "emoji") return `<div class="emoji-clue">${seen}</div>`;
+    if (type === "hangman") return `<div class="hangman">${maskWord(word)}</div>`;
+    return `<div class="clue-text">${seen}</div>`;
+  }
+
+  function renderAnswerKey() {
+    const list = document.getElementById('akList');
+    list.innerHTML = ANSWER_KEY.map(([no, word, target, level, type, seen]) => `
+      <div class="ak-row">
+        <div class="flipcard" onclick="this.classList.toggle('flipped')">
+          <div class="flipcard-inner">
+            <div class="flipcard-front">
+              <div class="ak-no">ข้อ ${no}</div>
+              ${akFrontContent(type, word, seen)}
+              <div class="flipcard-hint">👆 กดเพื่อดูเฉลย</div>
+            </div>
+            <div class="flipcard-back">
+              <div class="ak-no">ข้อ ${no}</div>
+              <div class="ak-answer-word">${word}</div>
+              <div class="ak-answer-target">${target}</div>
+              <span class="lvl-badge ${level}">${level}</span>
+            </div>
+          </div>
+        </div>
+        <div class="ak-photos" id="ak-photos-${no}"><span class="ak-empty-photos">กำลังโหลดภาพ…</span></div>
+      </div>`).join('');
+    loadAnswerKeyPhotos();
+  }
+
+  async function loadAnswerKeyPhotos() {
+    const panels = document.querySelectorAll('.ak-photos');
+    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("PASTE_YOUR")) {
+      panels.forEach(el => el.innerHTML = '<span class="ak-empty-photos">ยังไม่ได้ตั้งค่า Google Sheet</span>');
+      return;
+    }
+    try {
+      const { headers, dataRows } = await fetchSheet();
+      if (!dataRows.length) { panels.forEach(el => el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>'); return; }
+      const groupCol = findCol(headers, ["ชื่อกลุ่ม", "กลุ่ม"]);
+
+      for (const [no] of ANSWER_KEY) {
+        const el = document.getElementById(`ak-photos-${no}`);
+        if (!el) continue;
+        const itemCol = findExactCol(headers, `SVR#${no}`);
+        if (itemCol < 0) {
+          el.innerHTML = `<span class="ak-empty-photos">ไม่พบคอลัมน์ SVR#${no} ในชีต</span>`;
+          continue;
+        }
+        const entries = [];
+        for (const r of dataRows) {
+          const cell = (r[itemCol] || "").trim();
+          if (!cell) continue;
+          const group = (r[groupCol] || "?").trim();
+          const ids = extractDriveIds(cell);
+          if (ids.length) ids.forEach(id => entries.push({ group, driveId: id, cell }));
+          else entries.push({ group, driveId: null, cell });
+        }
+        if (!entries.length) {
+          el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>';
+          continue;
+        }
+        el.innerHTML = entries.map(e => `
+          <a class="ak-photo" href="${e.driveId ? driveViewUrl(e.driveId) : e.cell}" target="_blank" rel="noopener">
+            <img src="${e.driveId ? driveThumbUrl(e.driveId) : ''}" loading="lazy" onerror="this.style.opacity=0.15">
+            <div class="grp">${e.group}</div>
+          </a>`).join('');
+      }
+    } catch (err) {
+      console.error(err);
+      panels.forEach(el => el.innerHTML = '<span class="ak-empty-photos">โหลดภาพไม่สำเร็จ</span>');
+    }
+  }
+
+  // =====================================================================
+  // Google Sheet: โครงสร้างจริงคือ 1 แถว = 1 กลุ่ม (ไม่ใช่ 1 แถว/1 รูปแบบเดิม)
+  // คอลัมน์ที่ต้องมี: "ชื่อกลุ่ม" + "SVR#1" ถึง "SVR#32" (คำถามอัปโหลดไฟล์ 1 ข้อ
+  // ต่อคำใบ้ 1 ข้อ — เว้นว่างได้ถ้ากลุ่มนั้นยังไม่ได้ถ่าย/ส่งข้อนั้น)
+  // =====================================================================
+  async function fetchSheet() {
+    const res = await fetch(SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) return { headers: [], dataRows: [] };
+    const headers = rows[0].map(h => h.trim());
+    const dataRows = rows.slice(1).filter(r => r.some(c => c && c.trim() !== ""));
+    return { headers, dataRows };
+  }
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = "", inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i], next = text[i + 1];
+      if (inQuotes) {
+        if (c === '"' && next === '"') { field += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { field += c; }
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === ',') { row.push(field); field = ""; }
+        else if (c === '\r') { /* skip */ }
+        else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ""; }
+        else field += c;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.length > 1 || (r.length === 1 && r[0] !== ""));
+  }
+  // จับคู่ชื่อคอลัมน์แบบ "มีคำนี้อยู่ในหัวข้อ" — ใช้กับคอลัมน์ทั่วไปเช่น "ชื่อกลุ่ม"
+  function findCol(headers, keywords) {
+    return headers.findIndex(h => keywords.some(k => h.includes(k)));
+  }
+  // จับคู่ชื่อคอลัมน์แบบ "ตรงเป๊ะ" — ใช้กับ SVR#1..SVR#32 เท่านั้น เพื่อไม่ให้
+  // "SVR#1" ไปจับคอลัมน์ "SVR#10"-"SVR#19" ผิดพลาดจากการเทียบแบบ includes()
+  function findExactCol(headers, name) {
+    return headers.findIndex(h => h.trim() === name);
+  }
+  // ช่องอัปโหลดไฟล์ 1 ข้อใน Google Form อาจมีได้หลายไฟล์ — ลิงก์ Drive ที่ export
+  // ออกมาในชีตจะอยู่รวมกันในเซลล์เดียว (คั่นด้วย comma) ฟังก์ชันนี้ดึง Drive ID
+  // ออกมาทั้งหมดที่พบในเซลล์นั้น
+  function extractDriveIds(cell) {
+    if (!cell) return [];
+    const ids = new Set();
+    const reId = /[?&]id=([-\w]{15,})|\/d\/([-\w]{15,})/g;
+    let m;
+    while ((m = reId.exec(cell)) !== null) ids.add(m[1] || m[2]);
+    if (!ids.size) {
+      cell.split(/[,\n]/).map(s => s.trim()).forEach(s => {
+        if (/^[-\w]{15,}$/.test(s)) ids.add(s);
+      });
+    }
+    return [...ids];
+  }
+  function driveThumbUrl(id) { return `https://drive.google.com/thumbnail?id=${id}&sz=w400`; }
+  function driveViewUrl(id) { return `https://drive.google.com/file/d/${id}/view`; }
+
+  const statusText = document.getElementById('statusText');
+  const configWarning = document.getElementById('configWarning');
+  const groupsEl = document.getElementById('groups');
+  const leaderboardBody = document.getElementById('leaderboardBody');
+  const emptyMsg = document.getElementById('emptyMsg');
+  let dashboardLoadedOnce = false;
+
+  async function loadDashboardData() {
+    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("PASTE_YOUR")) {
+      configWarning.style.display = 'block';
+      configWarning.innerHTML = "⚠️ ยังไม่ได้ตั้งค่า <code>SHEET_CSV_URL</code> ในไฟล์ screen.html — ดูวิธีตั้งค่าใน README.md";
+      statusText.textContent = "ยังไม่ได้ตั้งค่าแหล่งข้อมูล";
+      return;
+    }
+    statusText.textContent = "กำลังโหลดข้อมูล...";
+    try {
+      const { headers, dataRows } = await fetchSheet();
+      if (!dataRows.length) { renderDashboard([], {}); statusText.textContent = "โหลดสำเร็จ แต่ยังไม่มีข้อมูล"; return; }
+
+      const groupCol = findCol(headers, ["ชื่อกลุ่ม", "กลุ่ม"]);
+      const itemCols = {};
+      for (const [no] of ANSWER_KEY) itemCols[no] = findExactCol(headers, `SVR#${no}`);
+
+      renderDashboard(dataRows, { groupCol, itemCols });
+      statusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · ${dataRows.length} กลุ่ม`;
+      configWarning.style.display = 'none';
+      dashboardLoadedOnce = true;
+    } catch (err) {
+      console.error(err);
+      statusText.textContent = "โหลดข้อมูลไม่สำเร็จ";
+      configWarning.style.display = 'block';
+      configWarning.innerHTML = "❌ โหลดข้อมูลจาก Google Sheet ไม่สำเร็จ — ตรวจสอบว่าได้ Publish to web เป็น CSV แล้ว และลิงก์ยังใช้งานได้ (" + err.message + ")";
+    }
+  }
+
+  function renderDashboard(dataRows, cols) {
+    if (!dataRows.length) {
+      groupsEl.innerHTML = "";
+      leaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#99a;">—</td></tr>`;
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    const groupSummaries = [];
+    let html = "";
+    const sortedRows = [...dataRows].sort((a, b) =>
+      (a[cols.groupCol] || "").localeCompare(b[cols.groupCol] || "", 'th'));
+
+    for (const row of sortedRows) {
+      const group = (row[cols.groupCol] || "ไม่ระบุกลุ่ม").trim();
+      let score = 0, photoCount = 0;
+      let cardsHtml = "";
+      for (const [no, word, , level] of ANSWER_KEY) {
+        const colIdx = cols.itemCols[no];
+        const cell = colIdx >= 0 ? (row[colIdx] || "").trim() : "";
+        if (!cell) continue;
+        score += 1;
+        const ids = extractDriveIds(cell);
+        photoCount += ids.length || 1;
+        const driveId = ids[0] || null;
+
+        cardsHtml += `
+          <a class="photo-card" href="${driveId ? driveViewUrl(driveId) : cell}" target="_blank" rel="noopener">
+            <img src="${driveId ? driveThumbUrl(driveId) : ''}" loading="lazy" alt="${word}"
+                 onerror="this.style.opacity=0.15;this.alt='โหลดรูปไม่ได้ (เช็คสิทธิ์แชร์ไฟล์)'">
+            <div class="meta">
+              <div class="word">#${no} ${word}</div>
+              <div class="sub">
+                <span class="lvl-badge ${level}">${level}</span>
+                <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}</span>
+              </div>
+            </div>
+          </a>`;
+      }
+
+      groupSummaries.push({ group, score, photoCount });
+      html += `
+        <div class="group-section">
+          <div class="group-title">
+            <h4>👥 ${group}</h4>
+            <span class="score">${score} pts</span>
+            <span class="count">(${score} / 32 ข้อ · ${photoCount} ไฟล์ภาพ)</span>
+          </div>
+          <div class="photo-grid">${cardsHtml || '<span class="ak-empty-photos">ยังไม่ส่งภาพ</span>'}</div>
+        </div>`;
+    }
+    groupsEl.innerHTML = html;
+
+    groupSummaries.sort((a, b) => b.score - a.score);
+    leaderboardBody.innerHTML = groupSummaries.map((g, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${g.group}</td>
+        <td>${g.score}</td>
+        <td>${g.photoCount}</td>
+      </tr>`).join('');
+  }
+
+  document.getElementById('btnRefresh').addEventListener('click', loadDashboardData);
+  let autoTimer = null;
+  document.getElementById('autoRefresh').addEventListener('change', (e) => {
+    if (e.target.checked) autoTimer = setInterval(loadDashboardData, 30000);
+    else clearInterval(autoTimer);
+  });
+</script>
+</body>
+</html>
