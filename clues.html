@@ -139,7 +139,6 @@
   <button data-f="all" class="active">ทั้งหมด</button>
   <button data-f="Easy">🟢 ง่าย</button>
   <button data-f="Medium">🟡 กลาง</button>
-  <button data-f="Hard">🔴 ยาก</button>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -164,38 +163,38 @@
   //                เพื่อใช้เฉลยทีละตัวเมื่อกด — เป็นกลไกของเกมโดยตรง)
   // =====================================================================
   const clues = [
-    [1,  "Hard",   "riddle",  "🫂 ALL CREW MEMBERS (ANYWHERE) — gather your ENTIRE squad (every member of your own group) for one big selfie together. Any location on campus counts!"],
+    [1,  "Easy",   "riddle",  "🫂 ALL CREW MEMBERS (ANYWHERE) — get your WHOLE group together and take ONE big photo with EVERYONE. You can do this ANYWHERE in the school!"],
     [2,  "Easy",   "hangman", "CANTEEN"],
-    [3,  "Easy",   "riddle",  "Every Monday it watches you struggle to wake up. Salute it like a very tired soldier."],
+    [3,  "Easy",   "riddle",  "Every Monday, everyone stands here to sing the national anthem. Stand next to it like a soldier!"],
     [4,  "Easy",   "emoji",   "🚰"],
-    [5,  "Easy",   "riddle",  "You curse it every day — there’s still no elevator. Strike a superhero pose mid-climb."],
-    [6,  "Easy",   "riddle",  "The first thing you see each morning while pretending to be happy about it. Point at it like a tour guide."],
-    [7,  "Easy",   "riddle",  "Where teachers’ cars silently judge your future parking skills. Pose like a valet."],
+    [5,  "Easy",   "riddle",  "You walk up and down this every day — there is still no elevator! Pose like a superhero climbing up."],
+    [6,  "Easy",   "riddle",  "This is the first thing you see when you arrive at school. Point at it and smile like a tour guide!"],
+    [7,  "Easy",   "riddle",  "Teachers park their cars here. Stand here and pretend you are parking a car."],
     [8,  "Easy",   "emoji",   "🌳"],
-    [9,  "Medium", "hangman", "LIBRARY"],
-    [10, "Medium", "riddle",  "Walk in with a headache, walk out with a cotton ball and free advice. Fake a dramatic faint."],
-    [11, "Medium", "riddle",  "The first person who always knows you’re late. Give a very serious salute."],
-    [12, "Medium", "hangman", "BASKETBALL COURT"],
-    [13, "Medium", "riddle",  "Nature’s classroom and the mosquito’s five-star restaurant. Smell a flower like it’s a perfume ad."],
-    [14, "Medium", "riddle",  "Where “do re mi” can turn into “please stop.” Air-guitar like a rockstar."],
-    [15, "Medium", "riddle",  "Where this whole camp started before you got sent outside. Strike your best “camp leader” pose."],
-    [16, "Hard",   "hangman", "COMPUTER LAB"],
-    [17, "Hard",   "riddle",  "Where important announcements go to be ignored by everyone. Point at it like you actually read it."],
-    [18, "Hard",   "riddle",  "The final boss room every student avoids. Pose like you’re about to get called in."],
-    [19, "Easy",   "riddle",  "The financial black hole of your allowance. Pose like you just won the lottery from a bag of chips."],
-    [20, "Easy",   "riddle",  "Where odd socks go to disappear forever. Hold up one shoe like it’s crime scene evidence."],
+    [9,  "Easy",   "hangman", "LIBRARY"],
+    [10, "Medium", "riddle",  "If you feel sick at school, you come here. Pretend you have a headache and need help!"],
+    [11, "Medium", "riddle",  "The guard sits here and always knows if you are late! Give a big, serious salute."],
+    [12, "Easy",   "hangman", "BASKETBALL COURT"],
+    [13, "Easy",   "riddle",  "This small garden has flowers and plants. Smell a flower like it is expensive perfume!"],
+    [14, "Easy",   "riddle",  "You can hear singing and music from this room. Pretend to play the guitar like a rock star!"],
+    [15, "Medium", "riddle",  "This big room is where camp started today. Stand here like a camp leader giving a speech!"],
+    [16, "Easy",   "hangman", "COMPUTER ROOM"],
+    [17, "Medium", "riddle",  "This board has papers and news on it. Point at it like you read everything on it!"],
+    [18, "Medium", "riddle",  "This is the school director's office. Some students feel a little scared here! Look worried outside the door."],
+    [19, "Easy",   "riddle",  "You buy snacks and drinks here. Look super happy, like you just won free snacks!"],
+    [20, "Easy",   "riddle",  "You leave your shoes here before going into some rooms. Hold up one shoe like it is very special!"],
     [21, "Easy",   "emoji",   "🔔"],
-    [22, "Easy",   "riddle",  "Where you cheer loudest for a game you don’t fully understand. Strike a cheerleader pose."],
-    [23, "Medium", "riddle",  "Where “safety goggles” meet “questionable smells.” Pose like a mad scientist mid-discovery."],
-    [24, "Medium", "riddle",  "Where your stick figures get called “abstract art.” Strike your best gallery-opening pose."],
-    [25, "Medium", "riddle",  "The forbidden zone where teachers mysteriously relax. Peek in like a curious spy."],
-    [26, "Medium", "riddle",  "Where you race your friends every afternoon just for a window seat. Pose like you’re about to sprint."],
-    [27, "Medium", "riddle",  "The unofficial gossip headquarters of the school. Whisper a “secret” dramatically."],
-    [28, "Hard",   "riddle",  "Where the morning announcements come from — and where half the school ignores them. Pose like a news anchor."],
-    [29, "Hard",   "riddle",  "Hopefully the least-used item in school. Give it a respectful salute just in case."],
-    [30, "Hard",   "hangman", "SCHOOL MOTTO SIGN"],
-    [31, "Hard",   "emoji",   "🐕"],
-    [32, "Medium", "riddle",  "Known for saying “I already explained this” at least once a day. Find ANY teacher on campus and take a group selfie together — bonus points if they smile! 🍎"]
+    [22, "Easy",   "riddle",  "You sit here to watch and cheer for school sports. Stand up and cheer loudly like your team just won!"],
+    [23, "Easy",   "riddle",  "You wear safety glasses and do experiments here. Pretend you just made an amazing discovery!"],
+    [24, "Easy",   "riddle",  "You draw and paint pictures in this room. Strike your best 'famous artist' pose!"],
+    [25, "Medium", "riddle",  "Teachers rest here between classes. Peek inside like a curious detective!"],
+    [26, "Easy",   "riddle",  "You wait here for your parents or the school bus. Pretend you are running to catch the bus!"],
+    [27, "Easy",   "riddle",  "This shady place is for resting between classes. Sit down and relax like you are on vacation!"],
+    [28, "Medium", "riddle",  "The morning announcements come from this room every day. Pretend you are a TV news reporter!"],
+    [29, "Medium", "riddle",  "This red tool is used to stop fires. We hope no one ever needs it! Give it a respectful salute, just in case."],
+    [30, "Medium", "hangman", "MOTTO SIGN"],
+    [31, "Easy",   "emoji",   "🐕"],
+    [32, "Easy",   "riddle",  "Find any teacher at school and take a group photo together. Ask nicely and say thank you!"]
   ];
 
   const grid = document.getElementById('grid');
