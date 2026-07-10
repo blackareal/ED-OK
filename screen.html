@@ -572,7 +572,10 @@
   // ต่อคำใบ้ 1 ข้อ — เว้นว่างได้ถ้ากลุ่มนั้นยังไม่ได้ถ่าย/ส่งข้อนั้น)
   // =====================================================================
   async function fetchSheet() {
-    const res = await fetch(SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 'cachebust=' + Date.now());
+    // สำคัญ: ห้ามต่อพารามิเตอร์ (เช่น cachebust) ท้ายลิงก์ Google Sheets ที่ publish
+    // ไว้ — Google บางลิงก์จะตอบ 404 ทันทีถ้ามี query string แปลกปลอมเพิ่มมา
+    // ใช้ { cache: 'no-store' } ของ fetch() แทนเพื่อกันข้อมูลค้าง โดยไม่แก้ URL เลย
+    const res = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
     const rows = parseCSV(text);
