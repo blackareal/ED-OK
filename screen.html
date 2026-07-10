@@ -76,19 +76,40 @@
   .subtitle { font-size: clamp(0.95rem, 1vw + 1vh, 1.3rem); color: #C9D6EE; margin-bottom: 0.6em; }
   .meta { font-size: clamp(0.75rem, 0.7vw + 0.7vh, 1rem); color: #93A5C9; margin-bottom: 1em; }
 
-  .rules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 0.8vw;
-    margin-bottom: 1.2em;
+  /* เรียงข้อ 1-4 เป็นแนวตั้งทางซ้าย และ QR + ปุ่มจับเวลาอยู่ทางขวา เป็น 2 คอลัมน์ */
+  .intro-columns {
+    display: flex;
+    gap: 2.5vw;
+    align-items: center;
+    justify-content: center;
     text-align: left;
+    margin-bottom: 1em;
+  }
+  .rules-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+    flex: 1 1 420px;
+    max-width: 480px;
+  }
+  .qr-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8em;
+    flex: 0 0 auto;
   }
   .rule-card {
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.12);
     border-radius: 14px;
-    padding: 0.7em 1em;
+    padding: 0.6em 1em;
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
   }
+  .rule-card .num { margin-bottom: 0; flex-shrink: 0; }
+  .rule-card p { flex: 1; }
   .rule-card .num {
     display: inline-flex; align-items: center; justify-content: center;
     width: 1.7em; height: 1.7em; border-radius: 50%;
@@ -108,7 +129,7 @@
   .qr-box svg { display: block; width: 100%; height: 100%; }
 
   .start-btn {
-    margin-top: 0.8em;
+    margin-top: 0;
     background: var(--gold);
     color: #1a1a1a;
     border: none;
@@ -264,14 +285,15 @@
     <div class="subtitle">กิจกรรมถ่ายภาพล่าคำใบ้คำศัพท์รอบโรงเรียน</div>
     <div class="meta">ค่ายพัฒนาผู้นำด้านภาษาอังกฤษ &nbsp;|&nbsp; โรงเรียนอุดรพิชัยรักษ์พิทยา</div>
 
-    <div class="rules-grid">
+    <div class="intro-columns">
+      <div class="rules-grid">
       <div class="rule-card"><div class="num">1</div><p>แบ่งนักเรียนเป็น <b>6 กลุ่ม</b> สแกน QR ด้านล่างเพื่อดูคำใบ้ทั้งหมด <b>32 ข้อ</b></p></div>
       <div class="rule-card"><div class="num">2</div><p>ไม่บังคับถ่ายให้ครบ ถ่ายให้ได้มากที่สุดภายในเวลาที่กำหนด</p></div>
       <div class="rule-card"><div class="num">3</div><p>ทุกภาพต้องมี <b>สมาชิกครบทุกคน</b> ในกลุ่มอยู่ในภาพ</p></div>
       <div class="rule-card"><div class="num">4</div><p>ให้ <b>ตัวแทนกลุ่มเพียงคนเดียว</b> เป็นผู้กดส่งภาพเข้า Google Form</p></div>
     </div>
-
-    <div class="qr-wrap">
+      <div class="qr-col">
+        <div class="qr-wrap">
       <div id="qrCanvas" class="qr-box">
         <svg viewBox="0 0 35 35" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="QR code to clues.html">
         <rect width="35" height="35" fill="#ffffff"/>
@@ -282,6 +304,8 @@
       <div class="qr-url" id="qrUrlText"></div>
     </div>
     <button class="start-btn" id="btnGoTimer">⏱️ เริ่มจับเวลา 40 นาที</button>
+      </div>
+    </div>
     <footer class="hint">Selfie Vocab Run · หน้าจอสำหรับฉายในกิจกรรม</footer>
   </div>
 </div>
