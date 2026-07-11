@@ -13,8 +13,9 @@
 //      เพราะสคริปต์นี้ต้องอัปโหลดไฟล์รูปเข้า Drive ให้)
 // 4. คัดลอก "Web app URL" (ลงท้ายด้วย /exec) ไปวางแทนที่ WEBAPP_URL ในไฟล์ clues.html
 // 5. Publish แท็บชีตนี้เป็น CSV ตามปกติ (เลือกแท็บนี้เจาะจง ห้ามเลือก "ทั้งเอกสาร")
-//    แล้วเอาลิงก์ไปวางใน SHEET_CSV_URL ของไฟล์ screen.html — โครงสร้างคอลัมน์
-//    ("ชื่อกลุ่ม" + "SVR#1"..."SVR#32") เหมือนของเดิมทุกอย่าง ไม่ต้องแก้ screen.html เลย
+//    แล้วเอาลิงก์ไปวางใน SHEET_CSV_URL ของไฟล์ screen.html — คอลัมน์ "ชื่อกลุ่ม" +
+//    "SVR#1"..."SVR#32" จะถูกหา/สร้างให้อัตโนมัติไม่ว่าจะอยู่ตำแหน่งไหนในชีต
+//    (ดูฟังก์ชัน getGroupColIndex/findExactColIndex) ไม่ต้องแก้ screen.html เลย
 // 6. ทุกครั้งที่แก้โค้ดนี้ในอนาคต ต้องกด Deploy > Manage deployments > กดไอคอนดินสอ
 //    > เลือก Version: New version > Deploy ใหม่ทุกครั้ง ไม่งั้น Web app จะยังรันโค้ด
 //    เวอร์ชันเก่าอยู่ (ลิงก์ไม่เปลี่ยน แต่โค้ดไม่อัปเดต)
@@ -26,9 +27,10 @@
 // หมายเหตุ: อัปโหลดรูปใหม่ทับข้อเดิม (ข้อเดียวกัน กลุ่มเดียวกัน) จะ "แทนที่" ลิงก์
 // รูปเก่าในชีตด้วยรูปใหม่ทันที ไม่สะสมซ้ำหลายรูปต่อข้อ — ถ่ายใหม่ได้เรื่อย ๆ ถ้าไม่พอใจ
 
-const SHEET_NAME = "Form_Responses"; // ชื่อแท็บ — แก้ให้ตรงกับชีตจริงถ้าจำเป็น
+const SHEET_NAME = "การตอบแบบฟอร์ม 1"; // ชื่อแท็บ — แก้ให้ตรงกับชื่อแท็บจริงในชีตของคุณ
 const DRIVE_FOLDER_NAME = "Selfie Vocab Run Photos";
 const TOTAL_ITEMS = 32;
+const GROUP_COL_NAME = "ชื่อกลุ่ม";
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
@@ -61,9 +63,10 @@ function doPost(e) {
 
     // เขียนลิงก์ลงชีต (แทนที่ของเดิมถ้ากลุ่ม+ข้อนี้เคยส่งมาก่อน)
     const sheet = getOrCreateSheet();
-    const rowIndex = findOrCreateGroupRow(sheet, group);
-    const colIndex = findExactColIndex(sheet, "SVR#" + itemNo);
-    sheet.getRange(rowIndex, colIndex + 1).setValue(fileUrl);
+    const groupColIndex = getGroupColIndex(sheet);
+    const rowIndex = findOrCreateGroupRow(sheet, group, groupColIndex);
+    const itemColIndex = findExactColIndex(sheet, "SVR#" + itemNo);
+    sheet.getRange(rowIndex, itemColIndex + 1).setValue(fileUrl);
 
     return jsonOutput({ status: "ok", fileUrl: fileUrl });
   } catch (err) {
@@ -84,12 +87,16 @@ function getOrCreateFolder() {
 }
 
 function buildHeaders() {
-  const headers = ["ชื่อกลุ่ม"];
+  const headers = [GROUP_COL_NAME];
   for (let i = 1; i <= TOTAL_ITEMS; i++) headers.push("SVR#" + i);
   return headers;
 }
 
-// สร้างแท็บ + หัวตารางให้อัตโนมัติถ้ายังไม่มี (เหมือนกับระบบคอมเม้น)
+// หาแท็บตามชื่อ (สร้างใหม่ถ้ายังไม่มี) — ถ้าเป็นแท็บที่ว่างเปล่าสนิท (ไม่มีข้อมูลเลย
+// แม้แต่หัวตาราง) จะใส่หัวตารางมาตรฐานให้ครบชุดทันที แต่ถ้าแท็บนี้มีข้อมูล/หัวตาราง
+// อยู่แล้ว (เช่น เคยผูกกับ Google Form เดิมมาก่อน มีคอลัมน์ "ประทับเวลา" นำหน้าอยู่)
+// จะไม่ไปยุ่งกับโครงสร้างเดิมเลย ปล่อยให้ getGroupColIndex/findExactColIndex
+// หา หรือเพิ่มเฉพาะคอลัมน์ที่ขาดต่อท้ายแทน
 function getOrCreateSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_NAME);
@@ -100,29 +107,38 @@ function getOrCreateSheet() {
   return sheet;
 }
 
+// หาคอลัมน์ "ชื่อกลุ่ม" แบบไม่สนตำแหน่ง (กันปัญหาแท็บเดิมมีคอลัมน์ "ประทับเวลา"
+// นำหน้าอยู่ก่อน ทำให้ "ชื่อกลุ่ม" ไม่ได้อยู่คอลัมน์ A เสมอไป) — ถ้าไม่พบเลย จะเพิ่ม
+// คอลัมน์ใหม่ต่อท้ายให้อัตโนมัติ
+function getGroupColIndex(sheet) {
+  return findExactColIndex(sheet, GROUP_COL_NAME);
+}
+
 // หาคอลัมน์ตรงชื่อเป๊ะ ๆ (กัน SVR#1 ไปจับ SVR#10-19 ผิด) — ถ้าไม่พบ (เช่นชีตเก่า
-// ที่หัวตารางไม่ครบ 32 ข้อ) จะเพิ่มคอลัมน์ใหม่ต่อท้ายให้อัตโนมัติ
+// ที่หัวตารางไม่ครบ 32 ข้อ หรือไม่มีคอลัมน์ชื่อกลุ่มเลย) จะเพิ่มคอลัมน์ใหม่ต่อท้ายให้
 function findExactColIndex(sheet, name) {
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
   const idx = headers.findIndex(h => h.toString().trim() === name);
   if (idx >= 0) return idx;
   sheet.getRange(1, headers.length + 1).setValue(name);
   return headers.length;
 }
 
-// หาแถวของกลุ่มนี้ (ตรงเป๊ะกับคอลัมน์ A) ถ้ายังไม่มีแถวของกลุ่มนี้ ให้สร้างแถวใหม่
-function findOrCreateGroupRow(sheet, group) {
+// หาแถวของกลุ่มนี้ (ตรงเป๊ะกับคอลัมน์ชื่อกลุ่มที่หาไว้) ถ้ายังไม่มีแถวของกลุ่มนี้
+// ให้สร้างแถวใหม่ (เขียนแค่ชื่อกลุ่มไว้ในคอลัมน์ที่ถูกต้อง คอลัมน์อื่นเว้นว่างไว้ก่อน)
+function findOrCreateGroupRow(sheet, group, groupColIndex) {
   const lastRow = sheet.getLastRow();
   if (lastRow >= 2) {
-    const groupCol = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-    for (let i = 0; i < groupCol.length; i++) {
-      if ((groupCol[i][0] || "").toString().trim() === group) {
+    const groupColValues = sheet.getRange(2, groupColIndex + 1, lastRow - 1, 1).getValues();
+    for (let i = 0; i < groupColValues.length; i++) {
+      if ((groupColValues[i][0] || "").toString().trim() === group) {
         return i + 2; // แถวจริงใน sheet (1-indexed, +1 เพราะแถว 1 คือหัวตาราง)
       }
     }
   }
   const newRow = lastRow + 1;
-  sheet.getRange(newRow, 1).setValue(group);
+  sheet.getRange(newRow, groupColIndex + 1).setValue(group);
   return newRow;
 }
 
