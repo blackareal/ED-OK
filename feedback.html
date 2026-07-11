@@ -152,7 +152,7 @@
   // (Google Sheets → File → Share → Publish to web → เลือกชีตที่มีข้อมูลจริง
   // (ห้ามเลือก "ทั้งเอกสาร") → รูปแบบ CSV → Publish → คัดลอกลิงก์มาวางแทนด้านล่าง)
   // =====================================================================
-  const SHEET_CSV_URL = "PASTE_YOUR_PUBLISHED_CSV_URL_HERE";
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRNLJCMMozjAy2g5h16MUe9o9S5UYzSstzA6cESXZsIahCYb1ZHe2KDfemXETtaGS80a6q_gsL7geLf/pub?gid=0&single=true&output=csv";
 
   const groupPicker = document.getElementById('groupPicker');
   const configWarning = document.getElementById('configWarning');
@@ -230,7 +230,6 @@
         return;
       }
 
-      // เรียงคอมเม้นล่าสุดขึ้นก่อน (ถ้ามีคอลัมน์เวลา)
       if (timeCol >= 0) {
         matched.sort((a, b) => new Date(b[timeCol]) - new Date(a[timeCol]));
       }
@@ -273,7 +272,7 @@
   });
 
   btnRefresh.addEventListener('click', () => {
-    cachedRows = null; // บังคับโหลดใหม่จากชีตแทนใช้ของที่แคชไว้
+    cachedRows = null;
     if (currentGroup) loadComments(currentGroup);
   });
 </script>
