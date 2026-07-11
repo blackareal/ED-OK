@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comment ให้กำลังใจ - Workshop นำกิจกรรม</title>
+<title>Comment - Workshop นำกิจกรรม</title>
 <style>
   :root {
     --navy: #1F3864;
@@ -132,7 +132,7 @@
 <body>
 
 <header>
-  <h1>💬 Comment ให้กำลังใจ</h1>
+  <h1>💬 Comment</h1>
   <p>Workshop การนำกิจกรรมของนักเรียนแต่ละฐาน</p>
 </header>
 
@@ -141,7 +141,7 @@
     <div class="config-warning" id="configWarning"></div>
     <form id="commentForm">
       <div class="form-group">
-        <label for="groupSelect">เลือกฐานที่จะ Comment</label>
+        <label for="groupSelect">Group</label>
         <select id="groupSelect" required>
           <option value="">-- เลือกฐาน --</option>
           <option value="Recreation (Gray)">Recreation (Gray)</option>
@@ -154,11 +154,11 @@
       </div>
       <div class="form-group">
         <label for="commentText">Comment (จุดเด่น / สิ่งที่ควรพัฒนา / ให้กำลังใจ)</label>
-        <textarea id="commentText" required placeholder="เช่น ฐานนี้เล่นเกมได้สนุกมาก น้อง ๆ มีส่วนร่วมดี ลองพัฒนาเรื่องการอธิบายกติกาให้ชัดเจนขึ้นอีกนิด สู้ๆ นะ!"></textarea>
+        <textarea id="commentText" required></textarea>
       </div>
       <div class="form-group">
-        <label for="commenterName">ชื่อผู้ Comment (ไม่ระบุก็ได้)</label>
-        <input type="text" id="commenterName" placeholder="เช่น ครูเอ (เว้นว่างได้ถ้าไม่อยากระบุชื่อ)">
+        <label for="commenterName">Name</label>
+        <input type="text" id="commenterName">
       </div>
       <button type="submit" class="btn-submit" id="btnSubmit">ส่ง Comment</button>
       <div class="submit-status" id="submitStatus"></div>
