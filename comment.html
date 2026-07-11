@@ -57,20 +57,61 @@
     margin-top: 0.5em;
   }
 
-  .cta {
-    text-align: center;
-    margin-top: 0.4em;
+  .form-group { margin-bottom: 1.1em; }
+  .form-group label {
+    display: block;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 0.4em;
+    font-size: 0.9rem;
   }
-  .cta a {
-    display: inline-block;
+  .form-group select,
+  .form-group textarea,
+  .form-group input {
+    width: 100%;
+    padding: 0.7em 0.9em;
+    border: 2px solid #dde3f0;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: #fff;
+    color: #1a1a2e;
+  }
+  .form-group textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+  .form-group select:focus,
+  .form-group textarea:focus,
+  .form-group input:focus { outline: none; border-color: var(--navy); }
+  .hint-small { font-size: 0.78rem; color: #99a; margin-top: 0.3em; }
+
+  .btn-submit {
+    display: block;
+    width: 100%;
     background: var(--gold);
     color: #1a1a1a;
-    text-decoration: none;
+    border: none;
     font-weight: 800;
-    font-size: 1.1rem;
-    padding: 0.9em 2.4em;
+    font-size: 1.05rem;
+    padding: 0.9em;
     border-radius: 100px;
-    box-shadow: 0 8px 24px rgba(212,160,23,0.4);
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(212,160,23,0.35);
+  }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .submit-status {
+    text-align: center;
+    margin-top: 0.9em;
+    font-size: 0.9rem;
+    min-height: 1.2em;
+  }
+  .submit-status.error { color: #C0392B; font-weight: 700; }
+  .submit-status.success { color: #1e7e34; font-weight: 700; }
+  .submit-status.loading { color: #778; }
+
+  .config-warning {
+    background: #FDECEC; border: 1px solid #C0392B; color: #8a1f1f;
+    padding: 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.85rem;
+    display: none;
   }
 
   .link-secondary {
@@ -124,8 +165,32 @@
     </div>
   </div>
 
-  <div class="cta">
-    <a id="formLink" href="#" target="_blank" rel="noopener">📝 เขียนคอมเม้น</a>
+  <div class="card">
+    <div class="config-warning" id="configWarning"></div>
+    <form id="commentForm">
+      <div class="form-group">
+        <label for="groupSelect">เลือกกลุ่มที่จะคอมเม้น</label>
+        <select id="groupSelect" required>
+          <option value="">-- เลือกกลุ่ม --</option>
+          <option value="กลุ่ม 1">กลุ่ม 1</option>
+          <option value="กลุ่ม 2">กลุ่ม 2</option>
+          <option value="กลุ่ม 3">กลุ่ม 3</option>
+          <option value="กลุ่ม 4">กลุ่ม 4</option>
+          <option value="กลุ่ม 5">กลุ่ม 5</option>
+          <option value="กลุ่ม 6">กลุ่ม 6</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="commentText">คอมเม้น (จุดเด่น / สิ่งที่ควรพัฒนา / ให้กำลังใจ)</label>
+        <textarea id="commentText" required placeholder="เช่น กลุ่มนี้เล่นเกมได้สนุกมาก น้อง ๆ มีส่วนร่วมดี ลองพัฒนาเรื่องการอธิบายกติกาให้ชัดเจนขึ้นอีกนิด สู้ๆ นะ!"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="commenterName">ชื่อผู้คอมเม้น (ไม่ระบุก็ได้)</label>
+        <input type="text" id="commenterName" placeholder="เช่น ครูเอ (เว้นว่างได้ถ้าไม่อยากระบุชื่อ)">
+      </div>
+      <button type="submit" class="btn-submit" id="btnSubmit">ส่งคอมเม้น</button>
+      <div class="submit-status" id="submitStatus"></div>
+    </form>
   </div>
 
   <div class="link-secondary">
@@ -139,10 +204,70 @@
 
 <script>
   // =====================================================================
-  // CONFIG — แก้ลิงก์นี้เป็น Google Form จริงของคุณก่อนใช้งาน
+  // CONFIG — วาง Web app URL ของ Google Apps Script ตรงนี้
+  // (ดูวิธีสร้างใน Code.gs ที่แนบมาด้วย)
   // =====================================================================
-  const GOOGLE_FORM_URL = "https://forms.gle/PASTE_YOUR_FORM_LINK_HERE";
-  document.getElementById('formLink').href = GOOGLE_FORM_URL;
+  const WEBAPP_URL = "PASTE_YOUR_APPS_SCRIPT_WEBAPP_URL_HERE";
+
+  const form = document.getElementById('commentForm');
+  const groupSelect = document.getElementById('groupSelect');
+  const commentText = document.getElementById('commentText');
+  const commenterName = document.getElementById('commenterName');
+  const btnSubmit = document.getElementById('btnSubmit');
+  const submitStatus = document.getElementById('submitStatus');
+  const configWarning = document.getElementById('configWarning');
+
+  function showStatus(msg, type) {
+    submitStatus.textContent = msg;
+    submitStatus.className = 'submit-status ' + (type || '');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!WEBAPP_URL || WEBAPP_URL.includes('PASTE_YOUR')) {
+      configWarning.style.display = 'block';
+      configWarning.textContent = "⚠️ ยังไม่ได้ตั้งค่า WEBAPP_URL ในไฟล์นี้ — ครูต้องตั้งค่า Google Apps Script ก่อนใช้งาน (ดู Code.gs)";
+      return;
+    }
+    configWarning.style.display = 'none';
+
+    const group = groupSelect.value;
+    const comment = commentText.value.trim();
+    const name = commenterName.value.trim();
+
+    if (!group) { showStatus("กรุณาเลือกกลุ่มก่อนส่งคอมเม้น", "error"); return; }
+    if (!comment) { showStatus("กรุณาเขียนคอมเม้นก่อนส่ง", "error"); return; }
+
+    btnSubmit.disabled = true;
+    showStatus("กำลังส่งคอมเม้น...", "loading");
+
+    try {
+      // หมายเหตุสำคัญ: ห้ามใส่ header "Content-Type: application/json" เอง
+      // เพราะจะทำให้ browser ส่ง OPTIONS preflight request ซึ่ง Google Apps Script
+      // Web App ไม่รองรับ ทำให้เชื่อมต่อไม่ได้ (CORS error)
+      // ปล่อยให้ fetch ใช้ content-type เริ่มต้น (text/plain) แทน แล้วฝั่ง
+      // Apps Script (Code.gs) จะ JSON.parse(e.postData.contents) เอาเอง
+      const res = await fetch(WEBAPP_URL, {
+        method: 'POST',
+        body: JSON.stringify({ group, comment, name })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        showStatus("✅ ส่งคอมเม้นสำเร็จ ขอบคุณครับ/ค่ะ!", "success");
+        commentText.value = '';
+        commenterName.value = '';
+        groupSelect.value = '';
+      } else {
+        throw new Error(data.message || 'ไม่ทราบสาเหตุ');
+      }
+    } catch (err) {
+      console.error(err);
+      showStatus("❌ ส่งไม่สำเร็จ ลองใหม่อีกครั้ง (" + err.message + ")", "error");
+    } finally {
+      btnSubmit.disabled = false;
+    }
+  });
 </script>
 </body>
 </html>
