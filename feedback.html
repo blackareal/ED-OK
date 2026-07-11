@@ -34,21 +34,22 @@
 
   .group-picker {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 0.6em;
     margin-bottom: 1.4em;
   }
   .group-picker button {
-    border: 2px solid var(--navy);
+    --c: var(--navy);
+    border: 2px solid var(--c);
     background: #fff;
-    color: var(--navy);
+    color: var(--c);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.95rem;
     padding: 0.7em 0.5em;
     border-radius: 12px;
     cursor: pointer;
   }
-  .group-picker button.active { background: var(--navy); color: #fff; }
+  .group-picker button.active { background: var(--c); color: #fff; }
 
   .config-warning {
     background: #FDECEC; border: 1px solid var(--warn); color: #8a1f1f;
@@ -121,18 +122,18 @@
 <body>
 
 <header>
-  <h1>💬 คอมเม้นของกลุ่มคุณ</h1>
-  <p>Workshop การนำกิจกรรมของนักเรียนแต่ละฐาน — เลือกกลุ่มของคุณด้านล่าง</p>
+  <h1>💬 คอมเม้นของฐานคุณ</h1>
+  <p>Workshop การนำกิจกรรมของนักเรียนแต่ละฐาน — เลือกฐานของคุณด้านล่าง</p>
 </header>
 
 <div class="wrap">
   <div class="group-picker" id="groupPicker">
-    <button data-group="กลุ่ม 1">กลุ่ม 1</button>
-    <button data-group="กลุ่ม 2">กลุ่ม 2</button>
-    <button data-group="กลุ่ม 3">กลุ่ม 3</button>
-    <button data-group="กลุ่ม 4">กลุ่ม 4</button>
-    <button data-group="กลุ่ม 5">กลุ่ม 5</button>
-    <button data-group="กลุ่ม 6">กลุ่ม 6</button>
+    <button data-group="Recreation (Gray)" style="--c:#6b7280;">Recreation (Gray)</button>
+    <button data-group="Vocabulary (Yellow)" style="--c:#c99a10;">Vocabulary (Yellow)</button>
+    <button data-group="Speaking (Pink)" style="--c:#d6598a;">Speaking (Pink)</button>
+    <button data-group="Sing&Dance (Purple)" style="--c:#8b5cf6;">Sing&amp;Dance (Purple)</button>
+    <button data-group="Grammar (Green)" style="--c:#2f9e5e;">Grammar (Green)</button>
+    <button data-group="Directions (Blue)" style="--c:#3b6fd6;">Directions (Blue)</button>
   </div>
 
   <div class="config-warning" id="configWarning"></div>
@@ -140,7 +141,7 @@
   <button id="btnRefresh" style="display:none;">🔄 รีเฟรชคอมเม้นล่าสุด</button>
 
   <div id="results">
-    <div class="intro-msg">👆 เลือกกลุ่มของคุณด้านบนเพื่อดูคอมเม้น</div>
+    <div class="intro-msg">👆 เลือกฐานของคุณด้านบนเพื่อดูคอมเม้น</div>
   </div>
 
   <footer class="hint">Workshop นำกิจกรรม · คอมเม้นจากครูและวิทยากรเพื่อให้กำลังใจและแนะแนวทางพัฒนา</footer>
@@ -226,7 +227,7 @@
       statusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · พบ ${matched.length} คอมเม้น`;
 
       if (!matched.length) {
-        results.innerHTML = '<div class="empty">ยังไม่มีคอมเม้นสำหรับกลุ่มนี้ ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
+        results.innerHTML = '<div class="empty">ยังไม่มีคอมเม้นสำหรับฐานนี้ ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
         return;
       }
 

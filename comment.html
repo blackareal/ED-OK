@@ -169,20 +169,20 @@
     <div class="config-warning" id="configWarning"></div>
     <form id="commentForm">
       <div class="form-group">
-        <label for="groupSelect">เลือกกลุ่มที่จะคอมเม้น</label>
+        <label for="groupSelect">เลือกฐานที่จะคอมเม้น</label>
         <select id="groupSelect" required>
-          <option value="">-- เลือกกลุ่ม --</option>
-          <option value="กลุ่ม 1">กลุ่ม 1</option>
-          <option value="กลุ่ม 2">กลุ่ม 2</option>
-          <option value="กลุ่ม 3">กลุ่ม 3</option>
-          <option value="กลุ่ม 4">กลุ่ม 4</option>
-          <option value="กลุ่ม 5">กลุ่ม 5</option>
-          <option value="กลุ่ม 6">กลุ่ม 6</option>
+          <option value="">-- เลือกฐาน --</option>
+          <option value="Recreation (Gray)">Recreation (Gray)</option>
+          <option value="Vocabulary (Yellow)">Vocabulary (Yellow)</option>
+          <option value="Speaking (Pink)">Speaking (Pink)</option>
+          <option value="Sing&Dance (Purple)">Sing&amp;Dance (Purple)</option>
+          <option value="Grammar (Green)">Grammar (Green)</option>
+          <option value="Directions (Blue)">Directions (Blue)</option>
         </select>
       </div>
       <div class="form-group">
         <label for="commentText">คอมเม้น (จุดเด่น / สิ่งที่ควรพัฒนา / ให้กำลังใจ)</label>
-        <textarea id="commentText" required placeholder="เช่น กลุ่มนี้เล่นเกมได้สนุกมาก น้อง ๆ มีส่วนร่วมดี ลองพัฒนาเรื่องการอธิบายกติกาให้ชัดเจนขึ้นอีกนิด สู้ๆ นะ!"></textarea>
+        <textarea id="commentText" required placeholder="เช่น ฐานนี้เล่นเกมได้สนุกมาก น้อง ๆ มีส่วนร่วมดี ลองพัฒนาเรื่องการอธิบายกติกาให้ชัดเจนขึ้นอีกนิด สู้ๆ นะ!"></textarea>
       </div>
       <div class="form-group">
         <label for="commenterName">ชื่อผู้คอมเม้น (ไม่ระบุก็ได้)</label>
@@ -194,7 +194,7 @@
   </div>
 
   <div class="link-secondary">
-    นักเรียนที่ต้องการดูคอมเม้นของกลุ่มตัวเอง
+    นักเรียนที่ต้องการดูคอมเม้นของฐานตัวเอง
     <br>
     <a href="feedback.html">👉 ไปหน้าดูคอมเม้น</a>
   </div>
@@ -236,7 +236,7 @@
     const comment = commentText.value.trim();
     const name = commenterName.value.trim();
 
-    if (!group) { showStatus("กรุณาเลือกกลุ่มก่อนส่งคอมเม้น", "error"); return; }
+    if (!group) { showStatus("กรุณาเลือกฐานก่อนส่งคอมเม้น", "error"); return; }
     if (!comment) { showStatus("กรุณาเขียนคอมเม้นก่อนส่ง", "error"); return; }
 
     btnSubmit.disabled = true;
