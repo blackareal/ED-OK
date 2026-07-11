@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ดู Comment ของฐานคุณ - Workshop นำกิจกรรม</title>
+<title>Feedback - Workshop</title>
 <style>
   :root {
     --navy: #1F3864;
@@ -122,8 +122,8 @@
 <body>
 
 <header>
-  <h1>💬 Comment ของฐานคุณ</h1>
-  <p>Workshop การนำกิจกรรมของนักเรียนแต่ละฐาน — เลือกฐานของคุณด้านล่าง</p>
+  <h1>💬 Feedback</h1>
+  <p>See what your teachers and facilitators think about your station — pick your group below!</p>
 </header>
 
 <div class="wrap">
@@ -138,13 +138,13 @@
 
   <div class="config-warning" id="configWarning"></div>
   <div class="status" id="statusText"></div>
-  <button id="btnRefresh" style="display:none;">🔄 รีเฟรช Comment ล่าสุด</button>
+  <button id="btnRefresh" style="display:none;">🔄 Refresh</button>
 
   <div id="results">
-    <div class="intro-msg">👆 เลือกฐานของคุณด้านบนเพื่อดู Comment</div>
+    <div class="intro-msg">👆 Pick your group above to see your feedback</div>
   </div>
 
-  <footer class="hint">Workshop นำกิจกรรม · Comment จากครูและวิทยากรเพื่อให้กำลังใจและแนะแนวทางพัฒนา</footer>
+  <footer class="hint">Station Workshop · Feedback from teachers &amp; facilitators to cheer you on and help you grow 🌱</footer>
 </div>
 
 <script>
@@ -184,8 +184,8 @@
     return rows.filter(r => r.length > 1 || (r.length === 1 && r[0] !== ""));
   }
   function findCol(headers, keywords) {
-    // จับคู่แบบตรงเป๊ะก่อน (กันปัญหาชื่อคอลัมน์ทับกัน เช่น "ชื่อกลุ่ม" vs "ชื่อผู้คอมเม้น"
-    // ที่ต่างก็มีคำว่า "คอมเม้น"/"กลุ่ม" ปนอยู่) แล้วค่อย fallback เป็นแบบมีคำนั้นอยู่บางส่วน
+    // Exact match first (avoids collisions like "ชื่อกลุ่ม" vs "ชื่อผู้คอมเม้น",
+    // which both contain "กลุ่ม"/"คอมเม้น"), then fall back to substring match.
     for (const k of keywords) {
       const idx = headers.findIndex(h => h === k);
       if (idx >= 0) return idx;
@@ -196,11 +196,11 @@
   async function loadComments(group) {
     if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("PASTE_YOUR")) {
       configWarning.style.display = 'block';
-      configWarning.innerHTML = "⚠️ ยังไม่ได้ตั้งค่า <code>SHEET_CSV_URL</code> ในไฟล์นี้ — ครูต้องตั้งค่าก่อนใช้งาน";
+      configWarning.innerHTML = "⚠️ <code>SHEET_CSV_URL</code> hasn't been set up yet in this file — ask your teacher to configure it.";
       return;
     }
     configWarning.style.display = 'none';
-    statusText.textContent = "กำลังโหลด Comment...";
+    statusText.textContent = "Loading your feedback...";
     results.innerHTML = "";
     try {
       if (!cachedRows) {
@@ -211,7 +211,7 @@
       }
       const rows = cachedRows;
       if (rows.length < 2) {
-        results.innerHTML = '<div class="empty">ยังไม่มี Comment เข้ามาเลย ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
+        results.innerHTML = '<div class="empty">No feedback yet — check back again soon! 🌟</div>';
         statusText.textContent = "";
         return;
       }
@@ -224,10 +224,10 @@
       const dataRows = rows.slice(1).filter(r => r.some(c => c && c.trim() !== ""));
       const matched = dataRows.filter(r => (r[groupCol] || "").trim() === group);
 
-      statusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · พบ ${matched.length} Comment`;
+      statusText.textContent = `Last updated ${new Date().toLocaleTimeString('en-US')} · ${matched.length} comment${matched.length === 1 ? '' : 's'} found`;
 
       if (!matched.length) {
-        results.innerHTML = '<div class="empty">ยังไม่มี Comment สำหรับฐานนี้ ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
+        results.innerHTML = '<div class="empty">No feedback for this group yet — check back again soon! 🌟</div>';
         return;
       }
 
@@ -243,7 +243,7 @@
           <div class="comment-card">
             <div class="comment-text">${escapeHtml(comment)}</div>
             <div class="comment-meta">
-              <span class="comment-author">${name ? '🧑‍🏫 ' + escapeHtml(name) : '🙈 ไม่ระบุชื่อ'}</span>
+              <span class="comment-author">${name ? '🧑‍🏫 ' + escapeHtml(name) : '🙈 Anonymous'}</span>
               <span>${escapeHtml(time)}</span>
             </div>
           </div>`;
@@ -251,7 +251,7 @@
     } catch (err) {
       console.error(err);
       configWarning.style.display = 'block';
-      configWarning.innerHTML = "❌ โหลด Comment ไม่สำเร็จ — ตรวจสอบว่าลิงก์ Google Sheet ยังใช้งานได้ (" + err.message + ")";
+      configWarning.innerHTML = "❌ Couldn't load feedback — please check that the Google Sheet link still works. (" + err.message + ")";
       statusText.textContent = "";
     }
   }
