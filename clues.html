@@ -89,6 +89,7 @@
     cursor: pointer;
     font-weight: 700;
   }
+  .group-active-bar button:disabled { opacity: 0.5; text-decoration: none; cursor: default; }
 
   .config-warning {
     background: #FDECEC; border-bottom: 2px solid #C0392B; color: #8a1f1f;
@@ -207,6 +208,7 @@
 <div class="group-active-bar" id="groupActiveBar">
   ✅ กำลังอัปโหลดในนาม <b id="activeGroupName"></b>
   <button id="btnChangeGroup">เปลี่ยนกลุ่ม</button>
+  <button id="btnRefreshStatus">🔄 เช็คสถานะล่าสุด</button>
 </div>
 
 <div class="config-warning" id="configWarning"></div>
@@ -225,6 +227,13 @@
   // CONFIG — วาง Web app URL ของ Google Apps Script (PhotoUpload.gs) ตรงนี้
   // =====================================================================
   const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyEnmal5FsBRWO8wo0knf1R5AXeN4hCeSntE_tcXYLak9NcIRhbu7ybTw7QgP3untc/exec";
+
+  // =====================================================================
+  // CONFIG — ลิงก์ CSV ของชีตเดียวกับที่ screen.html ใช้ (แท็บ Form_Responses)
+  // ใช้แค่ "อ่าน" เพื่อเช็คว่ากลุ่มนี้เคยอัปโหลดข้อไหนไปแล้วบ้าง (จากอุปกรณ์ไหนก็ได้)
+  // ไม่ต้องตั้งค่าเพิ่ม เพราะเป็นลิงก์เดียวกับใน screen.html อยู่แล้ว
+  // =====================================================================
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSovYsD4AM1mfIiCtuORyPXzRgOpvDZ1F5bXQNsNnbWnGXJdlUWrAL588t7rELGDc_bXM9tBNnvNbk7/pub?gid=1054791757&single=true&output=csv";
 
   // =====================================================================
   // คำใบ้ 32 ข้อ — จงใจ "ไม่" ใส่ชื่อสถานที่/คำศัพท์คำตอบไว้ในหน้านี้
@@ -273,6 +282,7 @@
   const configWarning = document.getElementById('configWarning');
 
   let currentGroup = null;
+  let currentFilter = 'all';
   const uploadState = {}; // { [no]: { status: 'loading'|'success'|'error', message: string } }
 
   if (!WEBAPP_URL || WEBAPP_URL.includes("PASTE_YOUR")) {
@@ -307,6 +317,7 @@
   }
 
   function render(filter) {
+    currentFilter = filter;
     grid.innerHTML = "";
     const items = clues.filter(c => filter === 'all' || c[1] === filter);
     emptyMsg.style.display = items.length ? 'none' : 'block';
@@ -356,12 +367,91 @@
     groupSelect.style.display = 'none';
     groupActiveBar.style.display = 'block';
     document.body.classList.remove('no-group');
+    refreshUploadStatus();
   });
 
   document.getElementById('btnChangeGroup').addEventListener('click', () => {
     groupSelect.style.display = 'block';
     groupActiveBar.style.display = 'none';
   });
+
+  document.getElementById('btnRefreshStatus').addEventListener('click', refreshUploadStatus);
+
+  // =====================================================================
+  // เช็คสถานะว่ากลุ่มที่เลือกอัปโหลดข้อไหนไปแล้วบ้าง (อ่านจากชีตจริง ไม่ใช่แค่
+  // ความจำในเครื่อง) — เผื่อกรณีเพื่อนคนอื่นในกลุ่มอัปโหลดจากมือถือเครื่องอื่นไปแล้ว
+  // จะได้ไม่ต้องเดา/อัปซ้ำ กดปุ่ม "เช็คสถานะล่าสุด" หรือกดเลือกกลุ่มใหม่เพื่อรีเฟรช
+  // =====================================================================
+  let statusCheckInFlight = false;
+  const btnRefreshStatus = document.getElementById('btnRefreshStatus');
+
+  async function refreshUploadStatus() {
+    if (!currentGroup) return;
+    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("PASTE_YOUR")) return;
+    if (statusCheckInFlight) return;
+    statusCheckInFlight = true;
+    const originalLabel = btnRefreshStatus.textContent;
+    btnRefreshStatus.disabled = true;
+    btnRefreshStatus.textContent = '🔄 กำลังเช็ค...';
+    try {
+      const res = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      const rows = parseCSV(text);
+      if (rows.length < 2) return;
+      const headers = rows[0].map(h => h.trim());
+      const groupCol = findCol(headers, ["ชื่อกลุ่ม", "กลุ่ม"]);
+      const dataRows = rows.slice(1).filter(r => r.some(c => c && c.trim() !== ""));
+      const myRow = dataRows.find(r => (r[groupCol] || "").trim() === currentGroup);
+      if (!myRow) return; // กลุ่มนี้ยังไม่เคยอัปโหลดอะไรเลยในชีต — ไม่มีอะไรต้องอัปเดต
+      for (const [no] of clues) {
+        if (uploadState[no] && uploadState[no].status === 'loading') continue; // ไม่ทับสถานะที่กำลังอัปโหลดอยู่
+        const colIdx = findExactCol(headers, "SVR#" + no);
+        if (colIdx < 0) continue;
+        const cell = (myRow[colIdx] || "").trim();
+        if (cell) setStatus(no, 'success', '✅ มีรูปอัปโหลดแล้ว');
+      }
+    } catch (err) {
+      console.error('refreshUploadStatus failed', err);
+    } finally {
+      statusCheckInFlight = false;
+      btnRefreshStatus.disabled = false;
+      btnRefreshStatus.textContent = originalLabel;
+    }
+  }
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = "", inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i], next = text[i + 1];
+      if (inQuotes) {
+        if (c === '"' && next === '"') { field += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { field += c; }
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === ',') { row.push(field); field = ""; }
+        else if (c === '\r') { /* skip */ }
+        else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ""; }
+        else field += c;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.length > 1 || (r.length === 1 && r[0] !== ""));
+  }
+  function findCol(headers, keywords) {
+    for (const k of keywords) {
+      const idx = headers.findIndex(h => h === k);
+      if (idx >= 0) return idx;
+    }
+    return headers.findIndex(h => keywords.some(k => h.includes(k)));
+  }
+  // จับคู่ชื่อคอลัมน์แบบ "ตรงเป๊ะ" — ใช้กับ SVR#1..SVR#32 เท่านั้น เพื่อไม่ให้
+  // "SVR#1" ไปจับคอลัมน์ "SVR#10"-"SVR#19" ผิดพลาดจากการเทียบแบบ includes()
+  function findExactCol(headers, name) {
+    return headers.findIndex(h => h.trim() === name);
+  }
 
   // =====================================================================
   // บีบอัดรูปในเครื่องก่อนส่ง (ลดขนาดไฟล์ให้เล็กพอส่งผ่านเน็ตโรงเรียนได้เร็ว
