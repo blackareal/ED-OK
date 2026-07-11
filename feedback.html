@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ดูคอมเม้นของกลุ่มคุณ - Workshop นำกิจกรรม</title>
+<style>
+  :root {
+    --navy: #1F3864;
+    --gold: #D4A017;
+    --bg: #F4F6FB;
+    --warn: #C0392B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Leelawadee UI", "Tahoma", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: #1a1a2e;
+  }
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 1.6em 1.2em 1.4em;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  header h1 { margin: 0 0 0.2em; font-size: clamp(1.3rem, 4vw, 1.8rem); }
+  header p { margin: 0; color: #C9D6EE; font-size: 0.85rem; }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 1.4em 1.2em 3em; }
+
+  .group-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 0.6em;
+    margin-bottom: 1.4em;
+  }
+  .group-picker button {
+    border: 2px solid var(--navy);
+    background: #fff;
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.7em 0.5em;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .group-picker button.active { background: var(--navy); color: #fff; }
+
+  .config-warning {
+    background: #FDECEC; border: 1px solid var(--warn); color: #8a1f1f;
+    padding: 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.9rem;
+    display: none;
+  }
+
+  .status { text-align: center; font-size: 0.85rem; color: #99a; margin-bottom: 1em; }
+
+  #btnRefresh {
+    display: block;
+    margin: 0 auto 1.4em;
+    background: rgba(31,56,100,0.08);
+    border: 1px solid rgba(31,56,100,0.2);
+    color: var(--navy);
+    padding: 0.5em 1.4em;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .comment-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.3em 1.4em;
+    box-shadow: 0 2px 12px rgba(20,30,60,0.07);
+    margin-bottom: 1em;
+    border-left: 6px solid var(--gold);
+  }
+  .comment-text {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #222;
+    white-space: pre-wrap;
+    margin-bottom: 0.8em;
+  }
+  .comment-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #778;
+    border-top: 1px solid #eee;
+    padding-top: 0.6em;
+  }
+  .comment-author { font-weight: 700; color: var(--navy); }
+
+  .empty {
+    text-align: center;
+    color: #99a;
+    padding: 3em 1em;
+    font-size: 0.95rem;
+  }
+
+  .intro-msg {
+    text-align: center;
+    color: #99a;
+    padding: 2em 1em;
+    font-size: 0.9rem;
+  }
+
+  footer.hint {
+    text-align: center;
+    margin-top: 2em;
+    font-size: 0.8rem;
+    color: #99a;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💬 คอมเม้นของกลุ่มคุณ</h1>
+  <p>Workshop การนำกิจกรรมของนักเรียนแต่ละฐาน — เลือกกลุ่มของคุณด้านล่าง</p>
+</header>
+
+<div class="wrap">
+  <div class="group-picker" id="groupPicker">
+    <button data-group="กลุ่ม 1">กลุ่ม 1</button>
+    <button data-group="กลุ่ม 2">กลุ่ม 2</button>
+    <button data-group="กลุ่ม 3">กลุ่ม 3</button>
+    <button data-group="กลุ่ม 4">กลุ่ม 4</button>
+    <button data-group="กลุ่ม 5">กลุ่ม 5</button>
+    <button data-group="กลุ่ม 6">กลุ่ม 6</button>
+  </div>
+
+  <div class="config-warning" id="configWarning"></div>
+  <div class="status" id="statusText"></div>
+  <button id="btnRefresh" style="display:none;">🔄 รีเฟรชคอมเม้นล่าสุด</button>
+
+  <div id="results">
+    <div class="intro-msg">👆 เลือกกลุ่มของคุณด้านบนเพื่อดูคอมเม้น</div>
+  </div>
+
+  <footer class="hint">Workshop นำกิจกรรม · คอมเม้นจากครูและวิทยากรเพื่อให้กำลังใจและแนะแนวทางพัฒนา</footer>
+</div>
+
+<script>
+  // =====================================================================
+  // CONFIG — วางลิงก์ Google Sheet ที่ Publish to web เป็น CSV แล้วตรงนี้
+  // (Google Sheets → File → Share → Publish to web → เลือกชีตที่มีข้อมูลจริง
+  // (ห้ามเลือก "ทั้งเอกสาร") → รูปแบบ CSV → Publish → คัดลอกลิงก์มาวางแทนด้านล่าง)
+  // =====================================================================
+  const SHEET_CSV_URL = "PASTE_YOUR_PUBLISHED_CSV_URL_HERE";
+
+  const groupPicker = document.getElementById('groupPicker');
+  const configWarning = document.getElementById('configWarning');
+  const statusText = document.getElementById('statusText');
+  const btnRefresh = document.getElementById('btnRefresh');
+  const results = document.getElementById('results');
+  let currentGroup = null;
+  let cachedRows = null;
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = "", inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i], next = text[i + 1];
+      if (inQuotes) {
+        if (c === '"' && next === '"') { field += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { field += c; }
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === ',') { row.push(field); field = ""; }
+        else if (c === '\r') { /* skip */ }
+        else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ""; }
+        else field += c;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.length > 1 || (r.length === 1 && r[0] !== ""));
+  }
+  function findCol(headers, keywords) {
+    // จับคู่แบบตรงเป๊ะก่อน (กันปัญหาชื่อคอลัมน์ทับกัน เช่น "ชื่อกลุ่ม" vs "ชื่อผู้คอมเม้น"
+    // ที่ต่างก็มีคำว่า "คอมเม้น"/"กลุ่ม" ปนอยู่) แล้วค่อย fallback เป็นแบบมีคำนั้นอยู่บางส่วน
+    for (const k of keywords) {
+      const idx = headers.findIndex(h => h === k);
+      if (idx >= 0) return idx;
+    }
+    return headers.findIndex(h => keywords.some(k => h.includes(k)));
+  }
+
+  async function loadComments(group) {
+    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes("PASTE_YOUR")) {
+      configWarning.style.display = 'block';
+      configWarning.innerHTML = "⚠️ ยังไม่ได้ตั้งค่า <code>SHEET_CSV_URL</code> ในไฟล์นี้ — ครูต้องตั้งค่าก่อนใช้งาน";
+      return;
+    }
+    configWarning.style.display = 'none';
+    statusText.textContent = "กำลังโหลดคอมเม้น...";
+    results.innerHTML = "";
+    try {
+      if (!cachedRows) {
+        const res = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+        cachedRows = parseCSV(text);
+      }
+      const rows = cachedRows;
+      if (rows.length < 2) {
+        results.innerHTML = '<div class="empty">ยังไม่มีคอมเม้นเข้ามาเลย ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
+        statusText.textContent = "";
+        return;
+      }
+      const headers = rows[0].map(h => h.trim());
+      const groupCol = findCol(headers, ["ชื่อกลุ่ม", "กลุ่ม"]);
+      const commentCol = findCol(headers, ["ความคิดเห็น", "คอมเม้น", "comment"]);
+      const nameCol = findCol(headers, ["ชื่อผู้คอมเม้น", "ชื่อผู้", "ผู้คอมเม้น"]);
+      const timeCol = findCol(headers, ["ประทับเวลา", "Timestamp"]);
+
+      const dataRows = rows.slice(1).filter(r => r.some(c => c && c.trim() !== ""));
+      const matched = dataRows.filter(r => (r[groupCol] || "").trim() === group);
+
+      statusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · พบ ${matched.length} คอมเม้น`;
+
+      if (!matched.length) {
+        results.innerHTML = '<div class="empty">ยังไม่มีคอมเม้นสำหรับกลุ่มนี้ ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
+        return;
+      }
+
+      // เรียงคอมเม้นล่าสุดขึ้นก่อน (ถ้ามีคอลัมน์เวลา)
+      if (timeCol >= 0) {
+        matched.sort((a, b) => new Date(b[timeCol]) - new Date(a[timeCol]));
+      }
+
+      results.innerHTML = matched.map(r => {
+        const comment = (r[commentCol] || "").trim();
+        const name = (r[nameCol] || "").trim();
+        const time = timeCol >= 0 ? (r[timeCol] || "").trim() : "";
+        return `
+          <div class="comment-card">
+            <div class="comment-text">${escapeHtml(comment)}</div>
+            <div class="comment-meta">
+              <span class="comment-author">${name ? '🧑‍🏫 ' + escapeHtml(name) : '🙈 ไม่ระบุชื่อ'}</span>
+              <span>${escapeHtml(time)}</span>
+            </div>
+          </div>`;
+      }).join('');
+    } catch (err) {
+      console.error(err);
+      configWarning.style.display = 'block';
+      configWarning.innerHTML = "❌ โหลดคอมเม้นไม่สำเร็จ — ตรวจสอบว่าลิงก์ Google Sheet ยังใช้งานได้ (" + err.message + ")";
+      statusText.textContent = "";
+    }
+  }
+
+  function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  groupPicker.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    groupPicker.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentGroup = btn.dataset.group;
+    btnRefresh.style.display = 'block';
+    loadComments(currentGroup);
+  });
+
+  btnRefresh.addEventListener('click', () => {
+    cachedRows = null; // บังคับโหลดใหม่จากชีตแทนใช้ของที่แคชไว้
+    if (currentGroup) loadComments(currentGroup);
+  });
+</script>
+</body>
+</html>
