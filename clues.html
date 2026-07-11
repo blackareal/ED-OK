@@ -19,7 +19,6 @@
     font-family: "Leelawadee UI", "Tahoma", "Segoe UI", sans-serif;
     background: var(--bg);
     color: #1a1a2e;
-    padding-bottom: 6em; /* room for floating submit button */
   }
   header {
     background: var(--navy);
@@ -41,6 +40,60 @@
     padding: 0.7em 1em;
     font-size: 0.9rem;
     font-weight: 600;
+  }
+
+  /* ---------- Group picker ---------- */
+  .group-select {
+    background: #fff;
+    border-bottom: 1px solid #e2e6ef;
+    padding: 1em 1em 1.2em;
+    text-align: center;
+  }
+  .group-select-label { font-weight: 700; color: var(--navy); font-size: 0.95rem; margin-bottom: 0.7em; }
+  .group-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 0.5em;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .group-buttons button {
+    border: 2px solid var(--navy);
+    background: #fff;
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.65em 0.4em;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .group-buttons button.active { background: var(--navy); color: #fff; }
+
+  .group-active-bar {
+    display: none;
+    background: #EAF3EA;
+    border-bottom: 1px solid #cfe4cf;
+    color: #1e5c1e;
+    text-align: center;
+    padding: 0.6em 1em;
+    font-size: 0.9rem;
+  }
+  .group-active-bar b { color: #0f3d0f; }
+  .group-active-bar button {
+    margin-left: 0.6em;
+    border: none;
+    background: none;
+    color: var(--navy);
+    text-decoration: underline;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .config-warning {
+    background: #FDECEC; border-bottom: 2px solid #C0392B; color: #8a1f1f;
+    text-align: center; padding: 0.8em 1em; font-size: 0.85rem; font-weight: 600;
+    display: none;
   }
 
   .filters {
@@ -66,7 +119,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 0.9em;
-    padding: 0 1em;
+    padding: 0 1em 2.5em;
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -104,36 +157,59 @@
 
   .empty { text-align: center; color: #99a; padding: 3em 1em; }
 
-  .submit-bar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: #fff;
-    border-top: 1px solid #ddd;
-    padding: 0.8em 1em;
-    display: flex;
-    justify-content: center;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  /* ---------- Upload block (inside each card) ---------- */
+  .upload-block {
+    margin-top: 0.9em;
+    padding-top: 0.8em;
+    border-top: 1px dashed #ddd;
+    text-align: center;
   }
-  .submit-bar a {
+  .file-input { display: none; }
+  .upload-btn {
+    display: inline-block;
     background: var(--gold);
     color: #1a1a1a;
-    text-decoration: none;
-    font-weight: 800;
-    padding: 0.85em 2em;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.55em 1.3em;
     border-radius: 100px;
-    font-size: 1rem;
-    box-shadow: 0 6px 20px rgba(212,160,23,0.4);
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(212,160,23,0.35);
   }
+  body.no-group .upload-btn { pointer-events: none; opacity: 0.4; }
+  .upload-status { margin-top: 0.5em; font-size: 0.8rem; min-height: 1.1em; }
+  .upload-status.loading { color: #778; }
+  .upload-status.success { color: #1e7e34; font-weight: 700; }
+  .upload-status.error { color: #C0392B; font-weight: 700; }
 </style>
 </head>
-<body>
+<body class="no-group">
 
 <header>
   <h1>📖 คำใบ้ Selfie Vocab Run</h1>
   <p>สแกน / เดา / ไปถ่ายรูป — เฉลยจะเปิดเผยตอนจบกิจกรรมเท่านั้น</p>
 </header>
 
-<div class="notice">⚠️ ให้ตัวแทนกลุ่มเพียงคนเดียวเท่านั้นเป็นผู้กดปุ่ม "ส่งภาพ" ด้านล่าง</div>
+<div class="notice">✅ ทุกคนในกลุ่มช่วยกันถ่ายและอัปโหลดรูปได้เลย แค่เลือกกลุ่มของคุณด้านล่างก่อนเริ่ม</div>
+
+<div class="group-select" id="groupSelect">
+  <div class="group-select-label">👥 เลือกกลุ่มของคุณก่อนเริ่มอัปโหลดรูป</div>
+  <div class="group-buttons" id="groupButtons">
+    <button data-group="กลุ่ม 1">กลุ่ม 1</button>
+    <button data-group="กลุ่ม 2">กลุ่ม 2</button>
+    <button data-group="กลุ่ม 3">กลุ่ม 3</button>
+    <button data-group="กลุ่ม 4">กลุ่ม 4</button>
+    <button data-group="กลุ่ม 5">กลุ่ม 5</button>
+    <button data-group="กลุ่ม 6">กลุ่ม 6</button>
+  </div>
+</div>
+
+<div class="group-active-bar" id="groupActiveBar">
+  ✅ กำลังอัปโหลดในนาม <b id="activeGroupName"></b>
+  <button id="btnChangeGroup">เปลี่ยนกลุ่ม</button>
+</div>
+
+<div class="config-warning" id="configWarning"></div>
 
 <div class="filters" id="filters">
   <button data-f="all" class="active">ทั้งหมด</button>
@@ -144,16 +220,11 @@
 <div class="grid" id="grid"></div>
 <div class="empty" id="emptyMsg" style="display:none;">ไม่มีคำใบ้ในหมวดนี้</div>
 
-<div class="submit-bar">
-  <a id="submitLink" href="#" target="_blank" rel="noopener">📤 ส่งภาพเข้า Google Form (ตัวแทนกลุ่มเท่านั้น)</a>
-</div>
-
 <script>
   // =====================================================================
-  // CONFIG — แก้ลิงก์นี้เป็น Google Form จริงของคุณก่อนใช้งาน
+  // CONFIG — วาง Web app URL ของ Google Apps Script (PhotoUpload.gs) ตรงนี้
   // =====================================================================
-  const GOOGLE_FORM_URL = "https://forms.gle/6GmKkDmxkXrrqdHH9";
-  document.getElementById('submitLink').href = GOOGLE_FORM_URL;
+  const WEBAPP_URL = "PASTE_YOUR_APPS_SCRIPT_WEBAPP_URL_HERE";
 
   // =====================================================================
   // คำใบ้ 32 ข้อ — จงใจ "ไม่" ใส่ชื่อสถานที่/คำศัพท์คำตอบไว้ในหน้านี้
@@ -199,6 +270,15 @@
 
   const grid = document.getElementById('grid');
   const emptyMsg = document.getElementById('emptyMsg');
+  const configWarning = document.getElementById('configWarning');
+
+  let currentGroup = null;
+  const uploadState = {}; // { [no]: { status: 'loading'|'success'|'error', message: string } }
+
+  if (!WEBAPP_URL || WEBAPP_URL.includes("PASTE_YOUR")) {
+    configWarning.style.display = 'block';
+    configWarning.textContent = "⚠️ ยังไม่ได้ตั้งค่า WEBAPP_URL ในไฟล์นี้ — ครูต้องตั้งค่า Google Apps Script ก่อนใช้งาน (ดู PhotoUpload.gs)";
+  }
 
   // เผยตัวอักษรครึ่งหนึ่งของแต่ละคำโดยอัตโนมัติ (ตัวแรกของทุกคำจะถูกเผยเสมอ)
   // เพื่อให้พอเดาคำตอบได้โดยไม่ต้องกดอะไรเพิ่ม
@@ -220,6 +300,12 @@
     return `<div class="hangman">${tiles}</div>`;
   }
 
+  function statusHtml(no) {
+    const s = uploadState[no];
+    if (!s) return '<div class="upload-status" id="uploadStatus-' + no + '"></div>';
+    return `<div class="upload-status ${s.status}" id="uploadStatus-${no}">${s.message}</div>`;
+  }
+
   function render(filter) {
     grid.innerHTML = "";
     const items = clues.filter(c => filter === 'all' || c[1] === filter);
@@ -232,7 +318,14 @@
       else if (type === "hangman") body = renderHangman(content);
       else body = `<div class="clue-text">${content}</div>`;
 
-      card.innerHTML = `<div class="card-no">ข้อที่ ${no}</div>${body}`;
+      card.innerHTML = `
+        <div class="card-no">ข้อที่ ${no}</div>
+        ${body}
+        <div class="upload-block">
+          <input type="file" accept="image/*" class="file-input" id="file-${no}" data-no="${no}">
+          <label for="file-${no}" class="upload-btn">📷 อัปโหลดรูป</label>
+          ${statusHtml(no)}
+        </div>`;
       grid.appendChild(card);
     }
   }
@@ -248,22 +341,112 @@
   render('all');
 
   // =====================================================================
-  // (ทางเลือกเสริม) Prefill ชื่อกลุ่มลงในฟอร์มอัตโนมัติ ถ้าลิงก์ที่แจกแต่ละกลุ่ม
-  // มี query string ต่อท้าย เช่น clues.html?group=3
-  // 1) เปิด Google Form ของคุณ -> กด ⋮ -> "รับลิงก์ที่กรอกไว้ล่วงหน้า"
-  // 2) กรอกช่อง "ชื่อกลุ่ม" เป็น "กลุ่ม 3" แล้วกด "รับลิงก์"
-  // 3) คัดลอกพารามิเตอร์ entry.XXXXXXXXX จากลิงก์ที่ได้ มาแทนที่ ENTRY_ID ด้านล่าง
-  //    แล้วเอาคอมเมนต์ออก (ลบ /* กับ */)
-  // ---------------------------------------------------------------------
-  /*
-  const params = new URLSearchParams(window.location.search);
-  const group = params.get('group');
-  if (group) {
-    const url = new URL(GOOGLE_FORM_URL);
-    url.searchParams.set('entry.ENTRY_ID', `กลุ่ม ${group}`);
-    document.getElementById('submitLink').href = url.href;
+  // เลือกกลุ่ม — เลือกครั้งเดียว ใช้กับการอัปโหลดทุกข้อจนกว่าจะกด "เปลี่ยนกลุ่ม"
+  // (สมาชิกคนไหนในกลุ่มก็อัปโหลดได้ ไม่ต้องเป็นตัวแทนคนเดียวเหมือนเดิม)
+  // =====================================================================
+  const groupSelect = document.getElementById('groupSelect');
+  const groupActiveBar = document.getElementById('groupActiveBar');
+  const activeGroupName = document.getElementById('activeGroupName');
+
+  document.getElementById('groupButtons').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    currentGroup = btn.dataset.group;
+    activeGroupName.textContent = currentGroup;
+    groupSelect.style.display = 'none';
+    groupActiveBar.style.display = 'block';
+    document.body.classList.remove('no-group');
+  });
+
+  document.getElementById('btnChangeGroup').addEventListener('click', () => {
+    groupSelect.style.display = 'block';
+    groupActiveBar.style.display = 'none';
+  });
+
+  // =====================================================================
+  // บีบอัดรูปในเครื่องก่อนส่ง (ลดขนาดไฟล์ให้เล็กพอส่งผ่านเน็ตโรงเรียนได้เร็ว
+  // และไม่ชนขีดจำกัดขนาดข้อมูลของ Google Apps Script)
+  // =====================================================================
+  function compressImage(file, maxDim, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("เปิดไฟล์รูปไม่สำเร็จ"));
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl.split(',')[1]);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
   }
-  */
+
+  function setStatus(no, status, message) {
+    uploadState[no] = { status, message };
+    const el = document.getElementById(`uploadStatus-${no}`);
+    if (el) {
+      el.textContent = message;
+      el.className = 'upload-status ' + status;
+    }
+  }
+
+  async function handleFileSelect(no, file) {
+    if (!currentGroup) { alert('กรุณาเลือกกลุ่มก่อนอัปโหลดรูป'); return; }
+    if (!WEBAPP_URL || WEBAPP_URL.includes("PASTE_YOUR")) {
+      alert('ยังไม่ได้ตั้งค่า WEBAPP_URL ในไฟล์นี้ — แจ้งครูให้ตั้งค่าก่อนใช้งาน');
+      return;
+    }
+    if (uploadState[no] && uploadState[no].status === 'loading') return; // กันกดซ้ำระหว่างอัปโหลด
+
+    setStatus(no, 'loading', 'กำลังบีบอัดรูป...');
+    try {
+      const base64 = await compressImage(file, 1280, 0.72);
+      setStatus(no, 'loading', 'กำลังอัปโหลด...');
+
+      // หมายเหตุสำคัญ: ห้ามใส่ header "Content-Type: application/json" เอง
+      // เพราะจะทำให้ browser ส่ง OPTIONS preflight request ซึ่ง Google Apps Script
+      // Web App ไม่รองรับ ปล่อยให้ fetch ใช้ content-type เริ่มต้น (text/plain) แทน
+      const res = await fetch(WEBAPP_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          group: currentGroup,
+          itemNo: no,
+          filename: `SVR${no}_${currentGroup}_${Date.now()}.jpg`,
+          mimeType: 'image/jpeg',
+          imageBase64: base64
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        setStatus(no, 'success', '✅ อัปโหลดสำเร็จ (อัปโหลดใหม่ได้ถ้าอยากเปลี่ยนรูป)');
+      } else {
+        throw new Error(data.message || 'ไม่ทราบสาเหตุ');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(no, 'error', '❌ อัปโหลดไม่สำเร็จ ลองใหม่อีกครั้ง (' + err.message + ')');
+    }
+  }
+
+  grid.addEventListener('change', (e) => {
+    const input = e.target.closest('.file-input');
+    if (!input || !input.files || !input.files.length) return;
+    const no = parseInt(input.dataset.no, 10);
+    handleFileSelect(no, input.files[0]);
+  });
 </script>
 </body>
 </html>
