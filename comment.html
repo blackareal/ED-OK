@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>คอมเม้นให้กำลังใจ - Workshop นำกิจกรรม</title>
+<title>Comment ให้กำลังใจ - Workshop นำกิจกรรม</title>
 <style>
   :root {
     --navy: #1F3864;
@@ -132,7 +132,7 @@
 <body>
 
 <header>
-  <h1>💬 คอมเม้นให้กำลังใจ</h1>
+  <h1>💬 Comment ให้กำลังใจ</h1>
   <p>Workshop การนำกิจกรรมของนักเรียนแต่ละฐาน</p>
 </header>
 
@@ -141,7 +141,7 @@
     <div class="config-warning" id="configWarning"></div>
     <form id="commentForm">
       <div class="form-group">
-        <label for="groupSelect">เลือกฐานที่จะคอมเม้น</label>
+        <label for="groupSelect">เลือกฐานที่จะ Comment</label>
         <select id="groupSelect" required>
           <option value="">-- เลือกฐาน --</option>
           <option value="Recreation (Gray)">Recreation (Gray)</option>
@@ -153,22 +153,22 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="commentText">คอมเม้น (จุดเด่น / สิ่งที่ควรพัฒนา / ให้กำลังใจ)</label>
+        <label for="commentText">Comment (จุดเด่น / สิ่งที่ควรพัฒนา / ให้กำลังใจ)</label>
         <textarea id="commentText" required placeholder="เช่น ฐานนี้เล่นเกมได้สนุกมาก น้อง ๆ มีส่วนร่วมดี ลองพัฒนาเรื่องการอธิบายกติกาให้ชัดเจนขึ้นอีกนิด สู้ๆ นะ!"></textarea>
       </div>
       <div class="form-group">
-        <label for="commenterName">ชื่อผู้คอมเม้น (ไม่ระบุก็ได้)</label>
+        <label for="commenterName">ชื่อผู้ Comment (ไม่ระบุก็ได้)</label>
         <input type="text" id="commenterName" placeholder="เช่น ครูเอ (เว้นว่างได้ถ้าไม่อยากระบุชื่อ)">
       </div>
-      <button type="submit" class="btn-submit" id="btnSubmit">ส่งคอมเม้น</button>
+      <button type="submit" class="btn-submit" id="btnSubmit">ส่ง Comment</button>
       <div class="submit-status" id="submitStatus"></div>
     </form>
   </div>
 
   <div class="link-secondary">
-    นักเรียนที่ต้องการดูคอมเม้นของฐานตัวเอง
+    นักเรียนที่ต้องการดู Comment ของฐานตัวเอง
     <br>
-    <a href="feedback.html">👉 ไปหน้าดูคอมเม้น</a>
+    <a href="feedback.html">👉 ไปหน้าดู Comment</a>
   </div>
 
   <footer class="hint">Workshop นำกิจกรรม · หน้าสำหรับคุณครู/วิทยากรเท่านั้น</footer>
@@ -208,11 +208,11 @@
     const comment = commentText.value.trim();
     const name = commenterName.value.trim();
 
-    if (!group) { showStatus("กรุณาเลือกฐานก่อนส่งคอมเม้น", "error"); return; }
-    if (!comment) { showStatus("กรุณาเขียนคอมเม้นก่อนส่ง", "error"); return; }
+    if (!group) { showStatus("กรุณาเลือกฐานก่อนส่ง Comment", "error"); return; }
+    if (!comment) { showStatus("กรุณาเขียน Comment ก่อนส่ง", "error"); return; }
 
     btnSubmit.disabled = true;
-    showStatus("กำลังส่งคอมเม้น...", "loading");
+    showStatus("กำลังส่ง Comment...", "loading");
 
     try {
       // หมายเหตุสำคัญ: ห้ามใส่ header "Content-Type: application/json" เอง
@@ -226,7 +226,7 @@
       });
       const data = await res.json();
       if (data.status === 'ok') {
-        showStatus("✅ ส่งคอมเม้นสำเร็จ ขอบคุณครับ/ค่ะ!", "success");
+        showStatus("✅ ส่ง Comment สำเร็จ ขอบคุณครับ/ค่ะ!", "success");
         commentText.value = '';
         commenterName.value = '';
         groupSelect.value = '';

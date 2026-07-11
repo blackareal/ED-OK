@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ดูคอมเม้นของกลุ่มคุณ - Workshop นำกิจกรรม</title>
+<title>ดู Comment ของฐานคุณ - Workshop นำกิจกรรม</title>
 <style>
   :root {
     --navy: #1F3864;
@@ -122,7 +122,7 @@
 <body>
 
 <header>
-  <h1>💬 คอมเม้นของฐานคุณ</h1>
+  <h1>💬 Comment ของฐานคุณ</h1>
   <p>Workshop การนำกิจกรรมของนักเรียนแต่ละฐาน — เลือกฐานของคุณด้านล่าง</p>
 </header>
 
@@ -138,13 +138,13 @@
 
   <div class="config-warning" id="configWarning"></div>
   <div class="status" id="statusText"></div>
-  <button id="btnRefresh" style="display:none;">🔄 รีเฟรชคอมเม้นล่าสุด</button>
+  <button id="btnRefresh" style="display:none;">🔄 รีเฟรช Comment ล่าสุด</button>
 
   <div id="results">
-    <div class="intro-msg">👆 เลือกฐานของคุณด้านบนเพื่อดูคอมเม้น</div>
+    <div class="intro-msg">👆 เลือกฐานของคุณด้านบนเพื่อดู Comment</div>
   </div>
 
-  <footer class="hint">Workshop นำกิจกรรม · คอมเม้นจากครูและวิทยากรเพื่อให้กำลังใจและแนะแนวทางพัฒนา</footer>
+  <footer class="hint">Workshop นำกิจกรรม · Comment จากครูและวิทยากรเพื่อให้กำลังใจและแนะแนวทางพัฒนา</footer>
 </div>
 
 <script>
@@ -200,7 +200,7 @@
       return;
     }
     configWarning.style.display = 'none';
-    statusText.textContent = "กำลังโหลดคอมเม้น...";
+    statusText.textContent = "กำลังโหลด Comment...";
     results.innerHTML = "";
     try {
       if (!cachedRows) {
@@ -211,7 +211,7 @@
       }
       const rows = cachedRows;
       if (rows.length < 2) {
-        results.innerHTML = '<div class="empty">ยังไม่มีคอมเม้นเข้ามาเลย ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
+        results.innerHTML = '<div class="empty">ยังไม่มี Comment เข้ามาเลย ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
         statusText.textContent = "";
         return;
       }
@@ -224,10 +224,10 @@
       const dataRows = rows.slice(1).filter(r => r.some(c => c && c.trim() !== ""));
       const matched = dataRows.filter(r => (r[groupCol] || "").trim() === group);
 
-      statusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · พบ ${matched.length} คอมเม้น`;
+      statusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · พบ ${matched.length} Comment`;
 
       if (!matched.length) {
-        results.innerHTML = '<div class="empty">ยังไม่มีคอมเม้นสำหรับฐานนี้ ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
+        results.innerHTML = '<div class="empty">ยังไม่มี Comment สำหรับฐานนี้ ลองกดรีเฟรชอีกครั้งภายหลังนะ</div>';
         return;
       }
 
@@ -251,7 +251,7 @@
     } catch (err) {
       console.error(err);
       configWarning.style.display = 'block';
-      configWarning.innerHTML = "❌ โหลดคอมเม้นไม่สำเร็จ — ตรวจสอบว่าลิงก์ Google Sheet ยังใช้งานได้ (" + err.message + ")";
+      configWarning.innerHTML = "❌ โหลด Comment ไม่สำเร็จ — ตรวจสอบว่าลิงก์ Google Sheet ยังใช้งานได้ (" + err.message + ")";
       statusText.textContent = "";
     }
   }
