@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบคะแนน · SWP Math Camp12</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #1e3a5f, #0f172a);
+    padding: 16px 24px;
+    border-bottom: 1px solid #334155;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { font-size: 1.3rem; color: #93c5fd; font-weight: 700; }
+
+  .price-bar { display: flex; gap: 16px; flex-wrap: wrap; }
+  .price-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 10px;
+    padding: 8px 16px; display: flex; flex-direction: column; align-items: center; min-width: 130px;
+  }
+  .price-card .label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+  .price-card .value { font-size: 1.1rem; font-weight: 700; }
+  .price-card .sub { font-size: 0.7rem; color: #64748b; }
+  .btc-color { color: #f97316; }
+  .gold-color { color: #eab308; }
+  .land-color { color: #22c55e; }
+  .refresh-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
+  .refresh-dot.loading { background: #f97316; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  nav { display: flex; background: #1e293b; border-bottom: 1px solid #334155; overflow-x: auto; }
+  nav button {
+    padding: 14px 20px; background: none; border: none; color: #94a3b8;
+    cursor: pointer; font-size: 0.9rem; white-space: nowrap; border-bottom: 3px solid transparent;
+    transition: all .2s;
+  }
+  nav button.active { color: #93c5fd; border-bottom-color: #3b82f6; font-weight: 600; }
+  nav button:hover:not(.active) { color: #e2e8f0; background: #0f172a; }
+
+  .tab { display: none; padding: 24px; max-width: 900px; margin: 0 auto; }
+  .tab.active { display: block; }
+
+  .section-title { font-size: 1.1rem; font-weight: 700; color: #93c5fd; margin-bottom: 16px; }
+
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+
+  label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; margin-top: 12px; }
+  label:first-child { margin-top: 0; }
+  input, select {
+    width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; color: #e2e8f0; font-size: 0.95rem; outline: none;
+  }
+  input:focus, select:focus { border-color: #3b82f6; }
+
+  .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all .2s; }
+  .btn-primary { background: #3b82f6; color: white; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-success { background: #16a34a; color: white; }
+  .btn-success:hover { background: #15803d; }
+  .btn-danger { background: #dc2626; color: white; font-size: 0.75rem; padding: 6px 12px; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .reward-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+  .reward-option {
+    border: 2px solid #334155; border-radius: 12px; padding: 16px; text-align: center;
+    cursor: pointer; transition: all .2s; background: #0f172a;
+  }
+  .reward-option:hover { border-color: #475569; background: #1e293b; }
+  .reward-option.selected { border-color: #3b82f6; background: #1e3a5f; }
+  .reward-option .icon { font-size: 2rem; margin-bottom: 8px; }
+  .reward-option .name { font-weight: 700; margin-bottom: 4px; }
+  .reward-option .current-price { font-size: 0.8rem; color: #94a3b8; }
+  .reward-option .current-price span { font-weight: 700; }
+
+  .wallet-grid { display: flex; flex-direction: column; gap: 16px; }
+  .wallet-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
+  .wallet-header { background: #0f172a; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .wallet-name { font-weight: 700; font-size: 1rem; }
+  .wallet-total { font-size: 0.9rem; }
+  .wallet-items { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .wallet-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #0f172a; border-radius: 8px; gap: 8px; }
+  .wallet-item-left { display: flex; align-items: center; gap: 10px; }
+  .wallet-item-icon { font-size: 1.3rem; }
+  .wallet-item-name { font-weight: 600; font-size: 0.9rem; }
+  .wallet-item-detail { font-size: 0.75rem; color: #64748b; }
+  .wallet-item-right { text-align: right; }
+  .wallet-item-current { font-weight: 700; font-size: 0.95rem; }
+  .wallet-item-change { font-size: 0.75rem; }
+  .positive { color: #22c55e; }
+  .negative { color: #ef4444; }
+  .neutral { color: #94a3b8; }
+  .wallet-empty { color: #64748b; font-size: 0.85rem; padding: 8px 0; }
+
+  .leaderboard { display: flex; flex-direction: column; gap: 10px; }
+  .lb-item { display: flex; align-items: center; gap: 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px; }
+  .lb-rank { font-size: 1.5rem; font-weight: 900; width: 36px; text-align: center; }
+  .lb-rank.r1 { color: #fbbf24; }
+  .lb-rank.r2 { color: #94a3b8; }
+  .lb-rank.r3 { color: #c2a16e; }
+  .lb-info { flex: 1; }
+  .lb-name { font-weight: 700; font-size: 1rem; }
+  .lb-holdings { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+  .lb-value { text-align: right; }
+  .lb-total { font-size: 1.1rem; font-weight: 700; color: #93c5fd; }
+  .lb-gain { font-size: 0.8rem; margin-top: 2px; }
+
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .history-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0f172a; border-radius: 8px; font-size: 0.85rem; }
+  .history-time { color: #64748b; min-width: 70px; }
+  .history-text { flex: 1; }
+  .btn-del-history { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+
+  .notice { background: #1e3a5f; border: 1px solid #3b82f6; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: #93c5fd; margin-bottom: 16px; }
+
+  @media (max-width: 600px) {
+    .reward-options { grid-template-columns: 1fr; }
+    .row { flex-direction: column; }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+
+  .confirm-box { background: #0f172a; border: 1px solid #3b82f6; border-radius: 10px; padding: 16px; margin-top: 16px; display: none; }
+  .confirm-box.show { display: block; }
+  .confirm-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
+  .confirm-row .key { color: #94a3b8; }
+  .confirm-row .val { font-weight: 700; }
+
+  .sched-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .sched-table th, .sched-table td {
+    border: 1px solid #334155; padding: 8px 6px; text-align: center;
+  }
+  .sched-table th { background: #0f172a; color: #94a3b8; font-size: 0.72rem; }
+  .sched-table td.rnd-lbl { background: #0f172a; color: #93c5fd; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🧮 ระบบคะแนน SWP Math Camp12</h1>
+    <div style="font-size:0.7rem; color:#64748b; margin-top:2px;">โรงเรียนสุวรรณภูมิพิทยไพศาล · ค่ายคณิตศาสตร์</div>
+  </div>
+  <div class="price-bar">
+    <div class="price-card">
+      <span class="label">Bitcoin <span class="refresh-dot" id="dot"></span></span>
+      <span class="value btc-color" id="price-btc">กำลังโหลด...</span>
+      <span class="sub" id="price-btc-updated">-</span>
+    </div>
+    <div class="price-card">
+      <span class="label">ทองคำ (ต่อบาท)</span>
+      <span class="value gold-color" id="price-gold">กำลังโหลด...</span>
+      <span class="sub" id="price-gold-updated">-</span>
+    </div>
+    <div class="price-card">
+      <span class="label">ที่ดิน (ต่อแปลง)</span>
+      <span class="value land-color" id="price-land-header">-</span>
+      <span class="sub">กำหนดโดยครู</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button onclick="showTab('setup')">⚙️ ตั้งค่า</button>
+  <button class="active" onclick="showTab('award')">🎖️ บันทึกรางวัล</button>
+  <button onclick="showTab('bonus')">⭐ คะแนนพิเศษ</button>
+  <button onclick="showTab('wallets')">👜 กระเป๋าเงิน</button>
+  <button onclick="showTab('leaderboard')">🏆 ผลสรุป</button>
+  <button onclick="showTab('history')">📋 ประวัติ</button>
+</nav>
+
+<!-- TAB: ตั้งค่า -->
+<div class="tab" id="tab-setup">
+  <p class="section-title">⚙️ ตั้งค่าค่าย</p>
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:12px;">กำหนดราคา</p>
+    <label>ราคาที่ดิน ต่อ 1 แปลง (บาท)</label>
+    <input type="number" id="input-land-price" placeholder="เช่น 100000" value="100000" />
+    <div class="row" style="margin-top:4px;">
+      <div>
+        <label>มูลค่ารางวัลทีมชนะ (บาท)</label>
+        <input type="number" id="input-winner-value" placeholder="เช่น 100000" value="100000" />
+      </div>
+      <div>
+        <label>มูลค่ารางวัลทีมแพ้ (บาท)</label>
+        <input type="number" id="input-loser-value" placeholder="เช่น 80000" value="80000" />
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <button class="btn btn-success" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
+    </div>
+    <div id="settings-msg" style="margin-top:8px; font-size:0.85rem; color:#22c55e; display:none;">✅ บันทึกแล้ว</div>
+  </div>
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:12px;">ทีมทั้งหมด (8 กลุ่มสี)</p>
+    <div id="team-list" class="wallet-grid" style="gap:8px;"></div>
+  </div>
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:12px;">📋 ตารางหมุนเวียนฐาน (4 รอบ · ไม่ซ้ำคู่ ไม่ซ้ำฐาน)</p>
+    <div id="sched-ref-table"></div>
+  </div>
+</div>
+
+<!-- TAB: บันทึกรางวัล -->
+<div class="tab active" id="tab-award">
+  <p class="section-title">🎖️ บันทึกรางวัล</p>
+  <div class="notice">💡 เลือกฐาน → เลือกทีมชนะ → ทีมชนะเลือกรางวัล → ทีมแพ้เลือกจาก 2 ที่เหลือ → ยืนยัน</div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <label>📍 ฐานที่บันทึก</label>
+    <select id="select-station">
+      <option value="">-- กรุณาเลือกฐาน --</option>
+      <option value="ฐาน 1 · โดม">ฐาน 1 · โดม</option>
+      <option value="ฐาน 2 · โดม">ฐาน 2 · โดม</option>
+      <option value="ฐาน 3 · HCEC">ฐาน 3 · HCEC</option>
+      <option value="ฐาน 4 · สนามแบดมินตัน">ฐาน 4 · สนามแบดมินตัน</option>
+    </select>
+  </div>
+
+  <div class="card" style="border-color:#eab308;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span style="font-size:1.3rem;">🏆</span>
+      <span style="font-weight:700; color:#eab308;">ทีมผู้ชนะ</span>
+      <span style="font-size:0.8rem; color:#64748b; margin-left:auto;" id="winner-value-label">มูลค่า ฿100,000</span>
+    </div>
+    <label>เลือกทีม</label>
+    <select id="select-winner" onchange="onWinnerChange()">
+      <option value="">-- กรุณาเลือก --</option>
+    </select>
+    <label style="margin-top:14px;">เลือกรางวัล</label>
+    <div class="reward-options" id="winner-options">
+      <div class="reward-option" onclick="selectWinnerReward('land')" id="w-opt-land">
+        <div class="icon">🏗️</div>
+        <div class="name land-color">ที่ดิน</div>
+        <div class="current-price">1 แปลง = <span id="opt-land-price">-</span></div>
+      </div>
+      <div class="reward-option" onclick="selectWinnerReward('gold')" id="w-opt-gold">
+        <div class="icon">🥇</div>
+        <div class="name gold-color">ทองคำ</div>
+        <div class="current-price">ราคา/บาท = <span id="opt-gold-price">-</span></div>
+      </div>
+      <div class="reward-option" onclick="selectWinnerReward('btc')" id="w-opt-btc">
+        <div class="icon">₿</div>
+        <div class="name btc-color">Bitcoin</div>
+        <div class="current-price">1 BTC = <span id="opt-btc-price">-</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:#475569;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span style="font-size:1.3rem;">🎖️</span>
+      <span style="font-weight:700; color:#94a3b8;">ทีมผู้แพ้</span>
+      <span style="font-size:0.8rem; color:#64748b; margin-left:auto;" id="loser-value-label">มูลค่า ฿80,000</span>
+    </div>
+    <label>เลือกทีม</label>
+    <select id="select-loser">
+      <option value="">-- กรุณาเลือก --</option>
+    </select>
+    <label style="margin-top:14px;">เลือกรางวัลที่เหลือ</label>
+    <div class="reward-options" id="loser-options">
+      <div style="color:#475569; font-size:0.85rem; padding:8px;">เลือกรางวัลทีมชนะก่อน</div>
+    </div>
+  </div>
+
+  <div class="confirm-box" id="confirm-box">
+    <p style="font-weight:700; margin-bottom:12px; color:#93c5fd;">📋 สรุปรางวัลทั้งสองทีม</p>
+    <div id="conf-station-row" style="margin-bottom:10px; font-size:0.85rem; color:#64748b;"></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+      <div style="background:#0f172a; border-radius:8px; padding:12px; border:1px solid #eab30844;">
+        <div style="color:#eab308; font-weight:700; margin-bottom:6px;">🏆 ทีมชนะ</div>
+        <div class="confirm-row"><span class="key">ทีม</span><span class="val" id="conf-w-team">-</span></div>
+        <div class="confirm-row"><span class="key">รางวัล</span><span class="val" id="conf-w-asset">-</span></div>
+        <div class="confirm-row"><span class="key">จำนวน</span><span class="val" id="conf-w-qty">-</span></div>
+        <div class="confirm-row"><span class="key">มูลค่า</span><span class="val" id="conf-w-total">-</span></div>
+      </div>
+      <div style="background:#0f172a; border-radius:8px; padding:12px; border:1px solid #47556944;">
+        <div style="color:#94a3b8; font-weight:700; margin-bottom:6px;">🎖️ ทีมแพ้</div>
+        <div class="confirm-row"><span class="key">ทีม</span><span class="val" id="conf-l-team">-</span></div>
+        <div class="confirm-row"><span class="key">รางวัล</span><span class="val" id="conf-l-asset">-</span></div>
+        <div class="confirm-row"><span class="key">จำนวน</span><span class="val" id="conf-l-qty">-</span></div>
+        <div class="confirm-row"><span class="key">มูลค่า</span><span class="val" id="conf-l-total">-</span></div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-success" onclick="confirmAward()">✅ ยืนยันบันทึกทั้งสองทีม</button>
+      <button class="btn" style="background:#334155;" onclick="cancelAward()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: คะแนนพิเศษ -->
+<div class="tab" id="tab-bonus">
+  <p class="section-title">⭐ ให้คะแนนพิเศษ</p>
+  <div class="notice">💡 บวกคะแนนพิเศษให้ทีมใดทีมหนึ่ง เช่น รางวัลจากกิจกรรมพิเศษหรือคะแนนโบนัส</div>
+  <div class="card">
+    <label>เลือกทีมที่ได้รับคะแนนพิเศษ</label>
+    <select id="bonus-select-team">
+      <option value="">-- กรุณาเลือกทีม --</option>
+    </select>
+    <label style="margin-top:16px;">ประเภทสินทรัพย์</label>
+    <div class="reward-options" id="bonus-options">
+      <div class="reward-option" onclick="selectBonusType('land')" id="b-opt-land">
+        <div class="icon">🏗️</div>
+        <div class="name land-color">ที่ดิน</div>
+        <div class="current-price">ราคา <span id="b-land-price">-</span>/แปลง</div>
+      </div>
+      <div class="reward-option" onclick="selectBonusType('gold')" id="b-opt-gold">
+        <div class="icon">🥇</div>
+        <div class="name gold-color">ทองคำ</div>
+        <div class="current-price">ราคา <span id="b-gold-price">-</span>/บาท</div>
+      </div>
+      <div class="reward-option" onclick="selectBonusType('btc')" id="b-opt-btc">
+        <div class="icon">₿</div>
+        <div class="name btc-color">Bitcoin</div>
+        <div class="current-price">ราคา <span id="b-btc-price">-</span>/BTC</div>
+      </div>
+    </div>
+    <label style="margin-top:16px;">มูลค่าคะแนนพิเศษ (บาท)</label>
+    <input type="number" id="bonus-value" placeholder="เช่น 50000" value="50000" />
+    <div style="margin-top:16px;">
+      <button class="btn btn-success" onclick="confirmBonus()">⭐ บันทึกคะแนนพิเศษ</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: กระเป๋าเงิน -->
+<div class="tab" id="tab-wallets">
+  <p class="section-title">👜 กระเป๋าเงินแต่ละทีม</p>
+  <div class="wallet-grid" id="wallet-grid"></div>
+</div>
+
+<!-- TAB: ผลสรุป -->
+<div class="tab" id="tab-leaderboard">
+  <p class="section-title">🏆 ผลสรุปมูลค่าพอร์ตโฟลิโอ</p>
+  <div class="notice" id="lb-notice">กำลังคำนวณ...</div>
+  <div class="leaderboard" id="leaderboard"></div>
+</div>
+
+<!-- TAB: ประวัติ -->
+<div class="tab" id="tab-history">
+  <p class="section-title">📋 ประวัติการรับรางวัล</p>
+  <div class="history-list" id="history-list"></div>
+</div>
+
+<script>
+// ======================== STATE ========================
+const TEAMS = [
+  { id: 'แดง',    name: '🔴 ทีมสีแดง',    hex: '#ef4444' },
+  { id: 'ฟ้า',    name: '🔵 ทีมสีฟ้า',    hex: '#0ea5e9' },
+  { id: 'เหลือง', name: '🟡 ทีมสีเหลือง', hex: '#eab308' },
+  { id: 'ส้ม',    name: '🟠 ทีมสีส้ม',    hex: '#f97316' },
+  { id: 'เขียว',  name: '🟢 ทีมสีเขียว',  hex: '#22c55e' },
+  { id: 'ม่วง',   name: '🟣 ทีมสีม่วง',   hex: '#a855f7' },
+  { id: 'ชมพู',   name: '🩷 ทีมสีชมพู',   hex: '#ec4899' },
+  { id: 'น้ำเงิน', name: '🔷 ทีมสีน้ำเงิน', hex: '#1d4ed8' },
+];
+
+// ── ตารางหมุนเวียนฐาน: 4 รอบ x 4 ฐาน ไม่ซ้ำคู่แข่งขัน ไม่ซ้ำฐาน (คำนวณไว้ล่วงหน้า) ──
+const STATIONS_ORDER = ['ฐาน 1 · โดม', 'ฐาน 2 · โดม', 'ฐาน 3 · HCEC', 'ฐาน 4 · สนามแบดมินตัน'];
+const SCHEDULE = [
+  { round: 1, time: '10:30–10:50', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'เขียว', teamB: 'ชมพู' },
+    { station: 'ฐาน 2 · โดม', teamA: 'แดง',   teamB: 'ม่วง' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'ฟ้า',   teamB: 'ส้ม' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เหลือง', teamB: 'น้ำเงิน' },
+  ]},
+  { round: 2, time: '10:50–11:10', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'ส้ม',   teamB: 'ม่วง' },
+    { station: 'ฐาน 2 · โดม', teamA: 'เหลือง', teamB: 'ชมพู' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'เขียว', teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'แดง', teamB: 'ฟ้า' },
+  ]},
+  { round: 3, time: '11:10–11:30', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'แดง',   teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 2 · โดม', teamA: 'ฟ้า',   teamB: 'เขียว' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'เหลือง', teamB: 'ม่วง' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'ส้ม', teamB: 'ชมพู' },
+  ]},
+  { round: 4, time: '11:30–11:50', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'ฟ้า',   teamB: 'เหลือง' },
+    { station: 'ฐาน 2 · โดม', teamA: 'ส้ม',   teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'แดง',  teamB: 'ชมพู' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เขียว', teamB: 'ม่วง' },
+  ]},
+];
+
+let state = {
+  settings: { landPrice: 100000, winnerValue: 100000, loserValue: 80000 },
+  transactions: [],
+};
+let prices = { btc: null, gold: null };
+let selectedWinnerReward = null;
+let selectedLoserReward  = null;
+
+// ======================== GOOGLE SHEETS API ========================
+// วาง URL ที่ได้จาก Deploy Apps Script ตรงนี้
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAS7E41O7b9xkyHOunboZJL_vRhytH15Ft8bz-mfHbMhcNxuglgOM8ShcSxrLzORpN/exec';
+
+async function apiCall(action, params = {}) {
+  if (!SCRIPT_URL) return null;
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', action);
+    for (const [k, v] of Object.entries(params)) {
+      url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    }
+    const res = await fetch(url.toString());
+    return await res.json();
+  } catch(e) {
+    console.warn('[Sheets] API error:', action, e);
+    return null;
+  }
+}
+
+// ======================== LOCALSTORAGE ========================
+function saveState() {
+  localStorage.setItem('mathCampScoreState', JSON.stringify(state));
+}
+function loadState() {
+  const s = localStorage.getItem('mathCampScoreState');
+  if (s) {
+    try {
+      const saved = JSON.parse(s);
+      state.settings = saved.settings ?? state.settings;
+      state.transactions = saved.transactions ?? [];
+    } catch(e) {}
+  }
+}
+
+// ======================== PRICE API ========================
+function setDot(loading) {
+  document.getElementById('dot').className = 'refresh-dot' + (loading ? ' loading' : '');
+}
+
+async function fetchPrices() {
+  setDot(true);
+  try {
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb',
+      { cache: 'no-store' }
+    );
+    const data = await res.json();
+
+    prices.btc = data.bitcoin.thb;
+    document.getElementById('price-btc').textContent = fmtCurrency(prices.btc);
+
+    const xautThb = data['tether-gold'].thb;
+    prices.gold = xautThb * (15.244 / 31.1035);
+    document.getElementById('price-gold').textContent = fmtCurrency(prices.gold);
+
+    const now = 'อัปเดต ' + new Date().toLocaleTimeString('th-TH');
+    document.getElementById('price-btc-updated').textContent = now;
+    document.getElementById('price-gold-updated').textContent = now;
+  } catch(e) {
+    document.getElementById('price-btc').textContent = 'โหลดไม่ได้';
+    document.getElementById('price-gold').textContent = 'โหลดไม่ได้';
+    console.warn('Price fetch error', e);
+  }
+  setDot(false);
+  updatePriceDisplays();
+  refreshWallets();
+  refreshLeaderboard();
+}
+
+function updatePriceDisplays() {
+  const lp = state.settings.landPrice;
+  const wv = state.settings.winnerValue;
+  const lv = state.settings.loserValue;
+  document.getElementById('price-land-header').textContent = fmtCurrency(lp);
+  document.querySelectorAll('#opt-land-price').forEach(el => el.textContent = fmtCurrency(lp));
+  document.querySelectorAll('#opt-gold-price').forEach(el => el.textContent = prices.gold ? fmtCurrency(prices.gold) : 'กำลังโหลด...');
+  document.querySelectorAll('#opt-btc-price').forEach(el => el.textContent = prices.btc ? fmtCurrency(prices.btc) : 'กำลังโหลด...');
+  const wLabel = document.getElementById('winner-value-label');
+  const lLabel = document.getElementById('loser-value-label');
+  if (wLabel) wLabel.textContent = `มูลค่า ${fmtCurrency(wv)}`;
+  if (lLabel) lLabel.textContent = `มูลค่า ${fmtCurrency(lv)}`;
+}
+
+// ======================== FORMATTING ========================
+function fmtCurrency(n) {
+  if (!n) return '-';
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+}
+function fmtQty(type, qty) {
+  if (type === 'btc') return qty.toFixed(8) + ' BTC';
+  if (type === 'gold') return qty.toFixed(4) + ' บาท (ทอง)';
+  return qty.toFixed(0) + ' แปลง';
+}
+function assetLabel(type) {
+  if (type === 'btc') return '₿ Bitcoin';
+  if (type === 'gold') return '🥇 ทองคำ';
+  return '🏗️ ที่ดิน';
+}
+function assetIcon(type) {
+  if (type === 'btc') return '₿';
+  if (type === 'gold') return '🥇';
+  return '🏗️';
+}
+function assetColor(type) {
+  if (type === 'btc') return '#f97316';
+  if (type === 'gold') return '#eab308';
+  return '#22c55e';
+}
+function teamById(id) { return TEAMS.find(t => t.id === id); }
+
+// ======================== SETTINGS ========================
+function saveSettings() {
+  const lp = parseFloat(document.getElementById('input-land-price').value);
+  const wv = parseFloat(document.getElementById('input-winner-value').value);
+  const lv = parseFloat(document.getElementById('input-loser-value').value);
+  if (!lp || !wv || !lv) { alert('กรุณากรอกตัวเลขให้ครบ'); return; }
+  state.settings.landPrice   = lp;
+  state.settings.winnerValue = wv;
+  state.settings.loserValue  = lv;
+  saveState();
+  apiCall('saveSettings', { data: state.settings });
+  updatePriceDisplays();
+  const msg = document.getElementById('settings-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 2000);
+}
+
+function renderTeamList() {
+  const container = document.getElementById('team-list');
+  if (!container) return;
+  container.innerHTML = TEAMS.map(t => `
+    <div class="wallet-card" style="border-color:${t.hex}55;">
+      <div class="wallet-header"><div class="wallet-name" style="color:${t.hex}">${t.name}</div></div>
+    </div>
+  `).join('');
+  renderScheduleRef();
+}
+
+function renderScheduleRef() {
+  const el = document.getElementById('sched-ref-table');
+  if (!el) return;
+  let html = '<table class="sched-table"><thead><tr><th>รอบ / เวลา</th>';
+  STATIONS_ORDER.forEach(st => { html += `<th>${st}</th>`; });
+  html += '</tr></thead><tbody>';
+  SCHEDULE.forEach(r => {
+    html += `<tr><td class="rnd-lbl">รอบ ${r.round}<br>${r.time}</td>`;
+    STATIONS_ORDER.forEach(st => {
+      const m = r.matches.find(x => x.station === st);
+      html += m ? `<td>${m.teamA}<br><span style="color:#475569">vs</span><br>${m.teamB}</td>` : '<td>-</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function populateTeamSelects() {
+  ['select-winner', 'select-loser', 'bonus-select-team'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">-- กรุณาเลือก --</option>';
+    TEAMS.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      sel.appendChild(opt);
+    });
+    if (current) sel.value = current;
+  });
+}
+
+// ======================== AWARD ========================
+const ALL_TYPES = ['land', 'gold', 'btc'];
+
+function onWinnerChange() {
+  selectedLoserReward = null;
+  document.querySelectorAll('#loser-options .reward-option').forEach(el => el.classList.remove('selected'));
+  if (selectedWinnerReward) renderLoserOptions(selectedWinnerReward);
+}
+
+function priceForType(type) {
+  if (type === 'land') return state.settings.landPrice;
+  if (type === 'gold') return prices.gold;
+  if (type === 'btc')  return prices.btc;
+  return null;
+}
+
+function selectWinnerReward(type) {
+  if (!document.getElementById('select-winner').value) {
+    alert('กรุณาเลือกทีมผู้ชนะก่อน'); return;
+  }
+  const p = priceForType(type);
+  if (!p) { alert('รอราคา ' + assetLabel(type) + ' โหลดก่อนนะครับ'); return; }
+
+  selectedWinnerReward = type;
+  selectedLoserReward  = null;
+  document.querySelectorAll('#winner-options .reward-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('w-opt-' + type).classList.add('selected');
+
+  renderLoserOptions(type);
+  updateConfirmBox();
+}
+
+function renderLoserOptions(excludeType) {
+  const remaining = ALL_TYPES.filter(t => t !== excludeType);
+  document.getElementById('loser-options').innerHTML = remaining.map(type => {
+    const p = priceForType(type);
+    const priceText = type === 'land'
+      ? `1 แปลง = <span>${fmtCurrency(p)}</span>`
+      : type === 'gold'
+        ? `ราคา/บาท = <span>${p ? fmtCurrency(p) : '-'}</span>`
+        : `1 BTC = <span>${p ? fmtCurrency(p) : '-'}</span>`;
+    return `
+      <div class="reward-option" onclick="selectLoserReward('${type}')" id="l-opt-${type}">
+        <div class="icon">${type === 'land' ? '🏗️' : type === 'gold' ? '🥇' : '₿'}</div>
+        <div class="name ${type === 'land' ? 'land' : type === 'gold' ? 'gold' : 'btc'}-color">${assetLabel(type)}</div>
+        <div class="current-price">${priceText}</div>
+      </div>`;
+  }).join('');
+}
+
+function selectLoserReward(type) {
+  if (!document.getElementById('select-loser').value) {
+    alert('กรุณาเลือกทีมผู้แพ้ก่อน'); return;
+  }
+  selectedLoserReward = type;
+  document.querySelectorAll('#loser-options .reward-option').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('l-opt-' + type);
+  if (el) el.classList.add('selected');
+  updateConfirmBox();
+}
+
+function calcTx(type, value) {
+  const price = priceForType(type);
+  if (!price) return null;
+  return { price, qty: value / price };
+}
+
+function updateConfirmBox() {
+  if (!selectedWinnerReward || !selectedLoserReward) {
+    document.getElementById('confirm-box').className = 'confirm-box';
+    return;
+  }
+  const winnerId  = document.getElementById('select-winner').value;
+  const loserId   = document.getElementById('select-loser').value;
+  if (!winnerId || !loserId) return;
+
+  const wv = state.settings.winnerValue;
+  const lv = state.settings.loserValue;
+  const wTx = calcTx(selectedWinnerReward, wv);
+  const lTx = calcTx(selectedLoserReward,  lv);
+  if (!wTx || !lTx) return;
+
+  const wName = teamById(winnerId)?.name ?? winnerId;
+  const lName = teamById(loserId)?.name ?? loserId;
+
+  const stationEl = document.getElementById('select-station');
+  const stationText = stationEl.options[stationEl.selectedIndex]?.text ?? '';
+  document.getElementById('conf-station-row').textContent = '📍 ' + stationText;
+  document.getElementById('conf-w-team').textContent  = wName;
+  document.getElementById('conf-w-asset').textContent = assetLabel(selectedWinnerReward);
+  document.getElementById('conf-w-qty').textContent   = fmtQty(selectedWinnerReward, wTx.qty);
+  document.getElementById('conf-w-total').textContent = fmtCurrency(wv);
+
+  document.getElementById('conf-l-team').textContent  = lName;
+  document.getElementById('conf-l-asset').textContent = assetLabel(selectedLoserReward);
+  document.getElementById('conf-l-qty').textContent   = fmtQty(selectedLoserReward, lTx.qty);
+  document.getElementById('conf-l-total').textContent = fmtCurrency(lv);
+
+  document.getElementById('confirm-box').className = 'confirm-box show';
+}
+
+function cancelAward() {
+  selectedWinnerReward = null;
+  selectedLoserReward  = null;
+  document.querySelectorAll('.reward-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('confirm-box').className = 'confirm-box';
+  document.getElementById('loser-options').innerHTML = '<div style="color:#475569; font-size:0.85rem; padding:8px;">เลือกรางวัลทีมชนะก่อน</div>';
+}
+
+function confirmAward() {
+  const winnerId = document.getElementById('select-winner').value;
+  const loserId  = document.getElementById('select-loser').value;
+  const station  = document.getElementById('select-station').value;
+  if (!station) { alert('กรุณาเลือกฐานก่อน'); return; }
+  if (!winnerId || !loserId || !selectedWinnerReward || !selectedLoserReward) return;
+  if (winnerId === loserId) { alert('ทีมชนะและทีมแพ้ต้องไม่ใช่ทีมเดียวกัน'); return; }
+
+  const wv  = state.settings.winnerValue;
+  const lv  = state.settings.loserValue;
+  const wTx = calcTx(selectedWinnerReward, wv);
+  const lTx = calcTx(selectedLoserReward,  lv);
+  if (!wTx || !lTx) { alert('ราคายังโหลดไม่ครบ กรุณารอสักครู่'); return; }
+
+  const now = new Date().toISOString();
+  const txW = { id: Date.now() + 'w', studentId: winnerId, type: selectedWinnerReward, qty: wTx.qty, priceAtAward: wTx.price, valueAtAward: wv, timestamp: now, station };
+  const txL = { id: Date.now() + 'l', studentId: loserId,  type: selectedLoserReward,  qty: lTx.qty, priceAtAward: lTx.price, valueAtAward: lv, timestamp: now, station };
+
+  state.transactions.push(txW, txL);
+  saveState();
+  apiCall('addTransaction', { data: txW });
+  apiCall('addTransaction', { data: txL });
+
+  const wName = teamById(winnerId)?.name ?? winnerId;
+  const lName = teamById(loserId)?.name  ?? loserId;
+  showToast(`✅ บันทึกแล้ว! ${wName} (ชนะ) รับ ${assetLabel(selectedWinnerReward)} · ${lName} (แพ้) รับ ${assetLabel(selectedLoserReward)}`);
+
+  cancelAward();
+  document.getElementById('select-winner').value = '';
+  document.getElementById('select-loser').value  = '';
+  refreshWallets();
+  refreshLeaderboard();
+  renderHistory();
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:12px 20px;border-radius:10px;font-weight:600;z-index:9999;font-size:.9rem;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ======================== CURRENT VALUE ========================
+function currentPrice(type) {
+  if (type === 'land') return state.settings.landPrice;
+  if (type === 'gold') return prices.gold;
+  if (type === 'btc') return prices.btc;
+  return null;
+}
+function currentValue(tx) {
+  const cp = currentPrice(tx.type);
+  if (!cp) return null;
+  return tx.qty * cp;
+}
+
+// ======================== WALLETS ========================
+function refreshWallets() {
+  const container = document.getElementById('wallet-grid');
+  if (!container) return;
+  container.innerHTML = TEAMS.map(team => {
+    const txs = state.transactions.filter(t => t.studentId === team.id);
+    const totalInvested = txs.reduce((s, t) => s + t.valueAtAward, 0);
+    const totalCurrent = txs.reduce((s, t) => {
+      const cv = currentValue(t);
+      return cv !== null ? s + cv : s;
+    }, 0);
+    const gain = totalCurrent - totalInvested;
+    const gainPct = totalInvested > 0 ? (gain / totalInvested) * 100 : 0;
+
+    const itemsHtml = txs.length === 0
+      ? '<div class="wallet-empty">ยังไม่มีรางวัล</div>'
+      : txs.map(t => {
+          const cv = currentValue(t);
+          const g = cv !== null ? cv - t.valueAtAward : null;
+          const gp = g !== null && t.valueAtAward > 0 ? (g / t.valueAtAward) * 100 : null;
+          const time = new Date(t.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div class="wallet-item">
+              <div class="wallet-item-left">
+                <div class="wallet-item-icon">${assetIcon(t.type)}</div>
+                <div class="wallet-item-info">
+                  <div class="wallet-item-name" style="color:${assetColor(t.type)}">${assetLabel(t.type)}</div>
+                  <div class="wallet-item-detail">${fmtQty(t.type, t.qty)} · รับเวลา ${time}</div>
+                  <div class="wallet-item-detail">ราคาตอนรับ: ${fmtCurrency(t.priceAtAward)}/หน่วย</div>
+                </div>
+              </div>
+              <div class="wallet-item-right">
+                <div class="wallet-item-current">${cv !== null ? fmtCurrency(cv) : '?'}</div>
+                ${gp !== null ? `<div class="wallet-item-change ${gp >= 0 ? 'positive' : 'negative'}">${gp >= 0 ? '▲' : '▼'} ${Math.abs(gp).toFixed(1)}%</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+    const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
+    const gainText = totalInvested > 0 ? `${gain >= 0 ? '+' : ''}${fmtCurrency(gain)} (${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)` : '-';
+
+    return `
+      <div class="wallet-card">
+        <div class="wallet-header">
+          <div class="wallet-name" style="color:${team.hex}">${team.name}</div>
+          <div class="wallet-total">
+            <span style="color:#93c5fd; font-weight:700;">${fmtCurrency(totalCurrent)}</span>
+            <span class="${gainClass}" style="font-size:.8rem; margin-left:8px;">${gainText}</span>
+          </div>
+        </div>
+        <div class="wallet-items">${itemsHtml}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ======================== LEADERBOARD ========================
+function refreshLeaderboard() {
+  const container = document.getElementById('leaderboard');
+  const notice = document.getElementById('lb-notice');
+  if (!container) return;
+
+  const data = TEAMS.map(team => {
+    const txs = state.transactions.filter(t => t.studentId === team.id);
+    const totalInvested = txs.reduce((s, t) => s + t.valueAtAward, 0);
+    const totalCurrent = txs.reduce((s, t) => {
+      const cv = currentValue(t);
+      return cv !== null ? s + cv : s;
+    }, 0);
+    const holdings = [...new Set(txs.map(t => t.type))].map(assetLabel).join(', ');
+    return { team, totalCurrent, totalInvested, holdings };
+  }).sort((a, b) => b.totalCurrent - a.totalCurrent);
+
+  const totalAll = data.reduce((s, d) => s + d.totalCurrent, 0);
+  notice.textContent = `💰 มูลค่าพอร์ตรวมทุกทีม: ${fmtCurrency(totalAll)} · อัปเดตทุก 60 วินาที`;
+
+  const rankIcons = ['🥇', '🥈', '🥉'];
+  container.innerHTML = data.map((d, i) => {
+    const gain = d.totalCurrent - d.totalInvested;
+    const gainPct = d.totalInvested > 0 ? (gain / d.totalInvested * 100) : 0;
+    const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
+    return `
+      <div class="lb-item">
+        <div class="lb-rank ${i < 3 ? 'r' + (i+1) : ''}">${i < 3 ? rankIcons[i] : '#' + (i+1)}</div>
+        <div class="lb-info">
+          <div class="lb-name" style="color:${d.team.hex}">${d.team.name}</div>
+          <div class="lb-holdings">${d.holdings || 'ยังไม่มีรางวัล'}</div>
+        </div>
+        <div class="lb-value">
+          <div class="lb-total">${fmtCurrency(d.totalCurrent)}</div>
+          <div class="lb-gain ${gainClass}">${gain >= 0 ? '+' : ''}${fmtCurrency(gain)} (${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ======================== HISTORY ========================
+function renderHistory() {
+  const container = document.getElementById('history-list');
+  if (!container) return;
+  if (state.transactions.length === 0) {
+    container.innerHTML = '<p style="color:#64748b; font-size:.85rem;">ยังไม่มีประวัติ</p>';
+    return;
+  }
+  const sorted = [...state.transactions].reverse();
+  container.innerHTML = sorted.map(t => {
+    const team = teamById(t.studentId);
+    const name = team ? team.name : (t.studentId || '(ไม่พบ)');
+    const time = new Date(t.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return `
+      <div class="history-item">
+        <span class="history-time">${time}</span>
+        <span class="history-text">
+          ${t.station ? `<span style="color:#475569; font-size:0.75rem;">${t.station} · </span>` : ''}
+          <strong>${name}</strong> รับ <strong style="color:${assetColor(t.type)}">${assetLabel(t.type)}</strong>
+          ${fmtQty(t.type, t.qty)} · ราคา ${fmtCurrency(t.priceAtAward)}/หน่วย · มูลค่า ${fmtCurrency(t.valueAtAward)}
+        </span>
+        <button class="btn-del-history" onclick="deleteTx('${t.id}')" title="ลบ">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteTx(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  state.transactions = state.transactions.filter(t => t.id !== id);
+  saveState();
+  apiCall('deleteTransaction', { id });
+  renderHistory();
+  refreshWallets();
+  refreshLeaderboard();
+}
+
+// ======================== BONUS ========================
+let selectedBonusType = null;
+
+function selectBonusType(type) {
+  selectedBonusType = type;
+  document.querySelectorAll('#bonus-options .reward-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('b-opt-' + type).classList.add('selected');
+}
+
+function updateBonusPrices() {
+  const lp = state.settings.landPrice;
+  document.getElementById('b-land-price').textContent = fmtCurrency(lp);
+  document.getElementById('b-gold-price').textContent = prices.gold ? fmtCurrency(prices.gold) : '-';
+  document.getElementById('b-btc-price').textContent  = prices.btc  ? fmtCurrency(prices.btc)  : '-';
+}
+
+function confirmBonus() {
+  const teamId = document.getElementById('bonus-select-team').value;
+  const value  = parseFloat(document.getElementById('bonus-value').value);
+  if (!teamId)           { alert('กรุณาเลือกทีม'); return; }
+  if (!selectedBonusType){ alert('กรุณาเลือกประเภทสินทรัพย์'); return; }
+  if (!value || value <= 0) { alert('กรุณากรอกมูลค่า'); return; }
+
+  const price = priceForType(selectedBonusType);
+  if (!price) { alert('ราคายังโหลดไม่ครบ กรุณารอสักครู่'); return; }
+
+  const qty = value / price;
+  const tx = {
+    id: Date.now() + 'b',
+    studentId: teamId,
+    type: selectedBonusType,
+    qty,
+    priceAtAward: price,
+    valueAtAward: value,
+    timestamp: new Date().toISOString(),
+    station: 'โบนัส',
+  };
+
+  state.transactions.push(tx);
+  saveState();
+  apiCall('addTransaction', { data: tx });
+
+  const teamName = teamById(teamId)?.name ?? teamId;
+  showToast(`⭐ บันทึกแล้ว! ${teamName} ได้รับโบนัส ${assetLabel(selectedBonusType)} มูลค่า ${fmtCurrency(value)}`);
+
+  document.getElementById('bonus-select-team').value = '';
+  document.getElementById('bonus-value').value = '50000';
+  selectedBonusType = null;
+  document.querySelectorAll('#bonus-options .reward-option').forEach(el => el.classList.remove('selected'));
+
+  refreshWallets();
+  refreshLeaderboard();
+  renderHistory();
+}
+
+// ======================== TABS ========================
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+
+  if (name === 'wallets')     refreshWallets();
+  if (name === 'leaderboard') refreshLeaderboard();
+  if (name === 'history')     renderHistory();
+  if (name === 'award')       updatePriceDisplays();
+  if (name === 'bonus')       updateBonusPrices();
+  if (name === 'setup')       renderTeamList();
+}
+
+// ======================== INIT ========================
+async function init() {
+  loadState();
+
+  const remote = await apiCall('getAll');
+  if (remote && !remote.error) {
+    if (remote.transactions?.length) state.transactions = remote.transactions;
+    if (remote.settings) state.settings = { ...state.settings, ...remote.settings };
+    saveState();
+  }
+
+  document.getElementById('input-land-price').value   = state.settings.landPrice;
+  document.getElementById('input-winner-value').value = state.settings.winnerValue ?? 100000;
+  document.getElementById('input-loser-value').value  = state.settings.loserValue  ?? 80000;
+
+  renderTeamList();
+  populateTeamSelects();
+  updatePriceDisplays();
+  renderHistory();
+
+  fetchPrices();
+  setInterval(fetchPrices, 60000);
+}
+
+init();
+</script>
+</body>
+</html>
