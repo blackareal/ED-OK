@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ภารกิจเซลฟี่คณิต - SWP Math Camp12</title>
+<style>
+  :root {
+    --navy: #1F3864;
+    --gold: #D4A017;
+    --easy: #2E7D32;
+    --medium: #B8860B;
+    --hard: #C0392B;
+    --bg: #F4F6FB;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Leelawadee UI", "Tahoma", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: #1a1a2e;
+  }
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 1.4em 1.2em 1.2em;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  header h1 { margin: 0 0 0.15em; font-size: 1.4rem; }
+  header p { margin: 0; font-size: 0.85rem; color: #C9D6EE; }
+
+  .notice {
+    background: #FFF4D6;
+    border-bottom: 2px solid var(--gold);
+    color: #6B4E00;
+    text-align: center;
+    padding: 0.7em 1em;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .draft-notice {
+    background: #FDECEC;
+    border-bottom: 2px solid var(--hard);
+    color: #8a1f1f;
+    text-align: center;
+    padding: 0.6em 1em;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  /* ---------- Team picker ---------- */
+  .team-select {
+    background: #fff;
+    border-bottom: 1px solid #e2e6ef;
+    padding: 1em 1em 1.2em;
+    text-align: center;
+  }
+  .team-select-label { font-weight: 700; color: var(--navy); font-size: 0.95rem; margin-bottom: 0.7em; }
+  .team-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 0.5em;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .team-buttons button {
+    border: 2px solid var(--navy);
+    background: #fff;
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.65em 0.4em;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .team-buttons button.active { color: #fff; }
+
+  .team-active-bar {
+    display: none;
+    background: #EAF3EA;
+    border-bottom: 1px solid #cfe4cf;
+    color: #1e5c1e;
+    text-align: center;
+    padding: 0.6em 1em;
+    font-size: 0.9rem;
+  }
+  .team-active-bar b { color: #0f3d0f; }
+  .team-active-bar button {
+    margin-left: 0.6em;
+    border: none;
+    background: none;
+    color: var(--navy);
+    text-decoration: underline;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .team-active-bar button:disabled { opacity: 0.5; text-decoration: none; cursor: default; }
+
+  .config-warning {
+    background: #FDECEC; border-bottom: 2px solid #C0392B; color: #8a1f1f;
+    text-align: center; padding: 0.8em 1em; font-size: 0.85rem; font-weight: 600;
+    display: none;
+  }
+
+  .filters {
+    display: flex;
+    gap: 0.5em;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 1em;
+  }
+  .filters button {
+    border: 1px solid #ccc;
+    background: #fff;
+    border-radius: 100px;
+    padding: 0.45em 1.1em;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #444;
+  }
+  .filters button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 0.9em;
+    padding: 0 1em 2.5em;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1em 1.1em;
+    box-shadow: 0 2px 10px rgba(20,30,60,0.06);
+    border-left: 6px solid var(--navy);
+  }
+  .card.Easy { border-left-color: var(--easy); }
+  .card.Medium { border-left-color: var(--medium); }
+  .card.Hard { border-left-color: var(--hard); }
+
+  .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5em; }
+  .card-no { color: #99a; font-size: 0.8rem; font-weight: 700; }
+  .lvl-badge { font-size: 0.65rem; font-weight: 700; padding: 0.15em 0.55em; border-radius: 100px; color: #fff; white-space: nowrap; }
+  .lvl-badge.Easy { background: var(--easy); }
+  .lvl-badge.Medium { background: var(--medium); }
+  .lvl-badge.Hard { background: var(--hard); }
+
+  .mission-text { font-size: 0.92rem; line-height: 1.55; color: #333; white-space: pre-line; }
+  .mission-tag { display: inline-block; margin-top: 0.5em; font-size: 0.68rem; font-weight: 700; color: var(--navy); background: #EAF0FB; padding: 0.2em 0.6em; border-radius: 100px; }
+
+  .empty { text-align: center; color: #99a; padding: 3em 1em; }
+
+  /* ---------- Upload block ---------- */
+  .upload-block {
+    margin-top: 0.9em;
+    padding-top: 0.8em;
+    border-top: 1px dashed #ddd;
+    text-align: center;
+  }
+  .file-input { display: none; }
+  .upload-btn {
+    display: inline-block;
+    background: var(--gold);
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.55em 1.3em;
+    border-radius: 100px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(212,160,23,0.35);
+  }
+  body.no-team .upload-btn { pointer-events: none; opacity: 0.4; }
+  .upload-status { margin-top: 0.5em; font-size: 0.8rem; min-height: 1.1em; }
+  .upload-status.loading { color: #778; }
+  .upload-status.success { color: #1e7e34; font-weight: 700; }
+  .upload-status.error { color: #C0392B; font-weight: 700; }
+</style>
+</head>
+<body class="no-team">
+
+<header>
+  <h1>🧮📸 ภารกิจเซลฟี่คณิต SWP Math Camp12</h1>
+  <p>แก้โจทย์คณิต ถอดรหัสเป็นคำตอบ แล้วไปถ่ายภาพให้ตรงกับภารกิจ!</p>
+</header>
+
+<div class="draft-notice">📝 ชุดภารกิจนี้เป็น "ฉบับร่าง" รอครูตรวจทานก่อนใช้งานจริง (ดูรายละเอียดใน README)</div>
+
+<div class="notice">✅ สมาชิกในทีมช่วยกันถ่ายและอัปโหลดรูปได้เลย แค่เลือกทีมของคุณด้านล่างก่อนเริ่ม</div>
+
+<div class="team-select" id="teamSelect">
+  <div class="team-select-label">👥 เลือกทีมของคุณก่อนเริ่มอัปโหลดรูป</div>
+  <div class="team-buttons" id="teamButtons"></div>
+</div>
+
+<div class="team-active-bar" id="teamActiveBar">
+  ✅ กำลังอัปโหลดในนามทีม <b id="activeTeamName"></b>
+  <button id="btnChangeTeam">เปลี่ยนทีม</button>
+  <button id="btnRefreshStatus">🔄 เช็คสถานะล่าสุด</button>
+</div>
+
+<div class="config-warning" id="configWarning"></div>
+
+<div class="filters" id="filters">
+  <button data-f="all" class="active">ทั้งหมด</button>
+  <button data-f="Easy">🟢 ง่าย</button>
+  <button data-f="Medium">🟡 กลาง</button>
+  <button data-f="Hard">🔴 ยาก</button>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="empty" id="emptyMsg" style="display:none;">ไม่มีภารกิจในหมวดนี้</div>
+
+<script>
+  // =====================================================================
+  // CONFIG — ใช้ Web App URL เดียวกับระบบคะแนน (Apps Script ตัวเดียวกัน
+  // เขียนข้อมูลลงแท็บ "missions" ในชีตเดียวกัน ไม่ต้อง publish CSV แยก)
+  // =====================================================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAS7E41O7b9xkyHOunboZJL_vRhytH15Ft8bz-mfHbMhcNxuglgOM8ShcSxrLzORpN/exec';
+
+  // =====================================================================
+  // ทีม 8 สี — ใช้ชุดเดียวกับระบบคะแนน (SWP_MathCamp12_ScoreInput.html)
+  // =====================================================================
+  const TEAMS = [
+    { id: 'แดง',    name: '🔴 ทีมสีแดง',    hex: '#ef4444' },
+    { id: 'ฟ้า',    name: '🔵 ทีมสีฟ้า',    hex: '#0ea5e9' },
+    { id: 'เหลือง', name: '🟡 ทีมสีเหลือง', hex: '#eab308' },
+    { id: 'ส้ม',    name: '🟠 ทีมสีส้ม',    hex: '#f97316' },
+    { id: 'เขียว',  name: '🟢 ทีมสีเขียว',  hex: '#22c55e' },
+    { id: 'ม่วง',   name: '🟣 ทีมสีม่วง',   hex: '#a855f7' },
+    { id: 'ชมพู',   name: '🩷 ทีมสีชมพู',   hex: '#ec4899' },
+    { id: 'น้ำเงิน', name: '🔷 ทีมสีน้ำเงิน', hex: '#1d4ed8' },
+  ];
+
+  // =====================================================================
+  // ภารกิจเซลฟี่คณิต 30 ข้อ — ฉบับร่าง (DRAFT) รอครูตรวจทาน/แก้ไขก่อนใช้งานจริง
+  // จุดที่มีคำว่า [ครูช่วยยืนยัน] คือจุดที่ต้องใส่ข้อมูลจริงของโรงเรียน
+  // (สี/ชื่อครู/พิกัด/จำนวนคน) ก่อนพิมพ์แจกจริง
+  // รูปแบบ: [no, level, missionText]
+  // =====================================================================
+  const MISSIONS = [
+    [1,  "Easy",   "🫂 รวมพลัง! ถ่ายภาพสมาชิกในทีมของคุณให้ครบทุกคนในภาพเดียว จะถ่ายที่ไหนในโรงเรียนก็ได้"],
+    [2,  "Medium", "แก้สมการ x² − 112x + 3136 = 0 แล้วไปถ่ายภาพคู่กับสิ่งของ/ป้ายที่มีตัวเลขตรงกับคำตอบที่ได้"],
+    [3,  "Easy",   "หาผลบวก 1 + 2 + 3 + ... + 10 แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้นเขียนอยู่ (เช่น เลขห้อง/ป้ายเลข)"],
+    [4,  "Medium", "ถ่ายภาพกับอาคารเรียนที่มีสีตรงกับรหัสสี #03a9f4 (สีฟ้าสด) ให้มีสมาชิกในทีมครบทุกคนอยู่ในภาพ [ครูช่วยยืนยันอาคารจริงที่ตรงกับสีนี้]"],
+    [5,  "Hard",   "ไปยังพิกัด GPS (17.0817614, 103.8176737) แล้วถ่ายเซลฟี่ให้ครบทุกคนในทีม ณ จุดนั้น [ครูช่วยยืนยัน/ปรับพิกัดให้ตรงกับจุดจริงในโรงเรียน]"],
+    [6,  "Medium", "สร้างภาพ (Generate ด้วยแอป AI ในมือถือ) ที่มีสมาชิกในทีมของคุณครบทุกคน โดยมีผู้อำนวยการโรงเรียนยืนอยู่ตรงกลาง"],
+    [7,  "Medium", "ถ่ายภาพกับบุคคลที่มีชื่อหรือฉายาความหมายว่า \"ความเจริญรุ่งเรืองยิ่งขึ้น\" [ครูช่วยระบุชื่อครู/บุคลากรที่ความหมายตรงโจทย์]"],
+    [8,  "Hard",   "ถ่ายภาพป้ายทะเบียนรถ (คันไหนก็ได้ในโรงเรียน) ที่ผลรวมของตัวเลขในทะเบียนมากกว่า 20"],
+    [9,  "Medium", "แปลงคำว่า \"SWP\" เป็นตัวเลขแบบ A=1, B=2, ..., Z=26 แล้วหาผลรวม จากนั้นถ่ายภาพคู่กับสิ่งของ/ตัวเลขที่ตรงกับผลรวมนั้น"],
+    [10, "Easy",   "หานาฬิกาเรือนไหนก็ได้ในโรงเรียน ถ่ายภาพตอนที่เข็มสั้นกับเข็มยาวทำมุม 90 องศาพอดี"],
+    [11, "Medium", "หาจำนวนเต็ม 3 จำนวนที่เรียงติดกัน (n, n+1, n+2) ซึ่งผลรวมเท่ากับ 141 แล้วถ่ายภาพคู่กับตัวเลขตัวกลาง"],
+    [12, "Hard",   "หาจำนวนเฉพาะ (Prime number) ที่มากที่สุดที่น้อยกว่า 50 แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้น"],
+    [13, "Easy",   "ถ่ายภาพกับวัตถุทรงเรขาคณิต (ทรงลูกบาศก์ ปิรามิด ทรงกระบอก ฯลฯ) ที่พบเจอในโรงเรียน พร้อมบอกชื่อทรงนั้น"],
+    [14, "Medium", "คำนวณพื้นที่วงกลมรัศมี 7 หน่วย (ใช้ π ≈ 22/7) แล้วถ่ายภาพคู่กับตัวเลขคำตอบที่ได้"],
+    [15, "Medium", "หาค่าเฉลี่ย (Mean) ของเลข 12, 18, 24, 30, 36 แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้น"],
+    [16, "Hard",   "แก้อสมการ 2x − 5 > 15 หาค่า x ที่น้อยที่สุดที่เป็นจำนวนเต็ม แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้น"],
+    [17, "Easy",   "นับจำนวนขั้นบันไดจริงของบันไดใดก็ได้ในโรงเรียน ถ่ายภาพคู่กับป้าย/มือที่ชูจำนวนขั้นที่นับได้ (ต้องเป็นเลขคี่)"],
+    [18, "Medium", "หาผลคูณของเลขคี่ 3 ตัวแรก (1 × 3 × 5) แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้น"],
+    [19, "Hard",   "แปลงเลขฐานสอง 111001 ให้เป็นเลขฐานสิบ แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้น"],
+    [20, "Medium", "หาพจน์ที่ 10 ของลำดับเลขคณิต 3, 7, 11, 15, ... แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้น"],
+    [21, "Easy",   "ถ่ายภาพกับต้นไม้ที่มีจำนวนกิ่งใหญ่หลักแยกจากลำต้นเป็นจำนวนเฉพาะ (นับเฉพาะกิ่งหลัก)"],
+    [22, "Hard",   "ขอจำนวนนักเรียนทั้งหมดในค่ายจากครูประจำฐาน แล้วคำนวณร้อยละ 15 ของจำนวนนั้น (ปัดเป็นจำนวนเต็ม) จากนั้นรวมกลุ่มให้ได้จำนวนคนเท่ากับคำตอบ แล้วถ่ายภาพ [ครูช่วยยืนยันจำนวนนักเรียนทั้งหมด]"],
+    [23, "Medium", "หา ห.ร.ม. (GCD) ของ 48 และ 60 แล้วถ่ายภาพคู่กับสิ่งของที่มีจำนวนเท่ากับคำตอบ"],
+    [24, "Medium", "หา ค.ร.น. (LCM) ของ 4, 6 และ 9 แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้น"],
+    [25, "Hard",   "สามเหลี่ยมมุมฉากมีด้านประกอบมุมฉากยาว 9 และ 12 หน่วย จงหาความยาวด้านตรงข้ามมุมฉาก แล้วถ่ายภาพคู่กับตัวเลขคำตอบ"],
+    [26, "Easy",   "หานาฬิกาที่บอกเวลาซึ่งตัวเลขชั่วโมงบวกกับตัวเลขนาทีได้ผลลัพธ์เท่ากับ 12 พอดี (เช่น 08:04) แล้วถ่ายภาพคู่กับนาฬิกาเรือนนั้น"],
+    [27, "Medium", "นำเลขประจำตัวนักเรียนของสมาชิก 1 คนในทีม มาบวกเลขโดดทุกหลักไปเรื่อย ๆ จนเหลือหลักเดียว (Digital Root) แล้วถ่ายภาพคู่กับตัวเลขคำตอบ"],
+    [28, "Hard",   "แก้ระบบสมการ x + y = 20 และ x − y = 6 หาค่า x แล้วถ่ายภาพคู่กับสิ่งของที่มีตัวเลขนั้น"],
+    [29, "Medium", "นับจำนวนหน้าต่างของอาคารเรียนอาคารใดก็ได้ 1 อาคาร แล้วชูป้ายคำตอบว่าจำนวนนั้นเป็น \"จำนวนเฉพาะ\" หรือ \"ไม่ใช่จำนวนเฉพาะ\" พร้อมถ่ายภาพคู่กับอาคารนั้น"],
+    [30, "Easy",   "สร้างภาพ (Generate ด้วยแอป AI) เป็นการ์ตูนทีมของคุณกำลังถือป้ายคะแนนที่คาดว่าทีมจะได้ในค่ายนี้ พร้อมสโลแกนประจำทีม"],
+  ];
+
+  const grid = document.getElementById('grid');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const configWarning = document.getElementById('configWarning');
+
+  let currentTeam = null;
+  let currentFilter = 'all';
+  const uploadState = {}; // { [no]: { status: 'loading'|'success'|'error', message: string } }
+
+  if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+    configWarning.style.display = 'block';
+    configWarning.textContent = "⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ในไฟล์นี้ — ครูต้องตั้งค่า Google Apps Script ก่อนใช้งาน";
+  }
+
+  function statusHtml(no) {
+    const s = uploadState[no];
+    if (!s) return '<div class="upload-status" id="uploadStatus-' + no + '"></div>';
+    return `<div class="upload-status ${s.status}" id="uploadStatus-${no}">${s.message}</div>`;
+  }
+
+  function render(filter) {
+    currentFilter = filter;
+    grid.innerHTML = "";
+    const items = MISSIONS.filter(m => filter === 'all' || m[1] === filter);
+    emptyMsg.style.display = items.length ? 'none' : 'block';
+    for (const [no, level, text] of items) {
+      const card = document.createElement('div');
+      card.className = `card ${level}`;
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-no">ภารกิจที่ ${no}</div>
+          <span class="lvl-badge ${level}">${level === 'Easy' ? 'ง่าย' : level === 'Medium' ? 'กลาง' : 'ยาก'}</span>
+        </div>
+        <div class="mission-text">${text}</div>
+        <div class="upload-block">
+          <input type="file" accept="image/*" class="file-input" id="file-${no}" data-no="${no}">
+          <label for="file-${no}" class="upload-btn">📷 อัปโหลดรูป</label>
+          ${statusHtml(no)}
+        </div>`;
+      grid.appendChild(card);
+    }
+  }
+
+  document.getElementById('filters').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render(btn.dataset.f);
+  });
+
+  render('all');
+
+  // =====================================================================
+  // เลือกทีม — เลือกครั้งเดียว ใช้กับการอัปโหลดทุกภารกิจจนกว่าจะกด "เปลี่ยนทีม"
+  // =====================================================================
+  const teamSelect = document.getElementById('teamSelect');
+  const teamActiveBar = document.getElementById('teamActiveBar');
+  const activeTeamName = document.getElementById('activeTeamName');
+  const teamButtonsEl = document.getElementById('teamButtons');
+
+  teamButtonsEl.innerHTML = TEAMS.map(t =>
+    `<button data-team="${t.id}" style="border-color:${t.hex}">${t.name}</button>`
+  ).join('');
+
+  teamButtonsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    currentTeam = btn.dataset.team;
+    const team = TEAMS.find(t => t.id === currentTeam);
+    activeTeamName.textContent = team ? team.name : currentTeam;
+    document.querySelectorAll('#teamButtons button').forEach(b => {
+      b.classList.remove('active');
+      b.style.background = '#fff';
+      b.style.color = 'var(--navy)';
+    });
+    btn.classList.add('active');
+    btn.style.background = team ? team.hex : 'var(--navy)';
+    btn.style.color = '#fff';
+    teamSelect.style.display = 'none';
+    teamActiveBar.style.display = 'block';
+    document.body.classList.remove('no-team');
+    refreshUploadStatus();
+  });
+
+  document.getElementById('btnChangeTeam').addEventListener('click', () => {
+    teamSelect.style.display = 'block';
+    teamActiveBar.style.display = 'none';
+  });
+
+  document.getElementById('btnRefreshStatus').addEventListener('click', refreshUploadStatus);
+
+  // =====================================================================
+  // เช็คสถานะว่าทีมที่เลือกอัปโหลดภารกิจไหนไปแล้วบ้าง (อ่านจาก Apps Script
+  // action=getMissions ตรง ๆ ไม่ต้อง publish CSV แยก)
+  // =====================================================================
+  let statusCheckInFlight = false;
+  const btnRefreshStatus = document.getElementById('btnRefreshStatus');
+
+  async function refreshUploadStatus() {
+    if (!currentTeam) return;
+    if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) return;
+    if (statusCheckInFlight) return;
+    statusCheckInFlight = true;
+    const originalLabel = btnRefreshStatus.textContent;
+    btnRefreshStatus.disabled = true;
+    btnRefreshStatus.textContent = '🔄 กำลังเช็ค...';
+    try {
+      const url = new URL(SCRIPT_URL);
+      url.searchParams.set('action', 'getMissions');
+      const res = await fetch(url.toString(), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const headers = data.headers || [];
+      const rows = data.rows || [];
+      const teamColIdx = headers.findIndex(h => h === 'ทีม');
+      const myRow = rows.find(r => (r[teamColIdx] || '').toString().trim() === currentTeam);
+      if (!myRow) return;
+      for (const [no] of MISSIONS) {
+        if (uploadState[no] && uploadState[no].status === 'loading') continue;
+        const colIdx = headers.findIndex(h => h === 'MISSION#' + no);
+        if (colIdx < 0) continue;
+        const cell = (myRow[colIdx] || '').toString().trim();
+        if (cell) setStatus(no, 'success', '✅ มีรูปอัปโหลดแล้ว');
+      }
+    } catch (err) {
+      console.error('refreshUploadStatus failed', err);
+    } finally {
+      statusCheckInFlight = false;
+      btnRefreshStatus.disabled = false;
+      btnRefreshStatus.textContent = originalLabel;
+    }
+  }
+
+  // =====================================================================
+  // บีบอัดรูปในเครื่องก่อนส่ง
+  // =====================================================================
+  function compressImage(file, maxDim, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("เปิดไฟล์รูปไม่สำเร็จ"));
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl.split(',')[1]);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function setStatus(no, status, message) {
+    uploadState[no] = { status, message };
+    const el = document.getElementById(`uploadStatus-${no}`);
+    if (el) {
+      el.textContent = message;
+      el.className = 'upload-status ' + status;
+    }
+  }
+
+  async function handleFileSelect(no, file) {
+    if (!currentTeam) { alert('กรุณาเลือกทีมก่อนอัปโหลดรูป'); return; }
+    if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+      alert('ยังไม่ได้ตั้งค่า SCRIPT_URL ในไฟล์นี้ — แจ้งครูให้ตั้งค่าก่อนใช้งาน');
+      return;
+    }
+    if (uploadState[no] && uploadState[no].status === 'loading') return;
+
+    setStatus(no, 'loading', 'กำลังบีบอัดรูป...');
+    try {
+      const base64 = await compressImage(file, 1280, 0.72);
+      setStatus(no, 'loading', 'กำลังอัปโหลด...');
+
+      // ห้ามใส่ header Content-Type เอง เพื่อไม่ให้เบราว์เซอร์ส่ง OPTIONS preflight
+      // ซึ่ง Google Apps Script Web App ไม่รองรับ
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          team: currentTeam,
+          missionNo: no,
+          filename: `MISSION${no}_${currentTeam}_${Date.now()}.jpg`,
+          mimeType: 'image/jpeg',
+          imageBase64: base64
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        setStatus(no, 'success', '✅ อัปโหลดสำเร็จ (อัปโหลดใหม่ได้ถ้าอยากเปลี่ยนรูป)');
+      } else {
+        throw new Error(data.message || 'ไม่ทราบสาเหตุ');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(no, 'error', '❌ อัปโหลดไม่สำเร็จ ลองใหม่อีกครั้ง (' + err.message + ')');
+    }
+  }
+
+  grid.addEventListener('change', (e) => {
+    const input = e.target.closest('.file-input');
+    if (!input || !input.files || !input.files.length) return;
+    const no = parseInt(input.dataset.no, 10);
+    handleFileSelect(no, input.files[0]);
+  });
+</script>
+</body>
+</html>
