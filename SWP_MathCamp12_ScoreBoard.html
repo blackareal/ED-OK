@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scoreboard · SWP Math Camp12</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Sarabun', 'Segoe UI', sans-serif;
+  background: #050a14;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.tab-nav { display: flex; gap: 4px; padding: 8px 24px 0; background: #07111f; border-bottom: 1px solid #0f2040; flex-shrink: 0; }
+.tab-btn {
+  padding: 7px 22px; border: none; border-radius: 8px 8px 0 0; background: transparent;
+  color: #334155; font-size: 0.85rem; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
+  transition: color .2s, background .2s;
+}
+.tab-btn:hover { color: #94a3b8; background: #0f2040; }
+.tab-btn.active { color: #e2e8f0; background: #0f2547; border-bottom: 2px solid #3b82f6; }
+
+.view-pane { display: none; flex: 1; overflow: hidden; }
+.view-pane.active { display: flex; }
+#view-wallet.active { display: block; overflow-y: auto; padding: 20px 24px; }
+
+.wallet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.wallet-color-col { display: flex; flex-direction: column; gap: 10px; }
+.wallet-card { background: #07111f; border: 1px solid #0f2040; border-radius: 10px; padding: 12px; transition: border-color .2s; }
+.wallet-card:hover { border-color: #1d4ed8; }
+.wallet-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.wallet-team-name { font-size: 0.85rem; font-weight: 800; }
+.wallet-team-total { font-size: 0.9rem; font-weight: 900; text-align: right; }
+.wallet-team-gain { font-size: 0.65rem; text-align: right; margin-top: 1px; }
+.wallet-empty { font-size: 0.72rem; color: #1e293b; text-align: center; padding: 16px 0; }
+.wallet-asset-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-top: 1px solid #0a1628; font-size: 0.75rem; }
+.wallet-asset-left { display: flex; align-items: center; gap: 5px; }
+.wallet-asset-icon { font-size: 0.9rem; }
+.wallet-asset-name { color: #64748b; }
+.wallet-asset-qty  { font-size: 0.65rem; color: #1e3a5f; margin-top: 1px; }
+.wallet-asset-right { text-align: right; }
+.wallet-asset-val  { font-weight: 700; }
+.wallet-asset-chg  { font-size: 0.63rem; margin-top: 1px; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between; padding: 10px 28px;
+  background: linear-gradient(90deg, #0a1628 0%, #0f2547 50%, #0a1628 100%);
+  border-bottom: 2px solid #1d4ed8; flex-shrink: 0;
+}
+.camp-name { font-size: 1.05rem; font-weight: 800; color: #93c5fd; line-height: 1.3; }
+.camp-sub  { font-size: 0.72rem; color: #475569; margin-top: 3px; }
+.clock-wrap { text-align: right; }
+.clock { font-size: 2rem; font-weight: 900; color: #e2e8f0; font-variant-numeric: tabular-nums; letter-spacing: 2px; }
+.refresh-label { font-size: 0.68rem; color: #334155; margin-top: 2px; }
+
+main { display: flex; flex: 1; overflow: hidden; }
+
+.scoreboard-panel { flex: 0 0 60%; display: flex; flex-direction: column; padding: 18px 24px; border-right: 1px solid #0f172a; }
+.panel-title { font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; flex-shrink: 0; }
+.bars-container { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 5px; }
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-rank { width: 32px; font-size: 1.15rem; text-align: center; flex-shrink: 0; }
+.bar-label-wrap { width: 96px; flex-shrink: 0; }
+.bar-color-name { font-size: 0.9rem; font-weight: 800; line-height: 1.2; }
+.bar-sub-info { font-size: 0.62rem; color: #475569; margin-top: 1px; }
+.bar-track { flex: 1; height: 34px; background: #0c1420; border-radius: 8px; overflow: hidden; border: 1px solid #1a2744; position: relative; }
+.bar-fill { height: 100%; border-radius: 8px; transition: width 1.8s cubic-bezier(0.4, 0, 0.2, 1); position: relative; min-width: 6px; display: flex; align-items: center; padding-left: 10px; }
+.bar-fill.is-leader { animation: glow-pulse 2s ease-in-out infinite alternate; }
+@keyframes glow-pulse { from { filter: brightness(1) saturate(1); } to { filter: brightness(1.35) saturate(1.2); } }
+.bar-inline-value { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; }
+.bar-right { width: 110px; flex-shrink: 0; text-align: right; }
+.bar-value { font-size: 0.9rem; font-weight: 800; }
+.bar-change { font-size: 0.68rem; margin-top: 1px; }
+
+.charts-panel { flex: 0 0 40%; display: flex; flex-direction: column; padding: 14px 16px; gap: 10px; overflow: hidden; background: #060c18; }
+.chart-card { flex: 1; background: #0a1220; border: 1px solid #111e30; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.chart-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; flex-shrink: 0; }
+.chart-title-text { font-size: 0.72rem; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 1.5px; }
+.chart-price-now { font-size: 1.15rem; font-weight: 800; }
+.chart-pct { font-size: 0.8rem; font-weight: 700; margin-top: 2px; text-align: right; }
+.chart-body { flex: 1; position: relative; min-height: 0; }
+
+.land-card { flex: 0 0 auto !important; height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; }
+.land-left .land-label { font-size: 0.72rem; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+.land-left .land-val  { font-size: 1.5rem; font-weight: 900; color: #22c55e; }
+.land-left .land-note { font-size: 0.66rem; color: #334155; margin-top: 2px; }
+.land-badge { border: 1px solid #166534; background: #052e14; border-radius: 8px; padding: 6px 14px; text-align: center; }
+.land-badge .risk-label { font-size: 0.65rem; color: #4ade80; }
+.land-badge .risk-val   { font-size: 1rem; font-weight: 800; color: #22c55e; }
+
+footer { display: flex; align-items: center; gap: 0; background: #030711; border-top: 1px solid #0f172a; padding: 0 24px; height: 46px; flex-shrink: 0; overflow: hidden; }
+.tick-block { display: flex; align-items: center; gap: 10px; padding: 0 20px; }
+.tick-icon  { font-size: 1.2rem; }
+.tick-name  { font-size: 0.65rem; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+.tick-val   { font-size: 0.95rem; font-weight: 800; }
+.tick-chg   { font-size: 0.72rem; margin-left: 6px; }
+.tick-sep   { width: 1px; height: 28px; background: #0f172a; flex-shrink: 0; }
+.tick-right { margin-left: auto; font-size: 0.65rem; color: #1e293b; padding-right: 4px; }
+
+.positive { color: #22c55e; }
+.negative { color: #ef4444; }
+.neutral  { color: #334155; }
+
+@media (max-width: 1000px) {
+  main { flex-direction: column; }
+  .scoreboard-panel, .charts-panel { flex: 1 1 auto; }
+  .wallet-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── SCHEDULE TAB ── */
+#view-schedule.active { display: flex; flex-direction: column; padding: 16px 24px; overflow-y: auto; }
+.view-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
+.vtgl-btn {
+  padding: 6px 16px; border: 1px solid #0f2040; border-radius: 20px;
+  background: transparent; color: #334155; font-size: 0.78rem;
+  font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.vtgl-btn.active { background: #0f2547; color: #93c5fd; border-color: #1d4ed8; }
+
+.sched-grid { display: grid; grid-template-columns: 70px repeat(4, 1fr); gap: 6px; }
+.sched-corner { }
+.sched-hdr {
+  background: #050a14; border: 1px solid #0a1628; border-radius: 6px; padding: 8px 4px;
+  font-size: 0.7rem; font-weight: 700; color: #1e3a5f; text-align: center; letter-spacing: 0.5px;
+}
+.sched-rnd-lbl {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; color: #475569;
+  background: #050a14; border-radius: 6px; padding: 4px 0; text-align: center;
+}
+.sched-cell {
+  background: #07111f; border: 1px solid #0a1e38; border-radius: 8px; padding: 10px 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; text-align: center; transition: background .2s;
+}
+.sched-cell:hover { background: #0a1e38; }
+.sched-team-name { font-size: 0.82rem; font-weight: 800; letter-spacing: 0.3px; }
+.sched-vs-dot { font-size: 0.6rem; color: #1e3a5f; }
+
+.team-sched-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.team-col { display: flex; flex-direction: column; gap: 6px; }
+.team-card { background: #07111f; border: 1px solid #0a1e38; border-radius: 8px; padding: 8px 10px; }
+.team-card-hdr { font-size: 0.88rem; font-weight: 800; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #0a1628; }
+.team-card-row { display: flex; align-items: baseline; gap: 6px; padding: 4px 0; border-top: 1px solid #050a14; }
+.tcr-rnd  { font-size: 0.65rem; color: #1e3a5f; min-width: 42px; flex-shrink: 0; }
+.tcr-base { font-size: 0.7rem; font-weight: 700; color: #475569; flex-shrink: 0; }
+.tcr-vs   { font-size: 0.6rem; color: #1e293b; flex-shrink: 0; }
+.tcr-opp  { font-size: 0.78rem; font-weight: 800; }
+
+@media (max-width: 900px) {
+  .sched-grid { grid-template-columns: 50px repeat(4, 1fr); font-size: 0.85rem; }
+  .team-sched-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="camp-name">🧮 SWP Math Camp12 — ระบบคะแนน</div>
+    <div class="camp-sub">โรงเรียนสุวรรณภูมิพิทยไพศาล · ค่ายคณิตศาสตร์</div>
+  </div>
+  <div class="clock-wrap">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="refresh-label" id="refresh-label">อัปเดตอัตโนมัติทุก 60 วินาที</div>
+  </div>
+</header>
+
+<div class="tab-nav">
+  <button class="tab-btn active" id="tab-btn-scoreboard" onclick="switchTab('scoreboard')">🏆 ภาพรวมคะแนน</button>
+  <button class="tab-btn" id="tab-btn-wallet" onclick="switchTab('wallet')">👜 กระเป๋าตัง</button>
+  <button class="tab-btn" id="tab-btn-schedule" onclick="switchTab('schedule')">📋 ตารางเข้าฐาน</button>
+</div>
+
+<div class="view-pane active" id="view-scoreboard">
+<main>
+  <div class="scoreboard-panel">
+    <div class="panel-title">🏆 คะแนนสะสม &mdash; มูลค่าพอร์ตโฟลิโอ (THB)</div>
+    <div class="bars-container" id="bars-container">
+      <div style="color:#1e293b; font-size:.9rem; padding:20px;">กำลังโหลดข้อมูล...</div>
+    </div>
+  </div>
+
+  <div class="charts-panel">
+    <div class="chart-card">
+      <div class="chart-top">
+        <div><div class="chart-title-text">₿ Bitcoin · 6 ชั่วโมงล่าสุด</div></div>
+        <div style="text-align:right">
+          <div class="chart-price-now" style="color:#f97316" id="h-btc-price">กำลังโหลด</div>
+          <div class="chart-pct" id="h-btc-chg"></div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="chart-btc"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-top">
+        <div><div class="chart-title-text">🥇 ทองคำ (บาทไทย) · 6 ชั่วโมงล่าสุด</div></div>
+        <div style="text-align:right">
+          <div class="chart-price-now" style="color:#eab308" id="h-gold-price">กำลังโหลด</div>
+          <div class="chart-pct" id="h-gold-chg"></div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="chart-gold"></canvas></div>
+    </div>
+
+    <div class="chart-card land-card">
+      <div class="land-left">
+        <div class="land-label">🏗️ ที่ดิน</div>
+        <div class="land-val" id="h-land-price">฿–</div>
+        <div class="land-note">ต่อ 1 แปลง · ราคาคงที่ กำหนดโดยครู</div>
+      </div>
+      <div class="land-badge">
+        <div class="risk-label">ความเสี่ยง</div>
+        <div class="risk-val">ต่ำมาก</div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="view-pane" id="view-wallet">
+  <div class="panel-title">💼 กระเป๋าสินทรัพย์แต่ละทีม — มูลค่า ณ ปัจจุบัน</div>
+  <div class="wallet-grid" id="wallet-grid">
+    <div style="color:#1e293b; font-size:.9rem; padding:20px; grid-column:1/-1">กำลังโหลดข้อมูล...</div>
+  </div>
+</div>
+
+<div class="view-pane" id="view-schedule">
+  <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px;">
+    <div class="panel-title" style="margin:0">📋 ตารางหมุนเวียนฐาน (4 รอบ · ไม่ซ้ำคู่ ไม่ซ้ำฐาน)</div>
+    <div class="view-toggle">
+      <button class="vtgl-btn active" id="vtgl-station" onclick="setSchedView('station')">🏫 ตามฐาน</button>
+      <button class="vtgl-btn" id="vtgl-team" onclick="setSchedView('team')">👥 ตามทีม</button>
+    </div>
+  </div>
+  <div id="sched-grid"><!-- render by JS --></div>
+</div>
+
+<footer>
+  <div class="tick-block">
+    <span class="tick-icon">₿</span>
+    <div class="tick-info">
+      <div class="tick-name">Bitcoin</div>
+      <div><span class="tick-val" style="color:#f97316" id="t-btc">–</span><span class="tick-chg" id="t-btc-chg"></span></div>
+    </div>
+  </div>
+  <div class="tick-sep"></div>
+  <div class="tick-block">
+    <span class="tick-icon">🥇</span>
+    <div class="tick-info">
+      <div class="tick-name">ทองคำ / บาทไทย</div>
+      <div><span class="tick-val" style="color:#eab308" id="t-gold">–</span><span class="tick-chg" id="t-gold-chg"></span></div>
+    </div>
+  </div>
+  <div class="tick-sep"></div>
+  <div class="tick-block">
+    <span class="tick-icon">🏗️</span>
+    <div class="tick-info">
+      <div class="tick-name">ที่ดิน / แปลง</div>
+      <div><span class="tick-val" style="color:#22c55e" id="t-land">–</span><span class="tick-chg" style="color:#22c55e">● คงที่</span></div>
+    </div>
+  </div>
+  <div class="tick-right" id="t-updated">–</div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+const TEAMS = [
+  { id: 'แดง',    name: 'ทีมสีแดง',    emoji: '🔴', hex: '#ef4444', grad: ['#5a0a0a44', '#ef444488'] },
+  { id: 'ฟ้า',    name: 'ทีมสีฟ้า',    emoji: '🔵', hex: '#0ea5e9', grad: ['#0c3a5544', '#0ea5e988'] },
+  { id: 'เหลือง', name: 'ทีมสีเหลือง', emoji: '🟡', hex: '#eab308', grad: ['#92650044', '#eab30888'] },
+  { id: 'ส้ม',    name: 'ทีมสีส้ม',    emoji: '🟠', hex: '#f97316', grad: ['#6b270444', '#f9731688'] },
+  { id: 'เขียว',  name: 'ทีมสีเขียว',  emoji: '🟢', hex: '#22c55e', grad: ['#052e1444', '#22c55e88'] },
+  { id: 'ม่วง',   name: 'ทีมสีม่วง',   emoji: '🟣', hex: '#a855f7', grad: ['#3b0a6444', '#a855f788'] },
+  { id: 'ชมพู',   name: 'ทีมสีชมพู',   emoji: '🩷', hex: '#ec4899', grad: ['#6b0a4444', '#ec489988'] },
+  { id: 'น้ำเงิน', name: 'ทีมสีน้ำเงิน', emoji: '🔷', hex: '#1d4ed8', grad: ['#0a144a44', '#1d4ed888'] },
+];
+const RANK_ICON = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
+const GOLD_TROY_TO_BAHT = 15.244 / 31.1035; // troy oz → Thai baht weight
+
+// ── ตารางหมุนเวียนฐาน: 4 รอบ x 4 ฐาน, คำนวณล่วงหน้าให้ไม่ซ้ำคู่แข่งขันและไม่ซ้ำฐานตลอด 4 รอบ ──
+const STATIONS_ORDER = ['ฐาน 1 · โดม', 'ฐาน 2 · โดม', 'ฐาน 3 · HCEC', 'ฐาน 4 · สนามแบดมินตัน'];
+const SCHEDULE = [
+  { round: 1, time: '10:30–10:50', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'เขียว', teamB: 'ชมพู' },
+    { station: 'ฐาน 2 · โดม', teamA: 'แดง',   teamB: 'ม่วง' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'ฟ้า',   teamB: 'ส้ม' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เหลือง', teamB: 'น้ำเงิน' },
+  ]},
+  { round: 2, time: '10:50–11:10', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'ส้ม',   teamB: 'ม่วง' },
+    { station: 'ฐาน 2 · โดม', teamA: 'เหลือง', teamB: 'ชมพู' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'เขียว', teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'แดง', teamB: 'ฟ้า' },
+  ]},
+  { round: 3, time: '11:10–11:30', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'แดง',   teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 2 · โดม', teamA: 'ฟ้า',   teamB: 'เขียว' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'เหลือง', teamB: 'ม่วง' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'ส้ม', teamB: 'ชมพู' },
+  ]},
+  { round: 4, time: '11:30–11:50', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'ฟ้า',   teamB: 'เหลือง' },
+    { station: 'ฐาน 2 · โดม', teamA: 'ส้ม',   teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'แดง',  teamB: 'ชมพู' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เขียว', teamB: 'ม่วง' },
+  ]},
+];
+
+// ── วาง URL Apps Script เดียวกับใน score_input.html ──
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAS7E41O7b9xkyHOunboZJL_vRhytH15Ft8bz-mfHbMhcNxuglgOM8ShcSxrLzORpN/exec';
+
+let prices = { btc: null, gold: null };
+let remoteState = { transactions: [], settings: { landPrice: 100000 } };
+let chartBTC = null;
+let chartGold = null;
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+const fmt = n => n == null ? '–' : '฿' + Math.round(n).toLocaleString('th-TH');
+const fmtK = n => {
+  if (n == null) return '–';
+  if (n >= 1e6) return '฿' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '฿' + (n/1e3).toFixed(1) + 'K';
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+};
+const pct = (a,b) => b ? (((a-b)/b)*100).toFixed(2) : null;
+const timeFmt = ts => new Date(ts).toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', hour12:false });
+
+function setChgEl(id, val) {
+  const el = document.getElementById(id);
+  if (!el || val == null) return;
+  const v = parseFloat(val);
+  el.textContent = (v >= 0 ? '▲ +' : '▼ ') + val + '%';
+  el.className = 'chart-pct ' + (v >= 0 ? 'positive' : 'negative');
+}
+function setTickChg(id, val) {
+  const el = document.getElementById(id);
+  if (!el || val == null) return;
+  const v = parseFloat(val);
+  el.textContent = (v >= 0 ? '+' : '') + val + '%';
+  el.className = 'tick-chg ' + (v >= 0 ? 'positive' : 'negative');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('th-TH', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════
+//  STATE — Google Sheets (primary) + localStorage (fallback)
+// ═══════════════════════════════════════════════════════
+async function fetchRemoteState() {
+  if (!SCRIPT_URL) {
+    try { return JSON.parse(localStorage.getItem('mathCampScoreState') || '{}'); }
+    catch(e) { return {}; }
+  }
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getAll');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    const data = await res.json();
+    remoteState = data;
+    return data;
+  } catch(e) {
+    console.warn('[Sheets] fetch failed, using last known state');
+    return remoteState;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCORE CALCULATION
+// ═══════════════════════════════════════════════════════
+function calcScores(s) {
+  s = s || remoteState;
+  const landPrice = s.settings?.landPrice ?? 100000;
+  const txs = s.transactions ?? [];
+
+  document.getElementById('h-land-price').textContent = fmt(landPrice);
+  document.getElementById('t-land').textContent = fmt(landPrice);
+
+  return TEAMS.map(c => {
+    const rows = txs.filter(t => t.studentId === c.id);
+    let invested = 0, current = 0;
+    rows.forEach(t => {
+      invested += t.valueAtAward ?? 0;
+      if      (t.type === 'land') current += t.qty * landPrice;
+      else if (t.type === 'gold' && prices.gold) current += t.qty * prices.gold;
+      else if (t.type === 'btc'  && prices.btc ) current += t.qty * prices.btc;
+      else current += t.valueAtAward ?? 0;
+    });
+    return { ...c, invested, current, gain: current - invested, count: rows.length };
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCOREBOARD RENDER
+// ═══════════════════════════════════════════════════════
+function renderScoreboard(s) {
+  const scores = calcScores(s).sort((a, b) => b.current - a.current);
+  const maxVal = Math.max(...scores.map(x => x.current), 1);
+
+  document.getElementById('bars-container').innerHTML = scores.map((sc, i) => {
+    const widthPct = maxVal > 0 ? Math.max((sc.current / maxVal) * 100, sc.current > 0 ? 1.5 : 0) : 0;
+    const gainPct = sc.invested > 0 ? pct(sc.current, sc.invested) : null;
+    const gainClass = sc.gain > 0 ? 'positive' : sc.gain < 0 ? 'negative' : 'neutral';
+    const isLeader = i === 0 && sc.current > 0;
+    const fillStyle = `background: linear-gradient(90deg, ${sc.grad[0]}, ${sc.hex}cc); width:${widthPct}%`;
+
+    return `
+      <div class="bar-row">
+        <div class="bar-rank">${RANK_ICON[i]}</div>
+        <div class="bar-label-wrap">
+          <div class="bar-color-name" style="color:${sc.hex}">${sc.emoji} ${sc.name}</div>
+          <div class="bar-sub-info">${sc.count} รางวัล</div>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ${isLeader ? 'is-leader' : ''}" style="${fillStyle}">
+            ${sc.current > 0 ? `<span class="bar-inline-value">${fmtK(sc.current)}</span>` : ''}
+          </div>
+        </div>
+        <div class="bar-right">
+          <div class="bar-value" style="color:${sc.hex}">${sc.current > 0 || sc.count > 0 ? fmt(sc.current) : '–'}</div>
+          <div class="bar-change ${gainClass}">
+            ${gainPct != null && sc.invested > 0 ? (parseFloat(gainPct)>=0?'▲ +':'▼ ') + gainPct + '%' : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  WALLET RENDER
+// ═══════════════════════════════════════════════════════
+function assetLabel(type) {
+  if (type === 'btc') return '₿ Bitcoin';
+  if (type === 'gold') return '🥇 ทองคำ';
+  return '🏗️ ที่ดิน';
+}
+function assetIcon(type) {
+  if (type === 'btc') return '₿';
+  if (type === 'gold') return '🥇';
+  return '🏗️';
+}
+function fmtQty(type, qty) {
+  if (type === 'btc') return qty.toFixed(8) + ' BTC';
+  if (type === 'gold') return qty.toFixed(4) + ' บาท (ทอง)';
+  return qty.toFixed(0) + ' แปลง';
+}
+
+function renderWallet(s) {
+  s = s || remoteState;
+  const landPrice = s.settings?.landPrice ?? 100000;
+  const txs = s.transactions ?? [];
+  const grid = document.getElementById('wallet-grid');
+  if (!grid) return;
+
+  grid.innerHTML = TEAMS.map(team => {
+    const rows = txs.filter(t => t.studentId === team.id);
+    const invested = rows.reduce((sum, t) => sum + (t.valueAtAward ?? 0), 0);
+    let current = 0;
+    const itemsHtml = rows.length === 0
+      ? '<div class="wallet-empty">ยังไม่มีรางวัล</div>'
+      : rows.map(t => {
+          let cv = null;
+          if      (t.type === 'land') cv = t.qty * landPrice;
+          else if (t.type === 'gold' && prices.gold) cv = t.qty * prices.gold;
+          else if (t.type === 'btc'  && prices.btc ) cv = t.qty * prices.btc;
+          if (cv !== null) current += cv;
+          const g = cv !== null ? cv - t.valueAtAward : null;
+          const gp = g !== null && t.valueAtAward > 0 ? (g / t.valueAtAward) * 100 : null;
+          return `
+            <div class="wallet-asset-row">
+              <div class="wallet-asset-left">
+                <span class="wallet-asset-icon">${assetIcon(t.type)}</span>
+                <div>
+                  <div class="wallet-asset-name">${assetLabel(t.type)}</div>
+                  <div class="wallet-asset-qty">${fmtQty(t.type, t.qty)}</div>
+                </div>
+              </div>
+              <div class="wallet-asset-right">
+                <div class="wallet-asset-val">${cv !== null ? fmt(cv) : '?'}</div>
+                ${gp !== null ? `<div class="wallet-asset-chg ${gp >= 0 ? 'positive' : 'negative'}">${gp >= 0 ? '▲' : '▼'} ${Math.abs(gp).toFixed(1)}%</div>` : ''}
+              </div>
+            </div>`;
+        }).join('');
+
+    const gain = current - invested;
+    const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
+
+    return `
+      <div class="wallet-card" style="border-color:${team.hex}33">
+        <div class="wallet-card-header">
+          <div class="wallet-team-name" style="color:${team.hex}">${team.emoji} ${team.name}</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+          <span class="wallet-team-total" style="color:${team.hex}">${fmt(current)}</span>
+        </div>
+        <div class="wallet-team-gain ${gainClass}">${invested > 0 ? (gain >= 0 ? '+' : '') + fmt(gain) : ''}</div>
+        ${itemsHtml}
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHART HELPERS
+// ═══════════════════════════════════════════════════════
+function sampleData(arr, maxPts = 30) {
+  if (arr.length <= maxPts) return arr;
+  const step = Math.ceil(arr.length / maxPts);
+  return arr.filter((_, i) => i % step === 0 || i === arr.length - 1);
+}
+function makeChartData(rawPrices) {
+  const sampled = sampleData(rawPrices);
+  return { labels: sampled.map(p => timeFmt(p[0])), values: sampled.map(p => Math.round(p[1])) };
+}
+const CHART_OPTS = (color) => ({
+  responsive: true, maintainAspectRatio: false,
+  animation: { duration: 800 },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#0f172a', borderColor: '#1e293b', borderWidth: 1,
+      titleColor: '#64748b', bodyColor: '#e2e8f0',
+      callbacks: { label: ctx => '฿' + ctx.parsed.y.toLocaleString('th-TH') }
+    }
+  },
+  scales: {
+    x: { grid: { color: '#0f172a' }, ticks: { color: '#1e3a5f', maxTicksLimit: 7, font: { size: 10 }, maxRotation: 0 } },
+    y: { grid: { color: '#0c1420' }, ticks: { color: '#1e3a5f', font: { size: 10 },
+         callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v } }
+  }
+});
+function makeGradient(ctx, chart, hex) {
+  const { chartArea } = chart;
+  if (!chartArea) return hex + '33';
+  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, hex + '55');
+  g.addColorStop(1, hex + '00');
+  return g;
+}
+function initChart(canvasId, d, color) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels: d.labels, datasets: [{
+      data: d.values, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.35, fill: true,
+      backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart, color)
+    }] },
+    options: CHART_OPTS(color),
+  });
+}
+function updateChart(chart, d) {
+  chart.data.labels = d.labels;
+  chart.data.datasets[0].data = d.values;
+  chart.update('none');
+}
+
+// ═══════════════════════════════════════════════════════
+//  FETCH
+// ═══════════════════════════════════════════════════════
+async function fetchPrices() {
+  const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb', { cache: 'no-store' });
+  const data = await res.json();
+  prices.btc  = data.bitcoin.thb;
+  prices.gold = data['tether-gold'].thb * GOLD_TROY_TO_BAHT;
+
+  document.getElementById('h-btc-price').textContent = fmt(prices.btc);
+  document.getElementById('h-gold-price').textContent = fmt(prices.gold);
+  document.getElementById('t-btc').textContent  = fmt(prices.btc);
+  document.getElementById('t-gold').textContent = fmt(prices.gold);
+}
+
+async function fetchHistorical() {
+  const cutoff = Date.now() - 6 * 60 * 60 * 1000;
+
+  const btcRes  = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+  const btcJson = await btcRes.json();
+  const btcPts  = btcJson.prices.filter(p => p[0] >= cutoff);
+
+  const gRes  = await fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+  const gJson = await gRes.json();
+  const gPts  = gJson.prices.filter(p => p[0] >= cutoff).map(p => [p[0], p[1] * GOLD_TROY_TO_BAHT]);
+
+  if (btcPts.length > 1) {
+    const c = pct(btcPts.at(-1)[1], btcPts[0][1]);
+    setChgEl('h-btc-chg', c);
+    setTickChg('t-btc-chg', c);
+  }
+  if (gPts.length > 1) {
+    const c = pct(gPts.at(-1)[1], gPts[0][1]);
+    setChgEl('h-gold-chg', c);
+    setTickChg('t-gold-chg', c);
+  }
+
+  const bd = makeChartData(btcPts);
+  const gd = makeChartData(gPts);
+
+  if (!chartBTC)  chartBTC  = initChart('chart-btc',  bd, '#f97316');
+  else            updateChart(chartBTC, bd);
+
+  if (!chartGold) chartGold = initChart('chart-gold', gd, '#eab308');
+  else            updateChart(chartGold, gd);
+}
+
+// ═══════════════════════════════════════════════════════
+//  REFRESH LOOP
+// ═══════════════════════════════════════════════════════
+let countdown = 60;
+
+async function refresh() {
+  try { await fetchPrices(); } catch(e) { console.warn('prices err', e); }
+  try { await fetchHistorical(); } catch(e) { console.warn('history err', e); }
+  const s = await fetchRemoteState();
+  renderScoreboard(s);
+  if (currentTab === 'wallet') renderWallet(s);
+  document.getElementById('t-updated').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour12:false });
+}
+
+setInterval(() => {
+  countdown--;
+  document.getElementById('refresh-label').textContent =
+    countdown > 0 ? `อัปเดตอัตโนมัติทุก 60 วินาที (อีก ${countdown}s)` : 'กำลังอัปเดต...';
+  if (countdown <= 0) { countdown = 60; refresh(); }
+}, 1000);
+
+// ═══════════════════════════════════════════════════════
+//  SCHEDULE RENDER
+// ═══════════════════════════════════════════════════════
+let schedView = 'station';
+
+function teamHex(id) {
+  const t = TEAMS.find(x => x.id === id);
+  return t ? t.hex : '#94a3b8';
+}
+function teamEmoji(id) {
+  const t = TEAMS.find(x => x.id === id);
+  return t ? t.emoji : '';
+}
+
+function setSchedView(view) {
+  schedView = view;
+  document.getElementById('vtgl-station').classList.toggle('active', view === 'station');
+  document.getElementById('vtgl-team').classList.toggle('active', view === 'team');
+  renderSchedule();
+}
+
+function renderScheduleByStation() {
+  // grid: corner + 4 station headers, then 4 rows (rounds) x 4 cells
+  let html = '<div class="sched-grid">';
+  html += '<div class="sched-corner"></div>';
+  STATIONS_ORDER.forEach(st => { html += `<div class="sched-hdr">${st}</div>`; });
+
+  SCHEDULE.forEach(r => {
+    html += `<div class="sched-rnd-lbl">รอบ ${r.round}<br><span style="font-weight:400;color:#334155;font-size:0.65rem;">${r.time}</span></div>`;
+    STATIONS_ORDER.forEach(st => {
+      const m = r.matches.find(x => x.station === st);
+      if (!m) { html += '<div class="sched-cell">-</div>'; return; }
+      html += `
+        <div class="sched-cell">
+          <div class="sched-team-name" style="color:${teamHex(m.teamA)}">${teamEmoji(m.teamA)} ${m.teamA}</div>
+          <div class="sched-vs-dot">VS</div>
+          <div class="sched-team-name" style="color:${teamHex(m.teamB)}">${teamEmoji(m.teamB)} ${m.teamB}</div>
+        </div>`;
+    });
+  });
+  html += '</div>';
+  document.getElementById('sched-grid').innerHTML = html;
+}
+
+function renderScheduleByTeam() {
+  let html = '<div class="team-sched-grid">';
+  TEAMS.forEach(team => {
+    html += `<div class="team-col"><div class="team-card">`;
+    html += `<div class="team-card-hdr" style="color:${team.hex}">${team.emoji} ${team.name}</div>`;
+    SCHEDULE.forEach(r => {
+      const m = r.matches.find(x => x.teamA === team.id || x.teamB === team.id);
+      if (!m) return;
+      const opp = m.teamA === team.id ? m.teamB : m.teamA;
+      html += `
+        <div class="team-card-row">
+          <span class="tcr-rnd">รอบ ${r.round}<br>${r.time}</span>
+          <span class="tcr-base">${m.station.replace('ฐาน ', 'ฐ.').split(' · ')[0]}</span>
+          <span class="tcr-vs">vs</span>
+          <span class="tcr-opp" style="color:${teamHex(opp)}">${teamEmoji(opp)} ${opp}</span>
+        </div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += '</div>';
+  document.getElementById('sched-grid').innerHTML = html;
+}
+
+function renderSchedule() {
+  if (schedView === 'station') renderScheduleByStation();
+  else renderScheduleByTeam();
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+let currentTab = 'scoreboard';
+function switchTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.view-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.getElementById('tab-btn-' + name).classList.add('active');
+  if (name === 'wallet')   renderWallet(remoteState);
+  if (name === 'schedule') renderSchedule();
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+async function init() {
+  await refresh();
+}
+init();
+</script>
+</body>
+</html>
