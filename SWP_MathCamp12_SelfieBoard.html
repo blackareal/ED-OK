@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ภารกิจเซลฟี่คณิต - Host Screen - SWP Math Camp12</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root {
+    --navy: #1F3864;
+    --gold: #D4A017;
+    --dark-bg: #0F1B33;
+    --light-bg: #F4F6FB;
+    --ok: #2E7D32;
+    --warn: #C0392B;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Leelawadee UI", "Tahoma", "Segoe UI", sans-serif;
+    color: #1a1a2e;
+  }
+
+  .tabbar {
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 50;
+    display: flex;
+    gap: 6px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+    padding: 6px;
+    border-radius: 100px;
+  }
+  .tabbar button {
+    border: none;
+    background: transparent;
+    color: #cfd8ea;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.5em 1em;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .tabbar button.active { background: var(--gold); color: #1a1a1a; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ================= INTRO + TIMER ================= */
+  #panel-intro, #panel-timer {
+    background: radial-gradient(circle at top, #2A4270, var(--dark-bg));
+    color: #fff;
+    height: 100vh;
+    height: 100dvh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5vh 2vw;
+    overflow: auto;
+  }
+  #panel-intro.active, #panel-timer.active { display: flex; }
+  .inner { width: 100%; max-width: 1300px; text-align: center; }
+
+  h1.title {
+    font-size: clamp(1.8rem, 3vw + 2.6vh, 3.4rem);
+    margin: 0 0 0.15em;
+    letter-spacing: 0.02em;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .subtitle { font-size: clamp(0.95rem, 1vw + 1vh, 1.3rem); color: #C9D6EE; margin-bottom: 0.6em; }
+  .meta { font-size: clamp(0.75rem, 0.7vw + 0.7vh, 1rem); color: #93A5C9; margin-bottom: 1em; }
+
+  .intro-columns {
+    display: flex;
+    gap: 2.5vw;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+    margin-bottom: 1em;
+  }
+  .rules-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+    flex: 1 1 420px;
+    max-width: 480px;
+  }
+  .qr-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8em;
+    flex: 0 0 auto;
+  }
+  .rule-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 0.6em 1em;
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+  }
+  .rule-card .num { margin-bottom: 0; flex-shrink: 0; }
+  .rule-card p { flex: 1; margin: 0; font-size: clamp(0.78rem, 0.5vw + 0.9vh, 1rem); line-height: 1.4; }
+  .rule-card .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.7em; height: 1.7em; border-radius: 50%;
+    background: var(--gold); color: #1a1a1a; font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .qr-wrap {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 0.5em;
+    background: #fff; border-radius: 20px; padding: 0.9em 1.4em;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .qr-label { color: #1F3864; font-weight: 700; font-size: clamp(0.85rem, 0.8vw + 0.8vh, 1.1rem); }
+  .qr-url { color: #667; font-size: 0.75rem; word-break: break-all; max-width: 320px; }
+  .qr-box { width: clamp(110px, 10vw + 10vh, 190px); height: clamp(110px, 10vw + 10vh, 190px); }
+  .qr-box img { display: block; width: 100%; height: 100%; }
+
+  .start-btn {
+    margin-top: 0;
+    background: var(--gold);
+    color: #1a1a1a;
+    border: none;
+    font-size: clamp(0.95rem, 1vw + 1vh, 1.3rem);
+    font-weight: 700;
+    padding: 0.6em 1.8em;
+    border-radius: 100px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(212,160,23,0.4);
+  }
+
+  .timer-label { font-size: clamp(1.1rem, 1.6vw + 1.6vh, 2rem); color: #C9D6EE; margin-bottom: 0.3em; letter-spacing: 0.05em; }
+  .timer-display {
+    font-size: clamp(4.5rem, 12vw + 12vh, 13rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin: 0.15em 0 0.3em;
+    text-shadow: 0 6px 30px rgba(0,0,0,0.5);
+  }
+  .timer-display.warning { color: #F2C744; }
+  .timer-display.danger { color: #E85C5C; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
+
+  .timer-controls { display: flex; gap: 1em; justify-content: center; flex-wrap: wrap; margin-top: 1em; }
+  .timer-controls button {
+    font-size: clamp(0.9rem, 1vw + 1vh, 1.3rem);
+    padding: 0.55em 1.6em;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  #btnStartPause { background: var(--gold); color: #1a1a1a; }
+  #btnReset { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+  footer.hint { margin-top: 1em; font-size: 0.7rem; color: #6C7EA3; }
+
+  /* ================= DASHBOARD ================= */
+  #panel-dashboard { background: var(--light-bg); min-height: 100vh; }
+  #panel-dashboard header {
+    background: var(--navy); color: #fff; padding: 1.2em 1.2em 1.2em 5.5em;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 0.6em;
+  }
+  #panel-dashboard header h2 { margin: 0; font-size: 1.3rem; }
+  #panel-dashboard header .status { font-size: 0.8rem; color: #C9D6EE; }
+  .controls { display: flex; gap: 0.6em; align-items: center; }
+  .controls button, .controls label {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 0.5em 1em;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 1.2em; }
+  .config-warning {
+    background: #FDECEC; border: 1px solid var(--warn); color: #8a1f1f;
+    padding: 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.9rem;
+  }
+  .leaderboard { background: #fff; border-radius: 14px; padding: 1.2em; margin-bottom: 1.5em; box-shadow: 0 2px 10px rgba(20,30,60,0.06); }
+  .leaderboard h3 { margin: 0 0 0.8em; font-size: 1.1rem; color: var(--navy); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.5em 0.6em; border-bottom: 1px solid #eee; }
+  th { color: #778; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
+  tr:first-child td { font-weight: 800; color: var(--navy); }
+  .group-section { margin-bottom: 2em; }
+  .group-title { display: flex; align-items: baseline; gap: 0.6em; margin-bottom: 0.7em; flex-wrap: wrap; }
+  .group-title h4 { margin: 0; font-size: 1.15rem; }
+  .group-title .score { color: var(--gold); font-weight: 800; }
+  .group-title .count { color: #99a; font-size: 0.85rem; }
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.8em; }
+  .photo-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(20,30,60,0.08); text-decoration: none; color: inherit; display: block; }
+  .photo-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #eee; display: block; }
+  .photo-card .meta { padding: 0.55em 0.7em; }
+  .photo-card .word { font-weight: 800; font-size: 0.85rem; color: var(--navy); }
+  .photo-card .sub { font-size: 0.72rem; color: #99a; display: flex; justify-content: space-between; margin-top: 0.2em; }
+  .empty { text-align: center; color: #99a; padding: 3em 1em; }
+
+  /* ================= ANSWER KEY ================= */
+  #panel-answerkey { background: var(--light-bg); min-height: 100vh; }
+  #panel-answerkey header {
+    background: var(--navy); color: #fff; padding: 1.2em 1.2em 1.2em 5.5em;
+  }
+  #panel-answerkey header h2 { margin: 0; font-size: 1.3rem; }
+  #panel-answerkey header p { margin: 0.2em 0 0; font-size: 0.8rem; color: #C9D6EE; }
+
+  .lvl-badge { font-size: 0.7rem; font-weight: 700; padding: 0.15em 0.5em; border-radius: 100px; color: #fff; white-space: nowrap; display: inline-block; }
+  .lvl-badge.Easy { background: var(--ok); }
+  .lvl-badge.Medium { background: #B8860B; }
+  .lvl-badge.Hard { background: var(--warn); }
+
+  .ak-list { display: flex; flex-direction: column; gap: 0.8em; }
+  .ak-row {
+    display: grid; grid-template-columns: 260px 1fr; gap: 1em;
+    background: #fff; border-radius: 14px; padding: 0.8em; box-shadow: 0 2px 10px rgba(20,30,60,0.06);
+  }
+  @media (max-width: 640px) { .ak-row { grid-template-columns: 1fr; } }
+
+  .ak-no { font-size: 0.7rem; color: #99a; font-weight: 700; margin-bottom: 0.3em; }
+  .ak-mission { font-size: 0.85rem; line-height: 1.45; color: #333; margin-bottom: 0.5em; }
+  .ak-answer-box {
+    background: var(--navy); color: #fff; border-radius: 10px; padding: 0.6em 0.9em; font-size: 0.85rem;
+  }
+  .ak-answer-box b { color: #F2C744; }
+  .ak-flag { color: var(--warn); font-weight: 700; font-size: 0.78rem; margin-top: 0.3em; display: block; }
+
+  .ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; margin-top: 0.6em; }
+  .ak-photo { width: 72px; text-align: center; text-decoration: none; color: inherit; }
+  .ak-photo img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; background: #eee; display: block; }
+  .ak-photo .grp { font-size: 0.65rem; color: #667; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ak-empty-photos { color: #aab; font-size: 0.85rem; align-self: center; }
+
+  .draft-banner {
+    background: #FDECEC; border-bottom: 2px solid var(--warn); color: #8a1f1f;
+    text-align: center; padding: 0.6em 1em; font-size: 0.82rem; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="tabbar" id="tabbar">
+  <button data-tab="intro" class="active">🎬 แนะนำ</button>
+  <button data-tab="timer">⏱️ จับเวลา</button>
+  <button data-tab="dashboard">🖼️ Dashboard</button>
+  <button data-tab="answerkey">🔑 เฉลย</button>
+</div>
+
+<!-- ============ INTRO PANEL ============ -->
+<div class="panel active" id="panel-intro">
+  <div class="inner">
+    <h1 class="title">🧮📸 ภารกิจเซลฟี่คณิต</h1>
+    <div class="subtitle">SWP Math Camp12 — แก้โจทย์คณิต ถอดรหัสเป็นคำตอบ แล้วไปถ่ายภาพให้ตรงภารกิจ</div>
+    <div class="meta">โรงเรียนสุวรรณภูมิพิทยไพศาล · ค่ายคณิตศาสตร์ · 8 ทีมสี</div>
+
+    <div class="intro-columns">
+      <div class="rules-grid">
+        <div class="rule-card"><div class="num">1</div><p>สแกน QR ด้านขวาเพื่อดูภารกิจทั้งหมด <b>30 ข้อ</b> เลือกทีมสีของตัวเองก่อนเริ่ม</p></div>
+        <div class="rule-card"><div class="num">2</div><p>ไม่บังคับทำให้ครบ ทำให้ได้มากที่สุดภายในเวลาที่กำหนด</p></div>
+        <div class="rule-card"><div class="num">3</div><p>ทุกภาพต้องมี <b>สมาชิกครบทุกคน</b> ในทีมอยู่ในภาพ (ยกเว้นภารกิจระบุไว้เป็นอย่างอื่น)</p></div>
+        <div class="rule-card"><div class="num">4</div><p>สมาชิกคนไหนในทีมก็กดอัปโหลดภาพได้ ไม่ต้องเป็นตัวแทนคนเดียว</p></div>
+      </div>
+      <div class="qr-col">
+        <div class="qr-wrap">
+          <div class="qr-box" id="qrBox"><img id="qrImg" alt="QR code"></div>
+          <div class="qr-label">📱 สแกนเพื่อดูภารกิจทั้งหมด</div>
+          <div class="qr-url" id="qrUrlText"></div>
+        </div>
+        <button class="start-btn" id="btnGoTimer">⏱️ เริ่มจับเวลา 45 นาที</button>
+      </div>
+    </div>
+    <footer class="hint">ภารกิจเซลฟี่คณิต SWP Math Camp12 · หน้าจอสำหรับฉายในกิจกรรม</footer>
+  </div>
+</div>
+
+<!-- ============ TIMER PANEL ============ -->
+<div class="panel" id="panel-timer">
+  <div class="inner">
+    <div class="timer-label">⏳ เวลาที่เหลือในการถ่ายภาพ</div>
+    <div class="timer-display" id="timerDisplay">45:00</div>
+    <div class="timer-controls">
+      <button id="btnStartPause">▶️ เริ่ม</button>
+      <button id="btnReset">🔄 รีเซ็ต</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD PANEL ============ -->
+<div class="panel" id="panel-dashboard">
+  <header>
+    <div>
+      <h2>🖼️ Dashboard ครู — ภารกิจเซลฟี่คณิต</h2>
+      <div class="status" id="statusText">ยังไม่ได้โหลดข้อมูล</div>
+    </div>
+    <div class="controls">
+      <label><input type="checkbox" id="autoRefresh"> รีเฟรชอัตโนมัติ (30s)</label>
+      <button id="btnRefresh">🔄 รีเฟรชตอนนี้</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="config-warning" id="configWarning" style="display:none;"></div>
+    <div class="leaderboard">
+      <h3>🏆 คะแนนรวมแต่ละทีม</h3>
+      <table>
+        <thead><tr><th>อันดับ</th><th>ทีม</th><th>ภารกิจสำเร็จ (จาก 30)</th><th>จำนวนไฟล์ภาพที่ส่ง</th></tr></thead>
+        <tbody id="leaderboardBody"><tr><td colspan="4" style="color:#99a;">—</td></tr></tbody>
+      </table>
+    </div>
+    <div id="groups"></div>
+    <div class="empty" id="emptyMsg" style="display:none;">ยังไม่มีภาพส่งเข้ามา</div>
+  </div>
+</div>
+
+<!-- ============ ANSWER KEY PANEL (ครูเท่านั้น) ============ -->
+<div class="panel" id="panel-answerkey">
+  <header>
+    <h2>🔑 เฉลยภารกิจทั้ง 30 ข้อ</h2>
+    <p>สำหรับครู/กรรมการเท่านั้น — อย่าฉายแท็บนี้ตอนบรีฟนักเรียน</p>
+  </header>
+  <div class="draft-banner">📝 ฉบับร่าง (DRAFT) — รายการที่มีข้อความสีแดง "ต้องยืนยันข้อมูลจริง" ครูต้องตรวจ/แก้ก่อนใช้งานจริง</div>
+  <div class="wrap">
+    <div class="ak-list" id="akList"></div>
+  </div>
+</div>
+
+<script>
+  // =====================================================================
+  // TAB SWITCHING
+  // =====================================================================
+  const tabbar = document.getElementById('tabbar');
+  const panels = {
+    intro: document.getElementById('panel-intro'),
+    timer: document.getElementById('panel-timer'),
+    dashboard: document.getElementById('panel-dashboard'),
+    answerkey: document.getElementById('panel-answerkey'),
+  };
+  function showTab(name) {
+    Object.entries(panels).forEach(([k, el]) => el.classList.toggle('active', k === name));
+    tabbar.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    if (name === 'dashboard') loadDashboardData();
+    if (name === 'answerkey') renderAnswerKey();
+  }
+  tabbar.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn) showTab(btn.dataset.tab);
+  });
+  document.getElementById('btnGoTimer').addEventListener('click', () => { showTab('timer'); startTimer(); });
+
+  // =====================================================================
+  // QR CODE — สร้างจาก URL ของหน้าภารกิจ (SWP_MathCamp12_SelfieMission.html)
+  // แก้ MISSION_PAGE_URL ให้ตรงกับลิงก์จริงหลังอัปขึ้น GitHub Pages แล้ว
+  // (ใช้บริการสร้าง QR ผ่านอินเทอร์เน็ต ต้องมีอินเทอร์เน็ตตอนฉายจอ)
+  // =====================================================================
+  const MISSION_PAGE_URL = "https://blackareal.github.io/ED-OK/SWP_MathCamp12_SelfieMission.html";
+  document.getElementById('qrUrlText').textContent = MISSION_PAGE_URL;
+  document.getElementById('qrImg').src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(MISSION_PAGE_URL);
+
+  // =====================================================================
+  // COUNTDOWN TIMER (45:00)
+  // =====================================================================
+  const TOTAL_SECONDS = 45 * 60;
+  let remaining = TOTAL_SECONDS;
+  let intervalId = null;
+  const display = document.getElementById('timerDisplay');
+  const btnStartPause = document.getElementById('btnStartPause');
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+  function renderTimer() {
+    display.textContent = formatTime(Math.max(remaining, 0));
+    display.classList.toggle('warning', remaining <= 300 && remaining > 60);
+    display.classList.toggle('danger', remaining <= 60);
+  }
+  function tick() {
+    remaining -= 1;
+    renderTimer();
+    if (remaining <= 0) {
+      pauseTimer();
+      display.textContent = "หมดเวลา!";
+      display.classList.add('danger');
+    }
+  }
+  function startTimer() {
+    if (intervalId) return;
+    intervalId = setInterval(tick, 1000);
+    btnStartPause.textContent = '⏸️ หยุดชั่วคราว';
+  }
+  function pauseTimer() {
+    clearInterval(intervalId);
+    intervalId = null;
+    btnStartPause.textContent = '▶️ เริ่ม';
+  }
+  btnStartPause.addEventListener('click', () => intervalId ? pauseTimer() : startTimer());
+  document.getElementById('btnReset').addEventListener('click', () => {
+    pauseTimer();
+    remaining = TOTAL_SECONDS;
+    renderTimer();
+  });
+  renderTimer();
+
+  // =====================================================================
+  // CONFIG — Apps Script เดียวกับระบบคะแนน (action=getMissions อ่านแท็บ
+  // "missions" โดยตรง ไม่ต้อง publish CSV แยก)
+  // =====================================================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAS7E41O7b9xkyHOunboZJL_vRhytH15Ft8bz-mfHbMhcNxuglgOM8ShcSxrLzORpN/exec';
+
+  const TEAMS = [
+    { id: 'แดง',    name: 'ทีมสีแดง',    hex: '#ef4444' },
+    { id: 'ฟ้า',    name: 'ทีมสีฟ้า',    hex: '#0ea5e9' },
+    { id: 'เหลือง', name: 'ทีมสีเหลือง', hex: '#eab308' },
+    { id: 'ส้ม',    name: 'ทีมสีส้ม',    hex: '#f97316' },
+    { id: 'เขียว',  name: 'ทีมสีเขียว',  hex: '#22c55e' },
+    { id: 'ม่วง',   name: 'ทีมสีม่วง',   hex: '#a855f7' },
+    { id: 'ชมพู',   name: 'ทีมสีชมพู',   hex: '#ec4899' },
+    { id: 'น้ำเงิน', name: 'ทีมสีน้ำเงิน', hex: '#1d4ed8' },
+  ];
+  function teamHex(id) { const t = TEAMS.find(x => x.id === id); return t ? t.hex : '#334155'; }
+
+  // =====================================================================
+  // ANSWER KEY (เฉลยเต็ม) — ฉบับร่าง (DRAFT)
+  // รูปแบบ: [no, level, missionText, answerHtml, flagged (true = ต้องยืนยันข้อมูลจริงก่อนใช้)]
+  // =====================================================================
+  const ANSWER_KEY = [
+    [1,  "Easy",   "รวมพลัง! ถ่ายภาพสมาชิกในทีมของคุณให้ครบทุกคนในภาพเดียว", "ไม่มีคำตอบตัวเลข — ตรวจแค่ว่าสมาชิกครบทุกคน", false],
+    [2,  "Medium", "แก้สมการ x² − 112x + 3136 = 0", "x = <b>56</b> (เป็นรากซ้ำ เพราะ (x−56)² = 0)", false],
+    [3,  "Easy",   "หาผลบวก 1 + 2 + 3 + ... + 10", "ผลบวก = <b>55</b>", false],
+    [4,  "Medium", "อาคารเรียนที่มีสีรหัส #03a9f4 (สีฟ้าสด)", "ต้องระบุอาคารจริงในโรงเรียนที่ตรงกับสีนี้", true],
+    [5,  "Hard",   "พิกัด GPS (17.0817614, 103.8176737)", "ต้องตรวจสอบว่าพิกัดนี้ตรงกับจุดใดจริงในผังโรงเรียน แล้วปรับให้ถูกต้อง", true],
+    [6,  "Medium", "Generate ภาพทีม + ผู้อำนวยการอยู่ตรงกลาง", "งานสร้างสรรค์ ไม่มีคำตอบตายตัว — ครูตัดสินจากความคิดสร้างสรรค์/ความครบถ้วน", false],
+    [7,  "Medium", "บุคคลที่มีชื่อความหมายว่า \"ความเจริญรุ่งเรืองยิ่งขึ้น\"", "ต้องระบุชื่อครู/บุคลากรจริงที่มีความหมายตรงกับโจทย์ก่อนใช้งาน", true],
+    [8,  "Hard",   "ป้ายทะเบียนรถที่ผลรวมตัวเลข > 20", "ตรวจด้วยการบวกเลขในทะเบียนจริงหน้างาน", false],
+    [9,  "Medium", "แปลง \"SWP\" เป็นตัวเลข A=1..Z=26 แล้วบวกกัน", "S=19, W=23, P=16 → ผลรวม = <b>58</b>", false],
+    [10, "Easy",   "นาฬิกาที่เข็มสั้น-เข็มยาวทำมุม 90°", "เวลาที่เป็นไปได้ เช่น 3:00 น. หรือ 9:00 น. (หรือเวลาอื่นที่คำนวณได้ 90° พอดี)", false],
+    [11, "Medium", "จำนวนเต็ม 3 ตัวเรียงติดกัน ผลรวม = 141", "n=46, n+1=<b>47</b>, n+2=48 → ตัวกลางคือ 47", false],
+    [12, "Hard",   "จำนวนเฉพาะที่มากที่สุดที่น้อยกว่า 50", "<b>47</b>", false],
+    [13, "Easy",   "วัตถุทรงเรขาคณิตในโรงเรียน", "ไม่มีคำตอบตายตัว — ตรวจว่าระบุชื่อทรงถูกต้องตรงกับวัตถุจริง", false],
+    [14, "Medium", "พื้นที่วงกลมรัศมี 7 หน่วย (π ≈ 22/7)", "A = πr² ≈ 22/7 × 49 = <b>154</b>", false],
+    [15, "Medium", "ค่าเฉลี่ยของ 12, 18, 24, 30, 36", "(12+18+24+30+36)/5 = <b>24</b>", false],
+    [16, "Hard",   "อสมการ 2x − 5 > 15 หา x น้อยที่สุดที่เป็นจำนวนเต็ม", "x > 10 → จำนวนเต็มน้อยที่สุดคือ <b>11</b>", false],
+    [17, "Easy",   "นับขั้นบันได ต้องได้เลขคี่", "ขึ้นกับบันไดจริงที่เลือก — ตรวจแค่ว่านับถูกและเป็นเลขคี่จริง", false],
+    [18, "Medium", "ผลคูณของเลขคี่ 3 ตัวแรก (1×3×5)", "<b>15</b>", false],
+    [19, "Hard",   "แปลงเลขฐานสอง 111001 เป็นฐานสิบ", "32+16+8+0+0+1 = <b>57</b>", false],
+    [20, "Medium", "พจน์ที่ 10 ของลำดับ 3, 7, 11, 15, ...", "aₙ = 3 + 4(n−1) → a₁₀ = 3+36 = <b>39</b>", false],
+    [21, "Easy",   "ต้นไม้ที่มีกิ่งหลักเป็นจำนวนเฉพาะ", "ขึ้นกับต้นไม้จริงที่เลือก — ตรวจแค่ว่านับถูกและเป็นจำนวนเฉพาะจริง", false],
+    [22, "Hard",   "ร้อยละ 15 ของจำนวนนักเรียนทั้งหมดในค่าย", "ต้องใช้จำนวนนักเรียนทั้งหมดจริงของค่ายนี้มาคำนวณ (240 คนตัวจริง → ประมาณ 36 คน แต่ควรยืนยันจำนวนจริงอีกครั้ง)", true],
+    [23, "Medium", "ห.ร.ม. ของ 48 และ 60", "<b>12</b>", false],
+    [24, "Medium", "ค.ร.น. ของ 4, 6 และ 9", "<b>36</b>", false],
+    [25, "Hard",   "สามเหลี่ยมมุมฉาก ด้านประกอบ 9 และ 12 หาด้านตรงข้ามมุมฉาก", "√(9²+12²) = √225 = <b>15</b>", false],
+    [26, "Easy",   "นาฬิกาที่ชั่วโมง + นาที = 12 พอดี", "มีได้หลายคำตอบ เช่น 08:04 (8+4=12) — ตรวจจากนาฬิกาจริงที่ถ่าย", false],
+    [27, "Medium", "Digital Root ของเลขประจำตัวนักเรียน", "ขึ้นกับเลขประจำตัวจริงของนักเรียนที่เลือก — ตรวจการคำนวณให้ถูกวิธี", false],
+    [28, "Hard",   "ระบบสมการ x+y=20, x−y=6 หาค่า x", "x = <b>13</b> (y = 7)", false],
+    [29, "Medium", "จำนวนหน้าต่างของอาคาร เป็นจำนวนเฉพาะหรือไม่", "ขึ้นกับอาคารจริงที่เลือก — ตรวจว่านับถูกและสรุปจำนวนเฉพาะถูกต้อง", false],
+    [30, "Easy",   "Generate การ์ตูนทีมถือป้ายคะแนนคาดการณ์ + สโลแกน", "งานสร้างสรรค์ ไม่มีคำตอบตายตัว", false],
+  ];
+
+  function renderAnswerKey() {
+    const list = document.getElementById('akList');
+    list.innerHTML = ANSWER_KEY.map(([no, level, mission, answer, flagged]) => `
+      <div class="ak-row">
+        <div>
+          <div class="ak-no">ภารกิจที่ ${no} <span class="lvl-badge ${level}">${level}</span></div>
+          <div class="ak-mission">${mission}</div>
+        </div>
+        <div>
+          <div class="ak-answer-box">${answer}</div>
+          ${flagged ? '<span class="ak-flag">⚠️ ต้องยืนยันข้อมูลจริงก่อนใช้งาน</span>' : ''}
+          <div class="ak-photos" id="ak-photos-${no}"><span class="ak-empty-photos">กำลังโหลดภาพ…</span></div>
+        </div>
+      </div>`).join('');
+    loadAnswerKeyPhotos();
+  }
+
+  async function fetchMissions() {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getMissions');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+
+  function extractDriveIds(cell) {
+    if (!cell) return [];
+    const ids = new Set();
+    const reId = /[?&]id=([-\w]{15,})|\/d\/([-\w]{15,})/g;
+    let m;
+    while ((m = reId.exec(cell)) !== null) ids.add(m[1] || m[2]);
+    if (!ids.size && /^[-\w]{15,}$/.test(cell.trim())) ids.add(cell.trim());
+    return [...ids];
+  }
+  function driveThumbUrl(id) { return `https://drive.google.com/thumbnail?id=${id}&sz=w400`; }
+  function driveViewUrl(id) { return `https://drive.google.com/file/d/${id}/view`; }
+
+  async function loadAnswerKeyPhotos() {
+    const panelsEl = document.querySelectorAll('.ak-photos');
+    if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+      panelsEl.forEach(el => el.innerHTML = '<span class="ak-empty-photos">ยังไม่ได้ตั้งค่า Apps Script URL</span>');
+      return;
+    }
+    try {
+      const { headers, rows } = await fetchMissions();
+      if (!rows || !rows.length) { panelsEl.forEach(el => el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>'); return; }
+      const teamColIdx = headers.findIndex(h => h === 'ทีม');
+
+      for (const [no] of ANSWER_KEY) {
+        const el = document.getElementById(`ak-photos-${no}`);
+        if (!el) continue;
+        const itemCol = headers.findIndex(h => h === `MISSION#${no}`);
+        if (itemCol < 0) { el.innerHTML = `<span class="ak-empty-photos">ไม่พบคอลัมน์ MISSION#${no}</span>`; continue; }
+        const entries = [];
+        for (const r of rows) {
+          const cell = (r[itemCol] || '').toString().trim();
+          if (!cell) continue;
+          const team = (r[teamColIdx] || '?').toString().trim();
+          const ids = extractDriveIds(cell);
+          if (ids.length) ids.forEach(id => entries.push({ team, driveId: id }));
+          else entries.push({ team, driveId: null, cell });
+        }
+        if (!entries.length) { el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>'; continue; }
+        el.innerHTML = entries.map(e => `
+          <a class="ak-photo" href="${e.driveId ? driveViewUrl(e.driveId) : e.cell}" target="_blank" rel="noopener" style="border:2px solid ${teamHex(e.team)}; border-radius:8px;">
+            <img src="${e.driveId ? driveThumbUrl(e.driveId) : ''}" loading="lazy" onerror="this.style.opacity=0.15">
+            <div class="grp" style="color:${teamHex(e.team)}">${e.team}</div>
+          </a>`).join('');
+      }
+    } catch (err) {
+      console.error(err);
+      panelsEl.forEach(el => el.innerHTML = '<span class="ak-empty-photos">โหลดภาพไม่สำเร็จ</span>');
+    }
+  }
+
+  // =====================================================================
+  // DASHBOARD
+  // =====================================================================
+  const statusText = document.getElementById('statusText');
+  const configWarning = document.getElementById('configWarning');
+  const groupsEl = document.getElementById('groups');
+  const leaderboardBody = document.getElementById('leaderboardBody');
+  const emptyMsg = document.getElementById('emptyMsg');
+
+  async function loadDashboardData() {
+    if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+      configWarning.style.display = 'block';
+      configWarning.textContent = "⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ในไฟล์นี้";
+      statusText.textContent = "ยังไม่ได้ตั้งค่าแหล่งข้อมูล";
+      return;
+    }
+    statusText.textContent = "กำลังโหลดข้อมูล...";
+    try {
+      const { headers, rows } = await fetchMissions();
+      if (!rows || !rows.length) { renderDashboard([], []); statusText.textContent = "โหลดสำเร็จ แต่ยังไม่มีข้อมูล"; return; }
+      renderDashboard(headers, rows);
+      statusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · ${rows.length} ทีม`;
+      configWarning.style.display = 'none';
+    } catch (err) {
+      console.error(err);
+      statusText.textContent = "โหลดข้อมูลไม่สำเร็จ";
+      configWarning.style.display = 'block';
+      configWarning.textContent = "❌ โหลดข้อมูลจาก Apps Script ไม่สำเร็จ (" + err.message + ")";
+    }
+  }
+
+  function renderDashboard(headers, rows) {
+    if (!rows.length) {
+      groupsEl.innerHTML = "";
+      leaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#99a;">—</td></tr>`;
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+    const teamColIdx = headers.findIndex(h => h === 'ทีม');
+    const itemCols = {};
+    for (const [no] of ANSWER_KEY) itemCols[no] = headers.findIndex(h => h === `MISSION#${no}`);
+
+    const teamSummaries = [];
+    let html = "";
+    const sortedRows = [...rows].sort((a, b) =>
+      (a[teamColIdx] || "").localeCompare(b[teamColIdx] || "", 'th'));
+
+    for (const row of sortedRows) {
+      const team = (row[teamColIdx] || "ไม่ระบุทีม").toString().trim();
+      let score = 0, photoCount = 0;
+      let cardsHtml = "";
+      for (const [no, level, mission] of ANSWER_KEY) {
+        const colIdx = itemCols[no];
+        const cell = colIdx >= 0 ? (row[colIdx] || "").toString().trim() : "";
+        if (!cell) continue;
+        score += 1;
+        const ids = extractDriveIds(cell);
+        photoCount += ids.length || 1;
+        const driveId = ids[0] || null;
+
+        cardsHtml += `
+          <a class="photo-card" href="${driveId ? driveViewUrl(driveId) : cell}" target="_blank" rel="noopener">
+            <img src="${driveId ? driveThumbUrl(driveId) : ''}" loading="lazy" alt="ภารกิจ ${no}"
+                 onerror="this.style.opacity=0.15;">
+            <div class="meta">
+              <div class="word">#${no}</div>
+              <div class="sub">
+                <span class="lvl-badge ${level}">${level}</span>
+                <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}</span>
+              </div>
+            </div>
+          </a>`;
+      }
+
+      teamSummaries.push({ team, score, photoCount });
+      html += `
+        <div class="group-section">
+          <div class="group-title">
+            <h4 style="color:${teamHex(team)}">👥 ${team}</h4>
+            <span class="score">${score} pts</span>
+            <span class="count">(${score} / 30 ภารกิจ · ${photoCount} ไฟล์ภาพ)</span>
+          </div>
+          <div class="photo-grid">${cardsHtml || '<span class="ak-empty-photos">ยังไม่ส่งภาพ</span>'}</div>
+        </div>`;
+    }
+    groupsEl.innerHTML = html;
+
+    teamSummaries.sort((a, b) => b.score - a.score);
+    leaderboardBody.innerHTML = teamSummaries.map((g, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td style="color:${teamHex(g.team)}; font-weight:800;">${g.team}</td>
+        <td>${g.score}</td>
+        <td>${g.photoCount}</td>
+      </tr>`).join('');
+  }
+
+  document.getElementById('btnRefresh').addEventListener('click', loadDashboardData);
+  let autoTimer = null;
+  document.getElementById('autoRefresh').addEventListener('change', (e) => {
+    if (e.target.checked) autoTimer = setInterval(loadDashboardData, 30000);
+    else clearInterval(autoTimer);
+  });
+</script>
+</body>
+</html>
