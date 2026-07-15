@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ภารกิจเซลฟี่คณิต - Host Screen - ค่ายคณิตศาสตร์ เต่างอยพัฒนศึกษา</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --card: #151515;
+    --card2: #1a1a1a;
+    --orange: #f4a261;
+    --teal: #2a9d8f;
+    --gold: #e9c46a;
+    --ok: #2a9d8f;
+    --warn: #e63946;
+    --catA: #2a9d8f;
+    --catB: #e9c46a;
+    --catC: #457b9d;
+    --text: #eee;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Sarabun', "Leelawadee UI", "Tahoma", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  .tabbar {
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 50;
+    display: flex;
+    gap: 6px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
+    padding: 6px;
+    border-radius: 100px;
+  }
+  .tabbar button {
+    border: none;
+    background: transparent;
+    color: #cfd8ea;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.5em 1em;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .tabbar button.active { background: var(--orange); color: #1a1a1a; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ================= INTRO + TIMER ================= */
+  #panel-intro, #panel-timer {
+    background: radial-gradient(circle at top, #241a10, var(--bg));
+    color: #fff;
+    height: 100vh;
+    height: 100dvh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5vh 2vw;
+    overflow: auto;
+  }
+  #panel-intro.active, #panel-timer.active { display: flex; }
+  .inner { width: 100%; max-width: 1300px; text-align: center; }
+
+  h1.title {
+    font-size: clamp(1.8rem, 3vw + 2.6vh, 3.4rem);
+    margin: 0 0 0.15em;
+    letter-spacing: 0.02em;
+    color: var(--orange);
+    text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .subtitle { font-size: clamp(0.95rem, 1vw + 1vh, 1.3rem); color: #ddd; margin-bottom: 0.6em; }
+  .meta { font-size: clamp(0.75rem, 0.7vw + 0.7vh, 1rem); color: #999; margin-bottom: 1em; }
+
+  .intro-columns {
+    display: flex;
+    gap: 2.5vw;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+    margin-bottom: 1em;
+  }
+  .rules-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+    flex: 1 1 420px;
+    max-width: 480px;
+  }
+  .qr-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8em;
+    flex: 0 0 auto;
+  }
+  .rule-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 0.6em 1em;
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+  }
+  .rule-card .num { margin-bottom: 0; flex-shrink: 0; }
+  .rule-card p { flex: 1; margin: 0; font-size: clamp(0.78rem, 0.5vw + 0.9vh, 1rem); line-height: 1.4; }
+  .rule-card .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.7em; height: 1.7em; border-radius: 50%;
+    background: var(--orange); color: #1a1a1a; font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .qr-wrap {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 0.5em;
+    background: #fff; border-radius: 20px; padding: 0.9em 1.4em;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .qr-label { color: #1a1a1a; font-weight: 700; font-size: clamp(0.85rem, 0.8vw + 0.8vh, 1.1rem); }
+  .qr-url { color: #667; font-size: 0.75rem; word-break: break-all; max-width: 320px; }
+  .qr-box { width: clamp(110px, 10vw + 10vh, 190px); height: clamp(110px, 10vw + 10vh, 190px); }
+  .qr-box img { display: block; width: 100%; height: 100%; }
+
+  .start-btn {
+    margin-top: 0;
+    background: var(--orange);
+    color: #1a1a1a;
+    border: none;
+    font-size: clamp(0.95rem, 1vw + 1vh, 1.3rem);
+    font-weight: 700;
+    padding: 0.6em 1.8em;
+    border-radius: 100px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(244,162,97,0.4);
+  }
+
+  .timer-label { font-size: clamp(1.1rem, 1.6vw + 1.6vh, 2rem); color: #ddd; margin-bottom: 0.3em; letter-spacing: 0.05em; }
+  .timer-display {
+    font-size: clamp(4.5rem, 12vw + 12vh, 13rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin: 0.15em 0 0.3em;
+    color: var(--orange);
+    text-shadow: 0 6px 30px rgba(0,0,0,0.6);
+  }
+  .timer-display.warning { color: var(--gold); }
+  .timer-display.danger { color: var(--warn); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
+
+  .timer-controls { display: flex; gap: 1em; justify-content: center; flex-wrap: wrap; margin-top: 1em; }
+  .timer-controls button {
+    font-size: clamp(0.9rem, 1vw + 1vh, 1.3rem);
+    padding: 0.55em 1.6em;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  #btnStartPause { background: var(--orange); color: #1a1a1a; }
+  #btnReset { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+  footer.hint { margin-top: 1em; font-size: 0.7rem; color: #666; }
+
+  /* ================= DASHBOARD ================= */
+  #panel-dashboard { background: var(--bg); min-height: 100vh; }
+  #panel-dashboard header {
+    background: var(--card); color: #fff; padding: 1.2em 1.2em 1.2em 5.5em;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 0.6em; border-bottom: 2px solid var(--orange);
+  }
+  #panel-dashboard header h2 { margin: 0; font-size: 1.3rem; color: var(--orange); }
+  #panel-dashboard header .status { font-size: 0.8rem; color: #999; }
+  .controls { display: flex; gap: 0.6em; align-items: center; }
+  .controls button, .controls label {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    padding: 0.5em 1em;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 1.2em; }
+  .config-warning {
+    background: #3a1414; border: 1px solid var(--warn); color: #ffb0b0;
+    padding: 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.9rem;
+  }
+  .leaderboard { background: var(--card); border-radius: 14px; padding: 1.2em; margin-bottom: 1.5em; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+  .leaderboard h3 { margin: 0 0 0.8em; font-size: 1.1rem; color: var(--orange); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.5em 0.6em; border-bottom: 1px solid #262626; }
+  th { color: #888; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
+  tr:first-child td { font-weight: 800; color: var(--orange); }
+  .group-section { margin-bottom: 2em; }
+  .group-title { display: flex; align-items: baseline; gap: 0.6em; margin-bottom: 0.7em; flex-wrap: wrap; }
+  .group-title h4 { margin: 0; font-size: 1.15rem; color: var(--teal); }
+  .group-title .score { color: var(--gold); font-weight: 800; }
+  .group-title .count { color: #888; font-size: 0.85rem; }
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.8em; }
+  .photo-card { background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.4); text-decoration: none; color: inherit; display: block; }
+  .photo-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #222; display: block; }
+  .photo-card .meta { padding: 0.55em 0.7em; }
+  .photo-card .word { font-weight: 800; font-size: 0.85rem; color: var(--orange); }
+  .photo-card .ans { font-size: 0.78rem; color: #ccc; margin-top: 0.25em; word-break: break-word; }
+  .photo-card .sub { font-size: 0.72rem; color: #888; display: flex; justify-content: space-between; margin-top: 0.2em; }
+  .empty { text-align: center; color: #888; padding: 3em 1em; }
+
+  /* ================= ANSWER KEY ================= */
+  #panel-answerkey { background: var(--bg); min-height: 100vh; }
+  #panel-answerkey header {
+    background: var(--card); color: #fff; padding: 1.2em 1.2em 1.2em 5.5em; border-bottom: 2px solid var(--orange);
+  }
+  #panel-answerkey header h2 { margin: 0; font-size: 1.3rem; color: var(--orange); }
+  #panel-answerkey header p { margin: 0.2em 0 0; font-size: 0.8rem; color: #999; }
+
+  .draft-banner {
+    background: #3a1414; border: 1px solid var(--warn); color: #ffb0b0;
+    padding: 0.9em 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.85rem; font-weight: 600;
+  }
+
+  .cat-badge { font-size: 0.7rem; font-weight: 700; padding: 0.15em 0.5em; border-radius: 100px; color: #111; white-space: nowrap; display: inline-block; }
+  .cat-badge.catA { background: var(--catA); color: #06231e; }
+  .cat-badge.catB { background: var(--catB); }
+  .cat-badge.catC { background: var(--catC); color: #fff; }
+
+  .ak-list { display: flex; flex-direction: column; gap: 0.8em; }
+  .ak-row {
+    display: grid; grid-template-columns: 300px 1fr; gap: 1em;
+    background: var(--card); border-radius: 14px; padding: 0.8em; box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  }
+  @media (max-width: 640px) { .ak-row { grid-template-columns: 1fr; } }
+
+  .ak-no { font-size: 0.7rem; color: #888; font-weight: 700; margin-bottom: 0.3em; }
+  .ak-loc { font-size: 0.8rem; color: var(--orange); font-weight: 700; margin-bottom: 0.2em; }
+  .ak-mission { font-size: 0.85rem; line-height: 1.45; color: #ddd; margin-bottom: 0.5em; }
+  .ak-answer-box {
+    background: #10241f; color: #fff; border-radius: 10px; padding: 0.6em 0.9em; font-size: 0.85rem;
+  }
+  .ak-answer-box b { color: var(--gold); }
+
+  .ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; margin-top: 0.6em; }
+  .ak-photo { width: 84px; text-align: center; text-decoration: none; color: inherit; }
+  .ak-photo img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; background: #222; display: block; }
+  .ak-photo .grp { font-size: 0.65rem; color: #999; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ak-photo .ansmini { font-size: 0.62rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ak-empty-photos { color: #888; font-size: 0.85rem; align-self: center; }
+</style>
+</head>
+<body>
+
+<div class="tabbar" id="tabbar">
+  <button data-tab="intro" class="active">🎬 แนะนำ</button>
+  <button data-tab="timer">⏱️ จับเวลา</button>
+  <button data-tab="dashboard">🖼️ Dashboard</button>
+  <button data-tab="answerkey">🔑 เฉลย</button>
+</div>
+
+<!-- ============ INTRO PANEL ============ -->
+<div class="panel active" id="panel-intro">
+  <div class="inner">
+    <h1 class="title">🧮📸 ภารกิจเซลฟี่คณิต</h1>
+    <div class="subtitle">ค่ายคณิตศาสตร์ เต่างอยพัฒนศึกษา — แก้โจทย์คณิต ไปให้ถึงสถานที่ ถ่ายภาพ แล้วพิมพ์คำตอบ</div>
+    <div class="meta">โรงเรียนเต่างอยพัฒนศึกษา · นักเรียน ม.ปลาย 88 คน · 9 กลุ่ม (กลุ่มเดียวกับกิจกรรม STEM ต่อจากนี้)</div>
+
+    <div class="intro-columns">
+      <div class="rules-grid">
+        <div class="rule-card"><div class="num">1</div><p>สแกน QR ด้านขวาเพื่อดูภารกิจปริศนาทั้งหมด <b>30 ข้อ</b> เลือกกลุ่มของตัวเองก่อนเริ่ม</p></div>
+        <div class="rule-card"><div class="num">2</div><p><b>ถอดรหัส</b> ว่าโจทย์แต่ละข้อพูดถึงสถานที่ไหนในโรงเรียน — โจทย์ไม่บอกสถานที่ตรง ๆ ต้องตีความเอง</p></div>
+        <div class="rule-card"><div class="num">3</div><p>ไปยังจุดนั้น <b>จัดท่า/มุมกล้องให้สร้างสรรค์</b> ถ่ายภาพกลุ่มครบทุกคน แล้ว<b>แก้โจทย์คณิต</b>พิมพ์คำตอบส่งคู่กัน ภายใน <b>60 นาที</b></p></div>
+        <div class="rule-card"><div class="num">4</div><p>ไม่บังคับทำให้ครบ สมาชิกคนไหนในกลุ่มก็ส่งได้ ส่งใหม่ทับของเดิมได้ถ้าอยากแก้ไข</p></div>
+      </div>
+      <div class="qr-col">
+        <div class="qr-wrap">
+          <div class="qr-box" id="qrBox"><img id="qrImg" alt="QR code"></div>
+          <div class="qr-label">📱 สแกนเพื่อดูภารกิจทั้งหมด</div>
+          <div class="qr-url" id="qrUrlText"></div>
+        </div>
+        <button class="start-btn" id="btnGoTimer">⏱️ เริ่มจับเวลา 60 นาที</button>
+      </div>
+    </div>
+    <footer class="hint">ภารกิจเซลฟี่คณิต ค่ายคณิตศาสตร์ เต่างอยพัฒนศึกษา · หน้าจอสำหรับฉายในกิจกรรม 13:00-14:00</footer>
+  </div>
+</div>
+
+<!-- ============ TIMER PANEL ============ -->
+<div class="panel" id="panel-timer">
+  <div class="inner">
+    <div class="timer-label">⏳ เวลาที่เหลือในการถ่ายภาพ</div>
+    <div class="timer-display" id="timerDisplay">60:00</div>
+    <div class="timer-controls">
+      <button id="btnStartPause">▶️ เริ่ม</button>
+      <button id="btnReset">🔄 รีเซ็ต</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD PANEL ============ -->
+<div class="panel" id="panel-dashboard">
+  <header>
+    <div>
+      <h2>🖼️ Dashboard ครู — ภารกิจเซลฟี่คณิต</h2>
+      <div class="status" id="statusText">ยังไม่ได้โหลดข้อมูล</div>
+    </div>
+    <div class="controls">
+      <label><input type="checkbox" id="autoRefresh"> รีเฟรชอัตโนมัติ (30s)</label>
+      <button id="btnRefresh">🔄 รีเฟรชตอนนี้</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="config-warning" id="configWarning" style="display:none;"></div>
+    <div class="leaderboard">
+      <h3>🏆 คะแนนรวมแต่ละกลุ่ม</h3>
+      <table>
+        <thead><tr><th>อันดับ</th><th>กลุ่ม</th><th>ภารกิจสำเร็จ (จาก 30)</th><th>จำนวนไฟล์ภาพที่ส่ง</th></tr></thead>
+        <tbody id="leaderboardBody"><tr><td colspan="4" style="color:#888;">—</td></tr></tbody>
+      </table>
+    </div>
+    <div id="groups"></div>
+    <div class="empty" id="emptyMsg" style="display:none;">ยังไม่มีภาพส่งเข้ามา</div>
+  </div>
+</div>
+
+<!-- ============ ANSWER KEY PANEL (ครูเท่านั้น) ============ -->
+<div class="panel" id="panel-answerkey">
+  <header>
+    <h2>🔑 เฉลยภารกิจทั้ง 30 ข้อ</h2>
+    <p>สำหรับครู/กรรมการเท่านั้น — มีสถานที่เฉลยอยู่ในนี้ อย่าฉายแท็บนี้ตอนบรีฟนักเรียนเด็ดขาด</p>
+  </header>
+  <div class="wrap">
+    <div class="draft-banner">⚠️ สถานที่เฉลย (📍) ของทั้ง 30 ข้อยังไม่ได้ตรวจสอบกับผังโรงเรียนเต่างอยพัฒนศึกษาจริง เป็นการตีความจากเนื้อหาโจทย์เท่านั้น กรุณาเดินสำรวจจริงก่อนใช้งาน ถ้าสถานที่ที่ตีความไม่ตรงกับของจริงในโรงเรียน หรือมีมากกว่า 1 จุดที่ตีความได้ ให้ครู/กรรมการใช้ดุลยพินิจตอนให้คะแนนจากความสมเหตุสมผลของภาพแทน (ดูรายละเอียดใน README)</div>
+    <div class="ak-list" id="akList"></div>
+  </div>
+</div>
+
+<script>
+  // =====================================================================
+  // TAB SWITCHING
+  // =====================================================================
+  const tabbar = document.getElementById('tabbar');
+  const panels = {
+    intro: document.getElementById('panel-intro'),
+    timer: document.getElementById('panel-timer'),
+    dashboard: document.getElementById('panel-dashboard'),
+    answerkey: document.getElementById('panel-answerkey'),
+  };
+  function showTab(name) {
+    Object.entries(panels).forEach(([k, el]) => el.classList.toggle('active', k === name));
+    tabbar.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    if (name === 'dashboard') loadDashboardData();
+    if (name === 'answerkey') renderAnswerKey();
+  }
+  tabbar.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn) showTab(btn.dataset.tab);
+  });
+  document.getElementById('btnGoTimer').addEventListener('click', () => { showTab('timer'); startTimer(); });
+
+  // =====================================================================
+  // QR CODE — สร้างจาก URL ของหน้าภารกิจ (TPS_MathCamp_SelfieMission.html)
+  // แก้ MISSION_PAGE_URL ให้ตรงกับลิงก์จริงหลังอัปขึ้น GitHub Pages แล้ว
+  // =====================================================================
+  const MISSION_PAGE_URL = "https://blackareal.github.io/ED-OK/TPS_MathCamp_SelfieMission.html";
+  document.getElementById('qrUrlText').textContent = MISSION_PAGE_URL;
+  document.getElementById('qrImg').src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(MISSION_PAGE_URL);
+
+  // =====================================================================
+  // COUNTDOWN TIMER (60:00)
+  // =====================================================================
+  const TOTAL_SECONDS = 60 * 60;
+  let remaining = TOTAL_SECONDS;
+  let intervalId = null;
+  const display = document.getElementById('timerDisplay');
+  const btnStartPause = document.getElementById('btnStartPause');
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+  function renderTimer() {
+    display.textContent = formatTime(Math.max(remaining, 0));
+    display.classList.toggle('warning', remaining <= 600 && remaining > 120);
+    display.classList.toggle('danger', remaining <= 120);
+  }
+  function tick() {
+    remaining -= 1;
+    renderTimer();
+    if (remaining <= 0) {
+      pauseTimer();
+      display.textContent = "หมดเวลา!";
+      display.classList.add('danger');
+    }
+  }
+  function startTimer() {
+    if (intervalId) return;
+    intervalId = setInterval(tick, 1000);
+    btnStartPause.textContent = '⏸️ หยุดชั่วคราว';
+  }
+  function pauseTimer() {
+    clearInterval(intervalId);
+    intervalId = null;
+    btnStartPause.textContent = '▶️ เริ่ม';
+  }
+  btnStartPause.addEventListener('click', () => intervalId ? pauseTimer() : startTimer());
+  document.getElementById('btnReset').addEventListener('click', () => {
+    pauseTimer();
+    remaining = TOTAL_SECONDS;
+    renderTimer();
+  });
+  renderTimer();
+
+  // =====================================================================
+  // CONFIG — วาง URL ของ Google Apps Script Web App (ระบบใหม่แยกอิสระของ
+  // ค่ายนี้) หลัง Deploy แล้ว ต้องตรงกับ SCRIPT_URL ในไฟล์ Mission ด้วย
+  // =====================================================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxGCvMtn37MJk5WJGrg5TbFdYEhVS2CJUzUcQpa4H_lVmPpMIYZ9AIogvbfaUlcjJG_A/exec';
+
+  const GROUPS = ['กลุ่ม1','กลุ่ม2','กลุ่ม3','กลุ่ม4','กลุ่ม5','กลุ่ม6','กลุ่ม7','กลุ่ม8','กลุ่ม9'];
+  const GROUP_COLORS = ['#f4a261','#e63946','#457b9d','#e9c46a','#a8dadc','#2a9d8f','#e76f51','#a855f7','#22c55e'];
+  function groupColor(id) { const i = GROUPS.indexOf(id); return i >= 0 ? GROUP_COLORS[i] : '#666'; }
+
+  // =====================================================================
+  // ANSWER KEY (เฉลยเต็ม) — สถานที่ (📍) เป็นการตีความจากเนื้อหาโจทย์ของครู
+  // ยังไม่ได้ตรวจกับผังโรงเรียนจริง ส่วนคำตอบคณิตศาสตร์คำนวณไว้ถูกต้องแล้ว
+  // หมวด: A = การวัดและเรขาคณิต, B = จำนวนและพีชคณิต, C = สถิติและความน่าจะเป็น
+  // รูปแบบ: [no, category, location, missionText, answerHtml]
+  // =====================================================================
+  const ANSWER_KEY = [
+    [1,  "A", "เสาธง", "เงาของเสาธงสูง 12 เมตร มุมเงยกับดวงอาทิตย์ 45°", "tan45° = 1 → เงายาวเท่ากับความสูง = <b>12 เมตร</b>"],
+    [2,  "A", "บันไดอาคารเรียน", "อัตราส่วนลูกตั้ง 15 ซม. ต่อลูกนอน 25 ซม.", "15/25 = <b>3/5</b> (หรือ 0.6)"],
+    [3,  "A", "สนามบาสเกตบอล (วงกลมกลางสนาม)", "เส้นผ่านศูนย์กลางเทียบกับรัศมี", "เส้นผ่านศูนย์กลาง = 2r → <b>2 เท่า</b>ของรัศมี"],
+    [4,  "A", "ถังน้ำ/แท็งก์น้ำทรงกระบอก", "ปริมาตรทรงกระบอก r=0.5 ม. สูง 2 ม. (π≈3.14)", "V=πr²h = 3.14×0.25×2 = <b>1.57 ลูกบาศก์เมตร</b>"],
+    [5,  "A", "ประตูห้องเรียน", "รูปทรงเรขาคณิต 3 มิติของแผ่นประตู", "<b>ปริซึมสี่เหลี่ยมมุมฉาก</b>"],
+    [6,  "A", "ป้ายจราจร/ป้ายเตือนวงกลมในโรงเรียน", "เส้นรอบวง 62.8 ซม. หารัศมี (π≈3.14)", "r = C/2π = 62.8/6.28 = <b>10 เซนติเมตร</b>"],
+    [7,  "A", "กระดานดำ/ไวท์บอร์ด", "พื้นที่สี่เหลี่ยมผืนผ้า 1.2×2.4 เมตร", "1.2×2.4 = <b>2.88 ตารางเมตร</b>"],
+    [8,  "A", "หน้าต่างห้องเรียน", "บานกระจกเลื่อนขนานกับผนัง", "<b>การเลื่อนขนาน (Translation)</b>"],
+    [9,  "A", "กระจกเงาในห้องน้ำ", "ภาพสะท้อนขนาดเท่าวัตถุจริง", "<b>การสะท้อน (Reflection)</b>"],
+    [10, "A", "นาฬิกาแขวนผนัง", "เข็มนาฬิกาเคลื่อนที่รอบแกนคงที่", "<b>การหมุน (Rotation)</b>"],
+    [11, "B", "โต๊ะม้าหินอ่อน", "โต๊ะแกนกลาง 15 ตัว ม้านั่งขนาบข้างตัวละ 4 ที่นั่ง", "15×4 = <b>60 ตัว</b>"],
+    [12, "B", "ร้านค้าสวัสดิการ/สหกรณ์โรงเรียน", "นมกล่องละ 12 บาท เทียบราคายกลัง 36 กล่อง=400 บาท", "12×36=432, 432−400 = ประหยัด <b>32 บาท</b>"],
+    [13, "B", "ก๊อกน้ำอ่างล้างมือ", "ปล่อยน้ำ 2 นาที ได้น้ำ 10 ลิตร", "เวลา:น้ำ = 2:10 = <b>1 : 5</b>"],
+    [14, "B", "โรงจอดรถครู", "รถยนต์ x คัน (4 ล้อ) + รถจักรยานยนต์ y คัน (2 ล้อ)", "<b>4x + 2y</b>"],
+    [15, "B", "ตู้กดน้ำ/ตู้เติมเงินอัตโนมัติ", "เหรียญ 10 บาทกับ 5 บาท รวม 12 เหรียญ = 90 บาท", "10a+5(12−a)=90 → a = <b>6 เหรียญ</b> (10 บาท)"],
+    [16, "B", "แปลงเกษตรโรงเรียน/สวนหย่อม", "ลำดับเลขคณิต 3,5,7,... แถวที่ 10", "aₙ=3+2(n−1) → a₁₀ = 3+18 = <b>21 ต้น</b>"],
+    [17, "B", "สนามฟุตบอล (ป้ายคะแนนหรือประตู)", "คะแนน A มากกว่า 2 เท่าของ B อยู่ 5 คะแนน", "<b>A &gt; 2B + 5</b>"],
+    [18, "B", "ห้องพยาบาล", "อัตราส่วนน้ำยา:น้ำ = 1:9 ผสมรวม 500 มล.", "500×(1/10) = <b>50 มิลลิลิตร</b>"],
+    [19, "B", "โรงอาหาร", "อาหารจานหลัก 3 อย่าง × ของหวาน 2 อย่าง", "3×2 = <b>6 วิธี</b>"],
+    [20, "B", "หน้าห้องผู้อำนวยการ/อาคารอำนวยการ", "ผู้บริหาร 8 ท่าน วาระท่านละ 4 ปี", "8×4 = <b>32 ปี</b>"],
+    [21, "C", "ลานจอดรถจักรยานยนต์นักเรียน", "เฉดสีของตัวถังรถจักรยานยนต์ (ข้อมูลประเภทใด)", "<b>ข้อมูลเชิงคุณภาพ</b>"],
+    [22, "C", "ถังขยะแยกประเภท (ถังสีเหลือง)", "ขวดแก้ว 8, กระป๋อง 5, กล่องกระดาษ 7 — ฐานนิยม", "ความถี่สูงสุด 8 → ฐานนิยมคือ <b>ขวดแก้ว</b>"],
+    [23, "C", "ห้องสมุด", "โต๊ะยาวนั่งได้ฝั่งละ 4 คน นำ 2 ตัวมาต่อความยาวกัน", "2 ฝั่ง × 4 คน × 2 โต๊ะ = <b>16 คน</b>"],
+    [24, "C", "หน้าห้องทะเบียน", "นักเรียน ม.1=120, ม.2=110, ม.3=130 หาค่าเฉลี่ย", "(120+110+130)/3 = <b>120 คน</b>"],
+    [25, "C", "สวนหย่อมประดับหน้าอาคาร", "หินขาว 6 ก้อน หินดำ 4 ก้อน สุ่มหยิบ 1 ก้อน หา P(ดำ)", "4/10 = <b>2/5</b> (0.4)"],
+    [26, "C", "โรงอาหาร (จุดล้างจาน/อ่างล้างมือ)", "สุ่มสำรวจ 10 คน พบล้างมือก่อนกินข้าว 7 คน", "7/10 = <b>ร้อยละ 70</b>"],
+    [27, "C", "ป้ายชื่อหน้าโรงเรียน", "ชื่อโรงเรียน 20 ตัวอักษร เป็นพยัญชนะ 12 ตัว", "พยัญชนะ 12 : สระ 8 = <b>3 : 2</b>"],
+    [28, "C", "เสาไฟส่องสว่างริมทางเดิน", "เสาต้นแรกที่ 0 ม. ห่างกันต้นละ 10 ม. หาเสาต้นที่ 6", "5 ช่วง × 10 = <b>50 เมตร</b>"],
+    [29, "C", "ร้านขายน้ำในโรงอาหาร", "น้ำปั่น 5 รส นักเรียน 2 คนสุ่มสั่ง หา P(รสเดียวกัน)", "5×(1/5×1/5) = <b>1/5</b> (0.2)"],
+    [30, "C", "กองอำนวยการค่าย/หอประชุมหลักที่จัดค่าย", "ธง แดง,เหลือง,น้ำเงิน วนซ้ำ ธงผืนที่ 100 สีอะไร", "100 mod 3 = 1 → ตำแหน่งที่ 1 = <b>สีแดง</b>"],
+  ];
+
+  function renderAnswerKey() {
+    const list = document.getElementById('akList');
+    list.innerHTML = ANSWER_KEY.map(([no, cat, loc, mission, answer]) => `
+      <div class="ak-row">
+        <div>
+          <div class="ak-no">ภารกิจที่ ${no} <span class="cat-badge cat${cat}">${cat === 'A' ? '📐 เรขาคณิต' : cat === 'B' ? '🔢 พีชคณิต' : '🎲 สถิติ'}</span></div>
+          <div class="ak-loc">📍 เฉลยสถานที่: ${loc}</div>
+          <div class="ak-mission">🔍 ${mission}</div>
+        </div>
+        <div>
+          <div class="ak-answer-box">${answer}</div>
+          <div class="ak-photos" id="ak-photos-${no}"><span class="ak-empty-photos">กำลังโหลดภาพ…</span></div>
+        </div>
+      </div>`).join('');
+    loadAnswerKeyPhotos();
+  }
+
+  async function fetchMissions() {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getMissions');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+
+  function extractDriveIds(cell) {
+    if (!cell) return [];
+    const ids = new Set();
+    const reId = /[?&]id=([-\w]{15,})|\/d\/([-\w]{15,})/g;
+    let m;
+    while ((m = reId.exec(cell)) !== null) ids.add(m[1] || m[2]);
+    if (!ids.size && /^[-\w]{15,}$/.test(cell.trim())) ids.add(cell.trim());
+    return [...ids];
+  }
+  function driveThumbUrl(id) { return `https://drive.google.com/thumbnail?id=${id}&sz=w400`; }
+  function driveViewUrl(id) { return `https://drive.google.com/file/d/${id}/view`; }
+
+  async function loadAnswerKeyPhotos() {
+    const panelsEl = document.querySelectorAll('.ak-photos');
+    if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+      panelsEl.forEach(el => el.innerHTML = '<span class="ak-empty-photos">ยังไม่ได้ตั้งค่า Apps Script URL</span>');
+      return;
+    }
+    try {
+      const { headers, rows } = await fetchMissions();
+      if (!rows || !rows.length) { panelsEl.forEach(el => el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>'); return; }
+      const groupColIdx = headers.findIndex(h => h === 'กลุ่ม');
+
+      for (const [no] of ANSWER_KEY) {
+        const el = document.getElementById(`ak-photos-${no}`);
+        if (!el) continue;
+        const photoCol = headers.findIndex(h => h === `M${no}_PHOTO`);
+        const answerCol = headers.findIndex(h => h === `M${no}_ANSWER`);
+        if (photoCol < 0) { el.innerHTML = `<span class="ak-empty-photos">ไม่พบคอลัมน์ M${no}_PHOTO</span>`; continue; }
+        const entries = [];
+        for (const r of rows) {
+          const cell = (r[photoCol] || '').toString().trim();
+          if (!cell) continue;
+          const group = (r[groupColIdx] || '?').toString().trim();
+          const ansText = answerCol >= 0 ? (r[answerCol] || '').toString().trim() : '';
+          const ids = extractDriveIds(cell);
+          if (ids.length) ids.forEach(id => entries.push({ group, driveId: id, ansText }));
+          else entries.push({ group, driveId: null, cell, ansText });
+        }
+        if (!entries.length) { el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>'; continue; }
+        el.innerHTML = entries.map(e => `
+          <a class="ak-photo" href="${e.driveId ? driveViewUrl(e.driveId) : e.cell}" target="_blank" rel="noopener" style="border:2px solid ${groupColor(e.group)}; border-radius:8px;">
+            <img src="${e.driveId ? driveThumbUrl(e.driveId) : ''}" loading="lazy" onerror="this.style.opacity=0.15">
+            <div class="grp" style="color:${groupColor(e.group)}">${e.group}</div>
+            <div class="ansmini">${e.ansText || '—'}</div>
+          </a>`).join('');
+      }
+    } catch (err) {
+      console.error(err);
+      panelsEl.forEach(el => el.innerHTML = '<span class="ak-empty-photos">โหลดภาพไม่สำเร็จ</span>');
+    }
+  }
+
+  // =====================================================================
+  // DASHBOARD
+  // =====================================================================
+  const statusText = document.getElementById('statusText');
+  const configWarning = document.getElementById('configWarning');
+  const groupsEl = document.getElementById('groups');
+  const leaderboardBody = document.getElementById('leaderboardBody');
+  const emptyMsg = document.getElementById('emptyMsg');
+
+  async function loadDashboardData() {
+    if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+      configWarning.style.display = 'block';
+      configWarning.textContent = "⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ในไฟล์นี้";
+      statusText.textContent = "ยังไม่ได้ตั้งค่าแหล่งข้อมูล";
+      return;
+    }
+    statusText.textContent = "กำลังโหลดข้อมูล...";
+    try {
+      const { headers, rows } = await fetchMissions();
+      if (!rows || !rows.length) { renderDashboard([], []); statusText.textContent = "โหลดสำเร็จ แต่ยังไม่มีข้อมูล"; return; }
+      renderDashboard(headers, rows);
+      statusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · ${rows.length} กลุ่ม`;
+      configWarning.style.display = 'none';
+    } catch (err) {
+      console.error(err);
+      statusText.textContent = "โหลดข้อมูลไม่สำเร็จ";
+      configWarning.style.display = 'block';
+      configWarning.textContent = "❌ โหลดข้อมูลจาก Apps Script ไม่สำเร็จ (" + err.message + ")";
+    }
+  }
+
+  function renderDashboard(headers, rows) {
+    if (!rows.length) {
+      groupsEl.innerHTML = "";
+      leaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#888;">—</td></tr>`;
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+    const groupColIdx = headers.findIndex(h => h === 'กลุ่ม');
+    const photoCols = {}, answerCols = {};
+    for (const [no] of ANSWER_KEY) {
+      photoCols[no] = headers.findIndex(h => h === `M${no}_PHOTO`);
+      answerCols[no] = headers.findIndex(h => h === `M${no}_ANSWER`);
+    }
+
+    const groupSummaries = [];
+    let html = "";
+    const sortedRows = [...rows].sort((a, b) =>
+      (a[groupColIdx] || "").localeCompare(b[groupColIdx] || "", 'th'));
+
+    for (const row of sortedRows) {
+      const group = (row[groupColIdx] || "ไม่ระบุกลุ่ม").toString().trim();
+      let score = 0, photoCount = 0;
+      let cardsHtml = "";
+      for (const [no, cat, loc] of ANSWER_KEY) {
+        const pIdx = photoCols[no];
+        const aIdx = answerCols[no];
+        const cell = pIdx >= 0 ? (row[pIdx] || "").toString().trim() : "";
+        if (!cell) continue;
+        const ansText = aIdx >= 0 ? (row[aIdx] || "").toString().trim() : "";
+        score += 1;
+        const ids = extractDriveIds(cell);
+        photoCount += ids.length || 1;
+        const driveId = ids[0] || null;
+
+        cardsHtml += `
+          <a class="photo-card" href="${driveId ? driveViewUrl(driveId) : cell}" target="_blank" rel="noopener">
+            <img src="${driveId ? driveThumbUrl(driveId) : ''}" loading="lazy" alt="ภารกิจ ${no}"
+                 onerror="this.style.opacity=0.15;">
+            <div class="meta">
+              <div class="word">#${no} · 📍${loc}</div>
+              <div class="ans">${ansText || '—'}</div>
+              <div class="sub">
+                <span class="cat-badge cat${cat}">${cat}</span>
+                <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}</span>
+              </div>
+            </div>
+          </a>`;
+      }
+
+      groupSummaries.push({ group, score, photoCount });
+      html += `
+        <div class="group-section">
+          <div class="group-title">
+            <h4 style="color:${groupColor(group)}">👥 ${group}</h4>
+            <span class="score">${score} pts</span>
+            <span class="count">(${score} / 30 ภารกิจ · ${photoCount} ไฟล์ภาพ)</span>
+          </div>
+          <div class="photo-grid">${cardsHtml || '<span class="ak-empty-photos">ยังไม่ส่งภาพ</span>'}</div>
+        </div>`;
+    }
+    groupsEl.innerHTML = html;
+
+    groupSummaries.sort((a, b) => b.score - a.score);
+    leaderboardBody.innerHTML = groupSummaries.map((g, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td style="color:${groupColor(g.group)}; font-weight:800;">${g.group}</td>
+        <td>${g.score}</td>
+        <td>${g.photoCount}</td>
+      </tr>`).join('');
+  }
+
+  document.getElementById('btnRefresh').addEventListener('click', loadDashboardData);
+  let autoTimer = null;
+  document.getElementById('autoRefresh').addEventListener('change', (e) => {
+    if (e.target.checked) autoTimer = setInterval(loadDashboardData, 30000);
+    else clearInterval(autoTimer);
+  });
+</script>
+</body>
+</html>
