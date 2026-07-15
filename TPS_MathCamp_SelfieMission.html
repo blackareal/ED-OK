@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ภารกิจเซลฟี่คณิต - ค่ายคณิตศาสตร์ เต่างอยพัฒนศึกษา</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --card: #151515;
+    --card2: #1a1a1a;
+    --orange: #f4a261;
+    --teal: #2a9d8f;
+    --catA: #2a9d8f;
+    --catB: #e9c46a;
+    --catC: #457b9d;
+    --warn: #e63946;
+    --text: #eee;
+    --sub: #888;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Sarabun', "Leelawadee UI", "Tahoma", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+    border-bottom: 2px solid var(--orange);
+    color: #fff;
+    padding: 1.3em 1.2em 1.1em;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  header h1 { margin: 0 0 0.15em; font-size: 1.3rem; color: var(--orange); }
+  header p { margin: 0; font-size: 0.82rem; color: #aaa; }
+
+  .notice {
+    background: #2a1f10;
+    border-bottom: 2px solid var(--orange);
+    color: #f4c78e;
+    text-align: center;
+    padding: 0.7em 1em;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .group-select {
+    background: var(--card);
+    border-bottom: 1px solid #262626;
+    padding: 1em 1em 1.2em;
+    text-align: center;
+  }
+  .group-select-label { font-weight: 700; color: var(--orange); font-size: 0.95rem; margin-bottom: 0.7em; }
+  .group-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.5em;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .group-buttons button {
+    border: 2px solid var(--orange);
+    background: transparent;
+    color: var(--orange);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.65em 0.4em;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .group-buttons button.active { background: var(--orange); color: #1a1a1a; }
+
+  .group-active-bar {
+    display: none;
+    background: #10241f;
+    border-bottom: 1px solid #1e4a3f;
+    color: #7fd9c4;
+    text-align: center;
+    padding: 0.6em 1em;
+    font-size: 0.87rem;
+  }
+  .group-active-bar b { color: #bdf2e2; }
+  .group-active-bar button {
+    margin-left: 0.6em;
+    border: none;
+    background: none;
+    color: var(--orange);
+    text-decoration: underline;
+    font-size: 0.83rem;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .group-active-bar button:disabled { opacity: 0.5; text-decoration: none; cursor: default; }
+  .group-codes { font-size: 0.75rem; color: #6fae9f; margin-top: 0.3em; letter-spacing: 1px; word-break: break-word; }
+
+  .config-warning {
+    background: #3a1414; border-bottom: 2px solid var(--warn); color: #ffb0b0;
+    text-align: center; padding: 0.8em 1em; font-size: 0.85rem; font-weight: 600;
+    display: none;
+  }
+
+  .filters {
+    display: flex;
+    gap: 0.5em;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 1em;
+  }
+  .filters button {
+    border: 1px solid #333;
+    background: var(--card);
+    border-radius: 100px;
+    padding: 0.45em 1.1em;
+    font-size: 0.83rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #bbb;
+  }
+  .filters button.active { background: var(--orange); color: #1a1a1a; border-color: var(--orange); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.9em;
+    padding: 0 1em 2.5em;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 1em 1.1em;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    border-left: 6px solid var(--orange);
+  }
+  .card.catA { border-left-color: var(--catA); }
+  .card.catB { border-left-color: var(--catB); }
+  .card.catC { border-left-color: var(--catC); }
+
+  .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5em; }
+  .card-no { color: #888; font-size: 0.8rem; font-weight: 700; }
+  .cat-badge { font-size: 0.65rem; font-weight: 700; padding: 0.15em 0.55em; border-radius: 100px; color: #111; white-space: nowrap; }
+  .cat-badge.catA { background: var(--catA); color: #06231e; }
+  .cat-badge.catB { background: var(--catB); }
+  .cat-badge.catC { background: var(--catC); color: #fff; }
+
+  .mission-text { font-size: 0.92rem; line-height: 1.55; color: #ddd; white-space: pre-line; }
+  .mission-tag { display: inline-block; margin-top: 0.5em; font-size: 0.68rem; font-weight: 700; color: var(--teal); background: #0e2a25; padding: 0.2em 0.6em; border-radius: 100px; }
+
+  .empty { text-align: center; color: #888; padding: 3em 1em; }
+
+  /* ---------- Answer + Upload block ---------- */
+  .answer-block {
+    margin-top: 0.9em;
+    padding-top: 0.8em;
+    border-top: 1px dashed #333;
+  }
+  .answer-input {
+    width: 100%;
+    background: #0d0d0d;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.55em 0.7em;
+    font-size: 0.88rem;
+    margin-bottom: 0.6em;
+    font-family: inherit;
+  }
+  .answer-input:focus { outline: none; border-color: var(--orange); }
+  .file-input { display: none; }
+  .file-row { display: flex; gap: 0.5em; align-items: center; flex-wrap: wrap; }
+  .upload-btn {
+    display: inline-block;
+    background: #222;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0.5em 1em;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .upload-btn.has-file { background: var(--teal); color: #06231e; }
+  .submit-btn {
+    background: var(--orange);
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0.5em 1.3em;
+    border-radius: 100px;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 4px 14px rgba(244,162,97,0.25);
+  }
+  .submit-btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+  body.no-group .submit-btn, body.no-group .upload-btn { pointer-events: none; opacity: 0.4; }
+  .upload-status { margin-top: 0.5em; font-size: 0.8rem; min-height: 1.1em; }
+  .upload-status.loading { color: #99a; }
+  .upload-status.success { color: #4fd8b8; font-weight: 700; }
+  .upload-status.error { color: #ff8585; font-weight: 700; }
+</style>
+</head>
+<body class="no-group">
+
+<header>
+  <h1>🧮📸 ภารกิจเซลฟี่คณิต</h1>
+  <p>ค่ายคณิตศาสตร์ โรงเรียนเต่างอยพัฒนศึกษา · 1) ถอดรหัสว่าโจทย์พูดถึงที่ไหน 2) ไปที่นั่นแล้วถ่ายภาพให้สร้างสรรค์ 3) แก้โจทย์คณิตส่งคำตอบ</p>
+</header>
+
+<div class="notice">✅ ทุกภาพต้องมีสมาชิกกลุ่มครบทุกคน · ไม่บังคับทำครบ 30 ข้อ ทำให้ได้มากที่สุดใน 60 นาที · แต่ละข้อต้องส่ง "รูปภาพ + คำตอบ" คู่กัน · ยิ่งตีความสถานที่สร้างสรรค์ ยิ่งสนุก!</div>
+
+<div class="group-select" id="groupSelect">
+  <div class="group-select-label">👥 เลือกกลุ่มของคุณก่อนเริ่ม (กลุ่มเดียวกับกิจกรรม STEM ช่วงบ่าย)</div>
+  <div class="group-buttons" id="groupButtons"></div>
+</div>
+
+<div class="group-active-bar" id="groupActiveBar">
+  ✅ กำลังส่งคำตอบในนาม <b id="activeGroupName"></b>
+  <div class="group-codes" id="activeGroupCodes"></div>
+  <button id="btnChangeGroup">เปลี่ยนกลุ่ม</button>
+  <button id="btnRefreshStatus">🔄 เช็คสถานะล่าสุด</button>
+</div>
+
+<div class="config-warning" id="configWarning"></div>
+
+<div class="filters" id="filters">
+  <button data-f="all" class="active">ทั้งหมด</button>
+  <button data-f="A">📐 การวัดและเรขาคณิต</button>
+  <button data-f="B">🔢 จำนวนและพีชคณิต</button>
+  <button data-f="C">🎲 สถิติและความน่าจะเป็น</button>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="empty" id="emptyMsg" style="display:none;">ไม่มีภารกิจในหมวดนี้</div>
+
+<script>
+  // =====================================================================
+  // CONFIG — วาง URL ของ Google Apps Script Web App (ระบบใหม่แยกอิสระ
+  // ของค่ายนี้ ไม่เกี่ยวกับ Apps Script ของค่าย SWP) หลัง Deploy แล้ว
+  // =====================================================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxGCvMtn37MJk5WJGrg5TbFdYEhVS2CJUzUcQpa4H_lVmPpMIYZ9AIogvbfaUlcjJG_A/exec';
+
+  // =====================================================================
+  // กลุ่ม 1-9 — ใช้ชุดเดียวกับกลุ่มกิจกรรมเซลฟี่+STEM ช่วงบ่าย (13:00-15:00)
+  // ตรงกับ camp_groups.html แท็บ "☀️ บ่าย · Selfie+STEM · 13:00"
+  // แสดงเฉพาะรหัส 3 หลัก ไม่มีชื่อจริง (ข้อมูลชื่อจริงเก็บแยกไว้ ไม่เผยแพร่)
+  // =====================================================================
+  const GROUPS = [
+    { id: 'กลุ่ม1', codes: ['231','527','496','211','465','322','361','276','327','094'] },
+    { id: 'กลุ่ม2', codes: ['235','452','270','596','858','668','744','792','759','968'] },
+    { id: 'กลุ่ม3', codes: ['250','491','970','266','780','899','848','189','890','931'] },
+    { id: 'กลุ่ม4', codes: ['110','850','069','438','523','215','898','929','534','672'] },
+    { id: 'กลุ่ม5', codes: ['362','258','592','688','230','049','999','754','830','915'] },
+    { id: 'กลุ่ม6', codes: ['259','098','961','853','072','765','786','896','377','390'] },
+    { id: 'กลุ่ม7', codes: ['981','367','444','990','782','460','056','090','671','631'] },
+    { id: 'กลุ่ม8', codes: ['280','731','613','889','861','739','353','740','396'] },
+    { id: 'กลุ่ม9', codes: ['485','693','916','498','825','992','571','551','262'] },
+  ];
+
+  // =====================================================================
+  // ภารกิจเซลฟี่คณิต 30 ข้อ — โจทย์ปริศนา 3 หมวด (หมวดละ 10 ข้อ)
+  // นักเรียนต้อง "ถอดรหัส" เองว่าโจทย์พูดถึงสถานที่ไหนในโรงเรียน — ไม่บอกสถานที่
+  // ตรงนี้ (สถานที่จริงอยู่ในเฉลยของครูเท่านั้น) แล้วไปถ่ายภาพกลุ่มให้สร้างสรรค์
+  // ตรงจุดนั้น พร้อมแก้โจทย์คณิตในเรื่องเดียวกันแล้วพิมพ์คำตอบส่ง
+  // หมวด: A = การวัดและเรขาคณิต, B = จำนวนและพีชคณิต, C = สถิติและความน่าจะเป็น
+  // รูปแบบ: [no, category, missionText]
+  // =====================================================================
+  const MISSIONS = [
+    [1,  "A", "เงาของสิ่งก่อสร้างที่สูงที่สุดในโรงเรียนซึ่งมีธงไตรรงค์โบกสะบัดอยู่บนยอด ทอดตัวยาวลงบนพื้นสนาม หากสมมติว่าโครงสร้างนี้มีความสูง 12 เมตร และทำมุมเงยกับดวงอาทิตย์ 45° ในเวลานั้น ความยาวของเงาที่ปรากฏบนพื้นจะมีค่ากี่เมตร?"],
+    [2,  "A", "โครงสร้างคอนกรีตที่ทำหน้าที่เชื่อมต่อพื้นที่ต่างระดับระหว่างชั้นของอาคารเรียน มีความสูงของขั้น (ลูกตั้ง) 15 เซนติเมตร และมีความลึกของขั้น (ลูกนอน) 25 เซนติเมตร อัตราส่วนความชัน (สูง/ลึก) ของโครงสร้างเชื่อมระดับนี้ คิดเป็นเศษส่วนอย่างต่ำได้เท่าใด?"],
+    [3,  "A", "ณ เส้นรอบวงกลมขนาดใหญ่ที่ถูกลากไว้ใจกลางลานกีฬาคอนกรีตกลางแจ้งสำหรับชันสูตรความแม่นยำในการชู้ตลูกบอลสีส้ม หากเส้นรอบวงนี้มีรัศมียาว r หน่วย เส้นผ่านศูนย์กลางของวงกลมนี้จะมีขนาดเป็นกี่เท่าของรัศมี?"],
+    [4,  "A", "ภาชนะเหล็กทรงกระบอกขนาดใหญ่ที่ทำหน้าที่กักเก็บน้ำสะอาดไว้ให้ชาวเต่างอยพัฒนศึกษามีน้ำดื่มประทังความร้อน หากภาชนะนี้วัดรัศมีที่ฐานได้ 0.5 เมตร และมีความสูง 2 เมตร จะมีปริมาตรความจุภายในกี่ลูกบาศก์เมตร? (กำหนดให้ π ≈ 3.14)"],
+    [5,  "A", "แผ่นไม้สี่เหลี่ยมหนาที่ยึดติดกับบานพับตรงทางเข้าห้องเรียน ทำหน้าที่เปิดออกเพื่อต้อนรับนักเรียนและปิดลงเมื่อเริ่มการโฮมรูม โครงสร้างแผ่นไม้นี้โดยทั่วไปจัดเป็นรูปทรงเรขาคณิตสามมิติชนิดใด?"],
+    [6,  "A", "ป้ายอะลูมิเนียมทรงวงกลมสมบูรณ์ที่ติดอยู่ริมถนนภายในโรงเรียนเพื่อแจ้งเตือนห้ามจอดหรือจำกัดความเร็ว หากวัดความยาวเส้นรอบรูปของป้ายนี้ได้ 62.8 เซนติเมตร ป้ายนี้จะมีรัศมียาวกี่เซนติเมตร? (กำหนดให้ π ≈ 3.14)"],
+    [7,  "A", "พื้นที่สี่เหลี่ยมผืนผ้าสีเขียวหรือสีขาวขนาดใหญ่ที่ติดตั้งอยู่ระนาบเดียวกับผนังด้านหน้าสุดของห้องเรียน ซึ่งทำหน้าที่รองรับหยาดหมึกชอล์กหรือปากกาเคมีของครู หากพื้นที่นี้กว้าง 1.2 เมตร และยาว 2.4 เมตร จะมีพื้นที่รวมกี่ตารางเมตร?"],
+    [8,  "A", "บานกระจกใสที่ติดตั้งไว้รอบผนังห้องเรียนซึ่งสามารถเลื่อนเปิดออกไปทางขนานกับผนังเพื่อระบายอากาศได้ 50 เซนติเมตร ลักษณะการเคลื่อนที่เชิงพิกัดของบานกระจกนี้ จัดเป็นการแปลงทางเรขาคณิตรูปแบบใด?"],
+    [9,  "A", "แผ่นแก้วฉาบโลหะเงินที่ติดอยู่บนผนังเหนืออ่างล้างมือในห้องสุขา ทำหน้าที่สะท้อนภาพเสมือนหัวตั้งที่มีขนาดเท่ากับวัตถุจริง ปรากฏการณ์การสะท้อนที่เกิดขึ้นนี้ตรงกับการแปลงทางเรขาคณิตรูปแบบใด?"],
+    [10, "A", "เครื่องมือกลศาสตร์ทรงกลมที่ทำหน้าที่บอกเวลา แขวนอยู่บนผนังห้องเรียน โดยมีเข็มสั้นและเข็มยาวเคลื่อนที่เป็นวงกลมรอบแกนหมุนคงที่ การเคลื่อนที่ของปลายเข็มดังกล่าวจัดเป็นการแปลงทางเรขาคณิตรูปแบบใด?"],
+    [11, "B", "ชุดที่นั่งปูนซีเมนต์ขัดหยาบที่ตั้งเรียงรายอยู่ใต้ร่มเงาไม้รอบบริเวณโรงเรียน หากกำหนดให้ชุดที่นั่ง 1 ชุด ประกอบด้วยโต๊ะแกนกลาง 1 ตัว และม้านั่งยาวขนาบข้าง 4 ตัว ถ้าในบริเวณนั้นมีโต๊ะแกนกลางทั้งหมด 15 ตัว จะมีม้านั่งยาวรวมกันทั้งสิ้นกี่ตัว?"],
+    [12, "B", "ป้ายแสดงรายการราคาสินค้าอุปโภคบริโภคของศูนย์สวัสดิการโรงเรียน ระบุว่านมกล่องรสหวานราคากล่องละ 12 บาท แต่หากทางโรงเรียนสั่งซื้อยกลัง (ลังละ 36 กล่อง) จะได้ราคารวม 400 บาท การซื้อแบบยกลังจะประหยัดเงินกว่าการซื้อแยกทีละกล่องรวมกันกี่บาท?"],
+    [13, "B", "วาล์วจ่ายน้ำทองเหลืองบริเวณจุดบริการสุขอนามัยอ่างล้างมือ เมื่อเปิดใช้งานพบว่าแรงดันน้ำสม่ำเสมอ โดยปล่อยน้ำทิ้งไว้ 2 นาที จะได้ปริมาตรน้ำรวม 10 ลิตร อัตราส่วนของ เวลา(นาที) ต่อ ปริมาณน้ำ(ลิตร) ในรูปอัตราส่วนอย่างต่ำคือเท่าใด?"],
+    [14, "B", "ลานจอดพาหนะใต้หลังคาเหล็กที่สงวนไว้สำหรับคณะครูและบุคลากรทางการศึกษา หากสมมติว่าในลานนี้มีรถยนต์จอดอยู่จำนวน x คัน และรถจักรยานยนต์จอดอยู่จำนวน y คัน จงเขียนนิพจน์พหุนามเพื่อแสดงจำนวนล้อทั้งหมดของพาหนะที่ลานแห่งนี้"],
+    [15, "B", "ตู้จักรกลอัตโนมัติที่ตั้งอยู่มุมอาคาร คอยทำหน้าที่ทอนเงินและจ่ายเครื่องดื่มหรือเติมเงินเมื่อหยอดเหรียญครบมูลค่า หากในช่องเก็บเงินมีเหรียญ 10 บาท และเหรียญ 5 บาท ปนกันอยู่รวม 12 เหรียญ คิดเป็นมูลค่าเงินรวม 90 บาท จะมีเหรียญ 10 บาทอยู่จำนวนกี่เหรียญ?"],
+    [16, "B", "แนวพืชผักและพันธุ์ไม้ที่ปลูกเรียงกันเป็นแถวอย่างเป็นระเบียบในพื้นที่การเรียนรู้เกษตรกรรม หากแถวแรกมีพืชอยู่ 3 ต้น แถวที่สองมี 5 ต้น แถวที่สามมี 7 ต้น และเพิ่มขึ้นเช่นนี้เรื่อย ๆ ตามลักษณะของลำดับเลขคณิต ในแถวที่ 10 จะมีพืชอยู่ทั้งหมดกี่ต้น?"],
+    [17, "B", "พื้นผิวกระดานสำหรับบันทึกคะแนน (Scoreboard) ที่ตั้งอยู่ขอบลานกีฬาหญ้าขนาดยักษ์ที่มีตาข่ายประตูขนาบสองฝั่ง หากสมมติว่าคะแนนของทีมเจ้าบ้าน (A) มากกว่าสองเท่าของทีมเยือน (B) อยู่ 5 คะแนน จงเขียนอสมการแสดงความสัมพันธ์ของคะแนนคู่นี้"],
+    [18, "B", "ขวดน้ำยาฆ่าเชื้อสีแดงเข้มที่วางอยู่บนชั้นวางอุปกรณ์ปฐมพยาบาลเบื้องต้น หากเจ้าหน้าที่ต้องการผสมน้ำยาฆ่าเชื้อนี้กับน้ำสะอาดตามอัตราส่วนความเข้มข้น 1 : 9 เพื่อให้ได้ปริมาตรสารละลายรวม 500 มิลลิลิตร จะต้องใช้ตัวน้ำยาฆ่าเชื้อเข้มข้นกี่มิลลิลิตร?"],
+    [19, "B", "ป้ายรายการเมนูอาหารประจำวันของสถานอาหารกลางวันนักเรียน หากร้านค้าที่ตั้งอยู่ภายในมีรายการอาหารจานหลักให้เลือก 3 อย่าง และมีรายการของหวาน 2 อย่าง จำนวนวิธีที่แตกต่างกันทั้งหมดในการเลือกสั่งอาหารจานหลัก 1 อย่าง และของหวาน 1 อย่าง มีกี่วิธี?"],
+    [20, "B", "ทำเนียบแผนผังภาพถ่ายที่ติดเรียงรายอยู่หน้าห้องปฏิบัติงานของผู้บริหารสูงสุดประจำสถานศึกษา หากนับจำนวนผู้ดำรงตำแหน่งตั้งแต่อดีตจนถึงปัจจุบันได้ 8 ท่าน และสมมติว่าแต่ละท่านมีวาระการทำงานท่านละ 4 ปีเท่ากันพอดี ระยะเวลาการบริหารรวมทั้งหมดคิดเป็นกี่ปี?"],
+    [21, "C", "ลานคอนกรีตที่มีพาหนะสองล้อของนักเรียนจอดเรียงรายอยู่นับร้อยคัน หากเราทำการสุ่มเลือกพาหนะขึ้นมา 1 คัน เพื่อพิจารณาตัวแปรที่ชื่อว่า เฉดสีของตัวถังรถจักรยานยนต์ ข้อมูลที่ได้นี้จัดเป็นข้อมูลประเภทใด (เชิงคุณภาพ หรือ เชิงปริมาณ)?"],
+    [22, "C", "ถังพลาสติกสี่สี (น้ำเงิน เขียว เหลือง แดง) ที่ตั้งอยู่มุมอาคารเพื่อคัดแยกสิ่งของก่อนกระบวนการกำจัดขยะ หากในถังสีเหลืองมีขวดแก้ว 8 ใบ กระป๋องอลูมิเนียม 5 ใบ และกล่องกระดาษ 7 กล่อง ค่าสถิติฐานนิยม (Mode) ของสิ่งของที่อยู่ในถังนี้คืออะไร?"],
+    [23, "C", "พื้นที่จัดเก็บทรัพยากรสารสนเทศและสิ่งพิมพ์ซึ่งเป็นเขตงดใช้เสียงดังประจำโรงเรียน หากภายในมีโต๊ะอ่านหนังสือทรงสี่เหลี่ยมผืนผ้าขนาดยาวที่นั่งได้ฝั่งละ 4 คน (ไม่นับหัวและท้ายโต๊ะ) ถ้านำโต๊ะลักษณะเดียวกันนี้ 2 ตัวมาวางต่อความยาวกัน จะสามารถรองรับผู้นั่งได้รวมกี่คน?"],
+    [24, "C", "บอร์ดสถิติจำนวนประชากรของแผนกทะเบียนและวัดผล ระบุข้อมูลแผนภูมิแท่งว่า นักเรียน ม.1 มี 120 คน ม.2 มี 110 คน และ ม.3 มี 130 คน ค่าเฉลี่ยเลขคณิตของจำนวนนักเรียนต่อหนึ่งระดับชั้นในกลุ่มมัธยมศึกษาตอนต้นนี้มีค่าเท่าใด?"],
+    [25, "C", "ก้อนหินกรวดขนาดใหญ่ที่จัดตกแต่งอยู่ตามพื้นผิวของสวนหย่อมประดับอาคารเรียน หากสมมติว่าในถุงบรรจุมีหินสีขาว 6 ก้อน และหินสีดำ 4 ก้อน เมื่อทำการหยิบหินขึ้นมาพร้อมกัน 1 ก้อนแบบสุ่ม ความน่าจะเป็นที่จะได้หินสีดำมีค่าเท่าใด? (ตอบเป็นเศษส่วนอย่างต่ำ)"],
+    [26, "C", "อ่างล้างภาชนะเหล็กไร้สนิมที่ตั้งอยู่บริเวณส่วนท้ายของโรงอาหาร จากการสุ่มสำรวจพฤติกรรมนักเรียนที่เดินผ่านจุดนี้จำนวน 10 คน พบว่ามีผู้ที่หยุดปฏิบัติกิจสุขอนามัยล้างมือก่อนรับประทานอาหารจำนวน 7 คน คิดเป็นร้อยละเท่าใดของจำนวนประชากรที่สุ่มสำรวจ?"],
+    [27, "C", "โครงสร้างสถาปัตยกรรมคอนกรีตขนาดใหญ่ตรงทางเข้าหลักที่จารึกอักษรชื่อสถาบันเด่นชัด หากนำตัวอักษรทั้งหมดของชื่อโรงเรียน (พยัญชนะ สระ และวรรณยุกต์รวมกันได้ 20 ตัว) มาจำแนกพบว่าเป็นพยัญชนะ 12 ตัว และส่วนที่เหลือเป็นสระ อัตราส่วนของจำนวนพยัญชนะต่อจำนวนสระในรูปเศษส่วนอย่างต่ำคือเท่าใด?"],
+    [28, "C", "แนวเสาเหล็กติดตั้งระบบไฟส่องสว่างอัตโนมัติที่ปักเรียงรายอยู่ริมทางเดินหลักของโรงเรียน หากเสาต้นแรก (ต้นที่ 1) ปักอยู่ที่พิกัด 0 เมตร และเสาต้นถัดไปปักห่างกันทุก ๆ ระยะ 10 เมตร เสาไฟต้นที่ 6 จะอยู่ห่างจากเสาไฟต้นแรกเป็นระยะทางกี่เมตร?"],
+    [29, "C", "เมนูเครื่องดื่มปั่นแช่เย็นรสผลไม้ที่ติดอยู่หน้าร้านค้าในโรงอาหารระบุว่ามีให้เลือก 5 รสชาติ ถ้านักเรียน 2 คนเดินไปสั่งน้ำปั่นคนละ 1 แก้วโดยการสุ่มเลือก ความน่าจะเป็นที่นักเรียนทั้งสองคนจะสั่งน้ำปั่นได้รสชาติเดียวกันพอดีมีค่าเท่าใด?"],
+    [30, "C", "แนวธงสามสี (แดง เหลือง น้ำเงิน) ที่นำมาขึงประดับประดาไว้รอบบริเวณพื้นที่ศูนย์กลางของการจัดกิจกรรมค่ายคณิตศาสตร์ในครั้งนี้ หากธงถูกแขวนเรียงสลับกันตามรูปแบบอนุกรม: แดง, เหลือง, น้ำเงิน, แดง, เหลือง, น้ำเงิน... ไปเรื่อย ๆ ธงผืนที่ 100 จะเป็นธงสีอะไร?"],
+  ];
+
+  const grid = document.getElementById('grid');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const configWarning = document.getElementById('configWarning');
+
+  let currentGroup = null;
+  let currentFilter = 'all';
+  const uploadState = {}; // { [no]: { status: 'loading'|'success'|'error', message: string } }
+  const pendingFile = {}; // { [no]: File }
+
+  if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+    configWarning.style.display = 'block';
+    configWarning.textContent = "⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ในไฟล์นี้ — ครูต้องตั้งค่า Google Apps Script ก่อนใช้งาน";
+  }
+
+  function statusHtml(no) {
+    const s = uploadState[no];
+    if (!s) return '<div class="upload-status" id="uploadStatus-' + no + '"></div>';
+    return `<div class="upload-status ${s.status}" id="uploadStatus-${no}">${s.message}</div>`;
+  }
+
+  const CAT_LABELS = { A: '📐 เรขาคณิต', B: '🔢 พีชคณิต', C: '🎲 สถิติ' };
+
+  function render(filter) {
+    currentFilter = filter;
+    grid.innerHTML = "";
+    const items = MISSIONS.filter(m => filter === 'all' || m[1] === filter);
+    emptyMsg.style.display = items.length ? 'none' : 'block';
+    for (const [no, cat, text] of items) {
+      const card = document.createElement('div');
+      card.className = `card cat${cat}`;
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-no">ภารกิจที่ ${no}</div>
+          <span class="cat-badge cat${cat}">${CAT_LABELS[cat] || cat}</span>
+        </div>
+        <div class="mission-text">🔍 ${text}</div>
+        <div class="answer-block">
+          <input type="text" class="answer-input" id="answer-${no}" data-no="${no}" placeholder="พิมพ์คำตอบที่นี่...">
+          <div class="file-row">
+            <input type="file" accept="image/*" capture="environment" class="file-input" id="file-${no}" data-no="${no}">
+            <label for="file-${no}" class="upload-btn" id="uploadLabel-${no}">📷 เลือกรูป</label>
+            <button class="submit-btn" id="submitBtn-${no}" data-no="${no}">ส่งคำตอบ + รูป</button>
+          </div>
+          ${statusHtml(no)}
+        </div>`;
+      grid.appendChild(card);
+    }
+  }
+
+  document.getElementById('filters').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render(btn.dataset.f);
+  });
+
+  render('all');
+
+  // =====================================================================
+  // เลือกกลุ่ม — เลือกครั้งเดียว ใช้กับการส่งคำตอบทุกภารกิจจนกว่าจะกด "เปลี่ยนกลุ่ม"
+  // =====================================================================
+  const groupSelect = document.getElementById('groupSelect');
+  const groupActiveBar = document.getElementById('groupActiveBar');
+  const activeGroupName = document.getElementById('activeGroupName');
+  const activeGroupCodes = document.getElementById('activeGroupCodes');
+  const groupButtonsEl = document.getElementById('groupButtons');
+
+  groupButtonsEl.innerHTML = GROUPS.map(g =>
+    `<button data-group="${g.id}">${g.id}</button>`
+  ).join('');
+
+  groupButtonsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    currentGroup = btn.dataset.group;
+    const group = GROUPS.find(g => g.id === currentGroup);
+    activeGroupName.textContent = currentGroup;
+    activeGroupCodes.textContent = group ? ('รหัสในกลุ่มนี้: ' + group.codes.join(', ')) : '';
+    document.querySelectorAll('#groupButtons button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    groupSelect.style.display = 'none';
+    groupActiveBar.style.display = 'block';
+    document.body.classList.remove('no-group');
+    refreshUploadStatus();
+  });
+
+  document.getElementById('btnChangeGroup').addEventListener('click', () => {
+    groupSelect.style.display = 'block';
+    groupActiveBar.style.display = 'none';
+  });
+
+  document.getElementById('btnRefreshStatus').addEventListener('click', refreshUploadStatus);
+
+  // =====================================================================
+  // เช็คสถานะว่ากลุ่มที่เลือกส่งภารกิจไหนไปแล้วบ้าง (อ่านจาก Apps Script
+  // action=getMissions ตรง ๆ ไม่ต้อง publish CSV แยก)
+  // =====================================================================
+  let statusCheckInFlight = false;
+  const btnRefreshStatus = document.getElementById('btnRefreshStatus');
+
+  async function refreshUploadStatus() {
+    if (!currentGroup) return;
+    if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) return;
+    if (statusCheckInFlight) return;
+    statusCheckInFlight = true;
+    const originalLabel = btnRefreshStatus.textContent;
+    btnRefreshStatus.disabled = true;
+    btnRefreshStatus.textContent = '🔄 กำลังเช็ค...';
+    try {
+      const url = new URL(SCRIPT_URL);
+      url.searchParams.set('action', 'getMissions');
+      const res = await fetch(url.toString(), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const headers = data.headers || [];
+      const rows = data.rows || [];
+      const groupColIdx = headers.findIndex(h => h === 'กลุ่ม');
+      const myRow = rows.find(r => (r[groupColIdx] || '').toString().trim() === currentGroup);
+      if (!myRow) return;
+      for (const [no] of MISSIONS) {
+        if (uploadState[no] && uploadState[no].status === 'loading') continue;
+        const photoColIdx = headers.findIndex(h => h === 'M' + no + '_PHOTO');
+        const answerColIdx = headers.findIndex(h => h === 'M' + no + '_ANSWER');
+        if (photoColIdx < 0) continue;
+        const photoCell = (myRow[photoColIdx] || '').toString().trim();
+        const answerCell = answerColIdx >= 0 ? (myRow[answerColIdx] || '').toString().trim() : '';
+        if (photoCell) {
+          setStatus(no, 'success', '✅ ส่งแล้ว — คำตอบที่บันทึกไว้: ' + (answerCell || '(ไม่มี)'));
+          const answerInput = document.getElementById('answer-' + no);
+          if (answerInput && !answerInput.value) answerInput.value = answerCell;
+        }
+      }
+    } catch (err) {
+      console.error('refreshUploadStatus failed', err);
+    } finally {
+      statusCheckInFlight = false;
+      btnRefreshStatus.disabled = false;
+      btnRefreshStatus.textContent = originalLabel;
+    }
+  }
+
+  // =====================================================================
+  // บีบอัดรูปในเครื่องก่อนส่ง
+  // =====================================================================
+  function compressImage(file, maxDim, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("เปิดไฟล์รูปไม่สำเร็จ"));
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl.split(',')[1]);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function setStatus(no, status, message) {
+    uploadState[no] = { status, message };
+    const el = document.getElementById(`uploadStatus-${no}`);
+    if (el) {
+      el.textContent = message;
+      el.className = 'upload-status ' + status;
+    }
+  }
+
+  grid.addEventListener('change', (e) => {
+    const input = e.target.closest('.file-input');
+    if (!input || !input.files || !input.files.length) return;
+    const no = parseInt(input.dataset.no, 10);
+    pendingFile[no] = input.files[0];
+    const label = document.getElementById('uploadLabel-' + no);
+    if (label) { label.textContent = '📷 เลือกแล้ว: ' + input.files[0].name; label.classList.add('has-file'); }
+  });
+
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.submit-btn');
+    if (!btn) return;
+    const no = parseInt(btn.dataset.no, 10);
+    submitMission(no);
+  });
+
+  async function submitMission(no) {
+    if (!currentGroup) { alert('กรุณาเลือกกลุ่มก่อนส่งคำตอบ'); return; }
+    if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
+      alert('ยังไม่ได้ตั้งค่า SCRIPT_URL ในไฟล์นี้ — แจ้งครูให้ตั้งค่าก่อนใช้งาน');
+      return;
+    }
+    const answerInput = document.getElementById('answer-' + no);
+    const answerText = (answerInput ? answerInput.value : '').trim();
+    const file = pendingFile[no];
+
+    if (!answerText) { alert('กรุณาพิมพ์คำตอบก่อนส่ง'); return; }
+    if (!file) { alert('กรุณาเลือกรูปภาพก่อนส่ง'); return; }
+    if (uploadState[no] && uploadState[no].status === 'loading') return;
+
+    setStatus(no, 'loading', 'กำลังบีบอัดรูป...');
+    try {
+      const base64 = await compressImage(file, 1280, 0.72);
+      setStatus(no, 'loading', 'กำลังส่ง...');
+
+      // ห้ามใส่ header Content-Type เอง เพื่อไม่ให้เบราว์เซอร์ส่ง OPTIONS preflight
+      // ซึ่ง Google Apps Script Web App ไม่รองรับ
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          group: currentGroup,
+          missionNo: no,
+          answerText: answerText,
+          filename: `MISSION${no}_${currentGroup}_${Date.now()}.jpg`,
+          mimeType: 'image/jpeg',
+          imageBase64: base64
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        setStatus(no, 'success', '✅ ส่งสำเร็จ (ส่งใหม่ได้ถ้าอยากแก้คำตอบหรือเปลี่ยนรูป)');
+      } else {
+        throw new Error(data.message || 'ไม่ทราบสาเหตุ');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(no, 'error', '❌ ส่งไม่สำเร็จ ลองใหม่อีกครั้ง (' + err.message + ')');
+    }
+  }
+</script>
+</body>
+</html>
