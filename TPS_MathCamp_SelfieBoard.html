@@ -277,7 +277,7 @@
       <div class="rules-grid">
         <div class="rule-card"><div class="num">1</div><p>สแกน QR ด้านขวาเพื่อดูภารกิจปริศนาทั้งหมด <b>32 ข้อ</b> เลือกกลุ่มของตัวเองก่อนเริ่ม</p></div>
         <div class="rule-card"><div class="num">2</div><p><b>ถอดรหัส</b> ว่าโจทย์แต่ละข้อพูดถึงสถานที่ไหนในโรงเรียน — โจทย์ไม่บอกสถานที่ตรง ๆ ต้องตีความเอง</p></div>
-        <div class="rule-card"><div class="num">3</div><p>ไปยังจุดนั้น <b>จัดท่า/มุมกล้องให้สร้างสรรค์</b> ถ่ายภาพกลุ่มครบทุกคน แล้ว<b>แก้โจทย์คณิต</b>พิมพ์คำตอบส่งคู่กัน ภายใน <b>60 นาที</b></p></div>
+        <div class="rule-card"><div class="num">3</div><p>ไปยังจุดนั้น <b>จัดท่า/มุมกล้องให้สร้างสรรค์</b> ถ่ายภาพกลุ่มครบทุกคน แล้ว<b>แก้โจทย์คณิต</b>พิมพ์คำตอบส่งคู่กัน ภายใน <b>40 นาที</b></p></div>
         <div class="rule-card"><div class="num">4</div><p>ไม่บังคับทำให้ครบ สมาชิกคนไหนในกลุ่มก็ส่งได้ ส่งใหม่ทับของเดิมได้ถ้าอยากแก้ไข</p></div>
       </div>
       <div class="qr-col">
@@ -286,10 +286,10 @@
           <div class="qr-label">📱 สแกนเพื่อดูภารกิจทั้งหมด</div>
           <div class="qr-url" id="qrUrlText"></div>
         </div>
-        <button class="start-btn" id="btnGoTimer">⏱️ เริ่มจับเวลา 60 นาที</button>
+        <button class="start-btn" id="btnGoTimer">⏱️ เริ่มจับเวลา 40 นาที</button>
       </div>
     </div>
-    <footer class="hint">ภารกิจเซลฟี่คณิต ค่ายคณิตศาสตร์ เต่างอยพัฒนศึกษา · หน้าจอสำหรับฉายในกิจกรรม 13:00-14:00</footer>
+    <footer class="hint">ภารกิจเซลฟี่คณิต ค่ายคณิตศาสตร์ เต่างอยพัฒนศึกษา · หน้าจอสำหรับฉายในกิจกรรม 13:30-14:30</footer>
   </div>
 </div>
 
@@ -297,7 +297,7 @@
 <div class="panel" id="panel-timer">
   <div class="inner">
     <div class="timer-label">⏳ เวลาที่เหลือในการถ่ายภาพ</div>
-    <div class="timer-display" id="timerDisplay">60:00</div>
+    <div class="timer-display" id="timerDisplay">40:00</div>
     <div class="timer-controls">
       <button id="btnStartPause">▶️ เริ่ม</button>
       <button id="btnReset">🔄 รีเซ็ต</button>
@@ -376,9 +376,9 @@
     "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(MISSION_PAGE_URL);
 
   // =====================================================================
-  // COUNTDOWN TIMER (60:00)
+  // COUNTDOWN TIMER (40:00)
   // =====================================================================
-  const TOTAL_SECONDS = 60 * 60;
+  const TOTAL_SECONDS = 40 * 60;
   let remaining = TOTAL_SECONDS;
   let intervalId = null;
   const display = document.getElementById('timerDisplay');
