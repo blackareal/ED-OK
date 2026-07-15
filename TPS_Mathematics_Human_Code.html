@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mathematics Human Code 🧮</title>
+<style>
+:root {
+  --bg: #050510;
+  --cyan: #00e5ff;
+  --green: #00ff88;
+  --red: #ff4455;
+  --yellow: #ffd700;
+  --orange: #ff7700;
+  --t1: #00ff88;
+  --t2: #00e5ff;
+  --t3: #ff7700;
+  --gray: #555;
+  --lgray: #aaa;
+  --white: #f0f0f0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #000;
+  color: var(--white);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  user-select: none;
+}
+#sc { position: relative; width: 100vw; height: 100vh; }
+.slide {
+  display: none; position: absolute; inset: 0;
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px 56px 54px; overflow: hidden;
+}
+.slide.active { display: flex; }
+
+/* Backgrounds */
+.bg-cover   { background: radial-gradient(ellipse 90% 80% at 50% 50%, #08163a 0%, #000 100%); }
+.bg-explain { background: linear-gradient(160deg, #050c1e 0%, #000 100%); }
+.bg-rules   { background: linear-gradient(160deg, #050b1c 0%, #000 100%); }
+.bg-t1      { background: radial-gradient(ellipse 80% 70% at 50% 40%, #021108 0%, #000 100%); }
+.bg-t2      { background: radial-gradient(ellipse 80% 70% at 50% 40%, #020c18 0%, #000 100%); }
+.bg-t3      { background: radial-gradient(ellipse 80% 70% at 50% 40%, #180800 0%, #000 100%); }
+.bg-q       { background: radial-gradient(ellipse 65% 70% at 50% 35%, #06062a 0%, #000 100%); }
+.bg-ans     { background: radial-gradient(ellipse 65% 65% at 50% 45%, #160900 0%, #000 100%); }
+.bg-timeout { background: radial-gradient(ellipse 65% 70% at 50% 38%, #161000 0%, #000 100%); }
+.bg-final   { background: radial-gradient(ellipse 70% 70% at 50% 40%, #0a0c22 0%, #000 100%); }
+
+/* Typography */
+.title-main {
+  font-size: clamp(44px, 7.5vw, 96px); font-weight: 900; line-height: 1.1; text-align: center;
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.tag {
+  font-size: clamp(11px, 1.4vw, 15px); letter-spacing: 4px; text-transform: uppercase;
+  padding: 5px 16px; border-radius: 20px; margin-bottom: 14px; display: inline-block;
+}
+.tag-cyan   { color: var(--cyan);   border: 1px solid rgba(0,229,255,.35); background: rgba(0,229,255,.06); }
+.tag-green  { color: var(--green);  border: 1px solid rgba(0,255,136,.35); background: rgba(0,255,136,.06); }
+.tag-yellow { color: var(--yellow); border: 1px solid rgba(255,215,0,.35);  background: rgba(255,215,0,.06); }
+.tag-orange { color: var(--orange); border: 1px solid rgba(255,119,0,.35); background: rgba(255,119,0,.06); }
+
+/* Question */
+.q-text { font-size: clamp(28px, 5vw, 64px); font-weight: 700; text-align: center; line-height: 1.5; max-width: 900px; }
+.q-text.compact { font-size: clamp(20px, 3.5vw, 46px); }
+.q-sub  { font-size: clamp(14px, 2vw, 26px); color: var(--lgray); text-align: center; margin-top: 6px; }
+
+/* Pose badge */
+.pose-badge { position: absolute; top: 16px; left: 24px; font-size: 13px; padding: 5px 13px; border-radius: 14px; font-weight: 600; }
+.pose-t1 { color: var(--t1); border: 1px solid rgba(0,255,136,.4); background: rgba(0,255,136,.08); }
+.pose-t2 { color: var(--t2); border: 1px solid rgba(0,229,255,.4); background: rgba(0,229,255,.08); }
+.pose-t3 { color: var(--t3); border: 1px solid rgba(255,119,0,.4); background: rgba(255,119,0,.08); }
+
+/* Timer */
+.timer-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 22px; }
+.timer-digits { font-size: clamp(54px, 9vw, 110px); font-weight: 900; font-family: 'Courier New', monospace; color: var(--yellow); letter-spacing: 4px; transition: color .3s; }
+.timer-digits.danger { color: var(--red); animation: pulse .45s ease-in-out infinite alternate; }
+.timer-digits.done   { color: var(--red); }
+@keyframes pulse { from { opacity: 1; } to { opacity: .28; } }
+.timer-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Buttons */
+.btn { border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; padding: 9px 22px; transition: transform .14s; }
+.btn:hover:not(:disabled) { transform: scale(1.04); }
+.btn:active:not(:disabled) { transform: scale(.96); }
+.btn:disabled { opacity: .3; cursor: not-allowed; }
+.btn-start { background: var(--green); color: #000; font-size: 18px; padding: 11px 32px; }
+.btn-stop  { background: var(--red);   color: #fff; font-size: 18px; padding: 11px 32px; }
+.btn-reset { background: rgba(255,255,255,.09); color: var(--lgray); border: 1px solid rgba(255,255,255,.14); }
+.btn-adj   { width: 34px; height: 34px; border-radius: 50%; font-size: 20px; background: rgba(255,255,255,.07); color: var(--cyan); border: 1px solid rgba(0,229,255,.35); cursor: pointer; transition: transform .14s; display: inline-flex; align-items: center; justify-content: center; }
+.btn-adj:hover { transform: scale(1.1); }
+.time-preset { color: var(--yellow); font-size: 17px; font-weight: 700; min-width: 48px; text-align: center; }
+
+/* Digit grid */
+.digit-grid { display: flex; flex-wrap: wrap; gap: 14px 20px; justify-content: center; }
+.digit-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.digit-num  { font-size: 16px; font-weight: 700; color: var(--cyan); }
+
+/* Answer */
+.answer-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.seg-row { display: flex; gap: 8px; align-items: center; filter: drop-shadow(0 0 14px rgba(255,119,0,.65)); }
+.formula-text { font-size: clamp(12px, 1.7vw, 20px); color: var(--cyan); text-align: center; max-width: 700px; }
+.answer-equals { font-size: clamp(22px, 3.5vw, 46px); font-weight: 900; color: var(--orange); padding: 8px 26px; border: 2px solid rgba(255,119,0,.4); border-radius: 10px; background: rgba(255,119,0,.07); }
+
+/* Scoring */
+.scoring-area { margin-top: 14px; text-align: center; }
+.scoring-hint { font-size: 12px; color: var(--gray); letter-spacing: 2px; margin-bottom: 8px; }
+.scoring-btns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 700px; }
+.grp-btn { padding: 6px 12px; border-radius: 7px; border: 2px solid rgba(255,255,255,.13); background: rgba(255,255,255,.05); color: var(--white); cursor: pointer; font-size: 12px; font-weight: 700; transition: all .17s; min-width: 72px; line-height: 1.5; }
+.grp-btn:hover:not(:disabled) { background: rgba(255,255,255,.13); }
+.grp-btn:disabled { opacity: .3; cursor: not-allowed; }
+.grp-btn.aw0 { border-color: gold;    background: rgba(255,215,0,.12); color: gold; }
+.grp-btn.aw1 { border-color: silver;  background: rgba(192,192,192,.1); color: silver; }
+.grp-btn.aw2 { border-color: #cd7f32; background: rgba(205,127,50,.1);  color: #cd7f32; }
+
+/* Scoreboard */
+#scoreboard { position: fixed; right: 13px; top: 50%; transform: translateY(-50%); width: 155px; background: rgba(6,6,20,.93); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 11px 9px; z-index: 300; backdrop-filter: blur(10px); }
+#scoreboard h4 { text-align: center; font-size: 11px; color: var(--cyan); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 9px; }
+.sb-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 7px; border-radius: 5px; margin-bottom: 3px; background: rgba(255,255,255,.04); font-size: 12px; }
+.sb-name { color: var(--lgray); }
+.sb-pts  { font-weight: 900; color: var(--green); font-size: 14px; }
+
+/* Nav */
+#nav { position: fixed; bottom: 0; left: 0; right: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(0,0,0,.82); border-top: 1px solid rgba(255,255,255,.06); backdrop-filter: blur(14px); z-index: 400; }
+.nav-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: var(--white); padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 13px; transition: background .15s; }
+.nav-btn:hover { background: rgba(255,255,255,.16); }
+.nav-btn:disabled { opacity: .2; cursor: default; }
+.nav-info { font-size: 12px; color: var(--gray); display: flex; align-items: center; gap: 12px; }
+.fs-btn { background: none; border: 1px solid rgba(255,255,255,.1); color: var(--gray); padding: 3px 9px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+
+/* Progress */
+#progress { position: fixed; bottom: 44px; left: 0; height: 2px; background: linear-gradient(90deg, var(--cyan), var(--green)); transition: width .32s ease; z-index: 401; }
+
+/* Chips */
+.pose-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px; }
+.pose-chip  { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 8px 18px; font-size: clamp(14px, 1.9vw, 19px); }
+
+/* Intro */
+.intro-num   { font-size: clamp(100px, 20vw, 240px); font-weight: 900; line-height: 1; }
+.intro-label { font-size: clamp(16px, 2.5vw, 28px); font-weight: 700; margin-top: 12px; }
+.intro-hint  { color: #444; font-size: clamp(12px, 1.5vw, 16px); margin-top: 18px; letter-spacing: 3px; }
+
+/* Final */
+.final-board { width: 100%; max-width: 580px; margin: 16px auto 0; }
+.final-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-radius: 8px; margin-bottom: 7px; background: rgba(255,255,255,.05); font-size: clamp(15px, 2.2vw, 21px); }
+
+/* Flash */
+@keyframes screenFlash { 0%{opacity:1} 20%{opacity:0;background:#200} 50%{opacity:1} 70%{opacity:0;background:#200} 100%{opacity:1} }
+.flashing { animation: screenFlash .7s ease; }
+
+/* 7-seg explain layout */
+.explain-layout { display: flex; gap: 36px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 860px; }
+.seg-legend { display: flex; flex-direction: column; gap: 8px; }
+.seg-legend-row { display: flex; align-items: center; gap: 12px; font-size: clamp(13px, 1.7vw, 17px); }
+.seg-chip { width: 30px; height: 30px; border-radius: 5px; background: var(--orange); color: #000; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; filter: drop-shadow(0 0 5px rgba(255,119,0,.7)); }
+.seg-pos  { color: var(--lgray); }
+</style>
+</head>
+<body>
+
+<!-- Global glow filter -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="seg-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<div id="sc"></div>
+<div id="progress"></div>
+<div id="scoreboard">
+  <h4>SCORE</h4>
+  <div id="sb-rows"></div>
+</div>
+<div id="nav">
+  <button class="nav-btn" id="prev-btn" onclick="go(-1)">← ก่อนหน้า</button>
+  <div class="nav-info">
+    <span id="sl-num"></span>
+    <button class="fs-btn" onclick="fs()">⛶ Full</button>
+  </div>
+  <button class="nav-btn" id="next-btn" onclick="go(1)">ถัดไป →</button>
+</div>
+
+<script>
+/* ── TIER DATA ── */
+const TIERS = {
+  1: { color:'#00ff88', bgCls:'bg-t1', poseCls:'pose-t1', tagCls:'tag-green',  pps:1, ppsLabel:'1 คน / Segment', label:'Tier 1' },
+  2: { color:'#00e5ff', bgCls:'bg-t2', poseCls:'pose-t2', tagCls:'tag-cyan',   pps:2, ppsLabel:'2 คน / Segment', label:'Tier 2' },
+  3: { color:'#ff7700', bgCls:'bg-t3', poseCls:'pose-t3', tagCls:'tag-orange', pps:3, ppsLabel:'3 คน / Segment', label:'Tier 3' },
+};
+const GROUPS = [
+  {name:'กลุ่ม 1', short:'G1', color:'#e0e0e0'},
+  {name:'กลุ่ม 2', short:'G2', color:'#e0e0e0'},
+  {name:'กลุ่ม 3', short:'G3', color:'#e0e0e0'},
+  {name:'กลุ่ม 4', short:'G4', color:'#e0e0e0'},
+  {name:'กลุ่ม 5', short:'G5', color:'#e0e0e0'},
+  {name:'กลุ่ม 6', short:'G6', color:'#e0e0e0'},
+];
+// 1 point per correct answer (flat scoring)
+
+/* ── SLIDE DATA ── */
+const SLIDES = [
+  {id:'cover',type:'cover'},
+  {id:'seg-explain',type:'seg-explain'},
+  {id:'digit-ref',type:'rules'},
+
+  // Demo (staff showcase)
+  {id:'demo-intro',type:'demo-intro'},
+  {id:'demo-q',type:'demo-q',t:60,lines:['3 + 1 = ?']},
+  {id:'demo-ans',type:'demo-ans',digits:['4'],ans:'4',formula:'3 + 1 = 4'},
+
+  // Questions — 1 คน / Segment ทุกข้อ (เรียงตามจำนวนคนที่ใช้ 5→13 คน)
+  {id:'i1',type:'intro',num:1},
+  {id:'q1',type:'q',num:1,t:60,lines:['<svg viewBox="0 0 260 215" style="height:min(32vh,210px);display:block;margin:4px auto;filter:drop-shadow(0 0 10px rgba(0,229,255,0.35))"><polygon points="40,175 205,175 40,30" fill="rgba(0,229,255,0.07)" stroke="#00e5ff" stroke-width="3" stroke-linejoin="round"/><polyline points="40,155 60,155 60,175" fill="none" stroke="#00e5ff" stroke-width="2.5"/><text x="122" y="200" text-anchor="middle" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="700">4</text><text x="16" y="107" text-anchor="middle" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="700">3</text><text x="148" y="90" text-anchor="middle" fill="#ffd700" font-size="24" font-family="sans-serif" font-weight="900">x = ?</text></svg>', 'จงหาค่า x']},
+  {id:'a1',type:'ans',qid:'q1',num:1,digits:['5'],ans:'5',formula:'ทฤษฎีบทพีทาโกรัส: 3² + 4² = 9 + 16 = 25  →  x = √25 = 5  (ใช้ 5 คน)'},
+
+  {id:'i2',type:'intro',num:2},
+  {id:'q2',type:'q',num:2,t:60,lines:['ห.ร.ม. ของ 27 กับ 72 คือเท่าไร?']},
+  {id:'a2',type:'ans',qid:'q2',num:2,digits:['9'],ans:'9',formula:'27 = 3³  |  72 = 2³×3²  →  ห.ร.ม. = 3² = 9  (ใช้ 6 คน)'},
+
+  {id:'i3',type:'intro',num:3},
+  {id:'q3',type:'q',num:3,t:60,lines:['2³(3² &#8722; 2³) = ?']},
+  {id:'a3',type:'ans',qid:'q3',num:3,digits:['8'],ans:'8',formula:'2³(3² &#8722; 2³) = 8 × (9 &#8722; 8) = 8 × 1 = 8  (ใช้ 7 คน)'},
+
+  {id:'i4',type:'intro',num:4},
+  {id:'q4',type:'q',num:4,t:60,lines:['จากโรงเรียนเต่างอยพัฒนศึกษา ถึงวนอุทยานภูผาแด่น','เส้นทางที่เร็วที่สุดระยะทางกี่กิโลเมตร?']},
+  {id:'a4',type:'ans',qid:'q4',num:4,digits:['1','0'],ans:'10 กม.',formula:'<svg viewBox="0 0 500 130" style="width:min(480px,88%);display:block;margin:6px auto" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="130" rx="10" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><rect x="8" y="8" width="484" height="56" rx="8" fill="rgba(0,229,255,0.1)" stroke="#00e5ff" stroke-width="1.5"/><circle cx="28" cy="36" r="7" fill="#00e5ff"/><text x="46" y="30" fill="rgba(255,255,255,0.65)" font-size="12" font-family="sans-serif">ผ่านถนนหมายเลข 2339 · เส้นทางที่เร็วที่สุด</text><text x="46" y="52" fill="#ffffff" font-size="15" font-weight="700" font-family="sans-serif">14 นาที</text><text x="330" y="52" fill="#ffd700" font-size="20" font-weight="900" font-family="sans-serif">10.0 กม.</text><rect x="8" y="72" width="484" height="50" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><circle cx="28" cy="97" r="7" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/><text x="46" y="91" fill="rgba(255,255,255,0.38)" font-size="12" font-family="sans-serif">ผ่านถนนหมายเลข 2339</text><text x="46" y="112" fill="rgba(255,255,255,0.38)" font-size="15" font-family="sans-serif">14 นาที  ·  9.9 กม.</text></svg>'},
+
+  // พักกลางเกม
+  {id:'timeout',type:'timeout',t:120},
+
+  {id:'i5',type:'intro',num:5},
+  {id:'q5',type:'q',num:5,t:60,lines:['2, &#8722;4, 8, &#8722;16, . . . ?','หาพจน์ถัดไปของลำดับ']},
+  {id:'a5',type:'ans',qid:'q5',num:5,digits:['3','2'],ans:'32',formula:'อัตราส่วน r = &#8722;2  →  &#8722;16 × (&#8722;2) = 32  (ใช้ 10 คน)'},
+
+  {id:'i6',type:'intro',num:6},
+  {id:'q6',type:'q',num:6,t:60,lines:['ถ้ารหัสไปรษณีย์ของอำเภอเต่างอย คือ <i>abcde</i>','จงหาค่าของ <i>a</i> + <i>bd</i> + <i>ce</i>']},
+  {id:'a6',type:'ans',qid:'q6',num:6,digits:['4','6'],ans:'46',formula:'รหัสไปรษณีย์ 47260  →  a=4, b=7, c=2, d=6, e=0<br>4 + (7×6) + (2×0) = 4 + 42 + 0 = 46  (ใช้ 10 คน)'},
+
+  {id:'i7',type:'intro',num:7},
+  {id:'q7',type:'q',num:7,t:60,lines:['ผลรวมของคำตอบข้อ 5 และข้อ 6 คือเท่าไร?']},
+  {id:'a7',type:'ans',qid:'q7',num:7,digits:['7','8'],ans:'78',formula:'32 + 46 = 78  (ใช้ 10 คน)'},
+
+  {id:'i8',type:'intro',num:8},
+  {id:'q8',type:'q',num:8,t:60,lines:['จำนวนนักเรียนระดับชั้น ม.5 ของโรงเรียนเต่างอยพัฒนศึกษา','ในปีการศึกษา 2569 คือเท่าไร?']},
+  {id:'a8',type:'ans',qid:'q8',num:8,digits:['1','3','5'],ans:'135 คน',formula:'<svg viewBox="0 0 500 205" style="width:min(480px,88%);display:block;margin:6px auto" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="205" rx="10" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><rect x="0" y="0" width="500" height="34" rx="10" fill="rgba(255,255,255,0.08)"/><rect x="0" y="20" width="500" height="14" fill="rgba(255,255,255,0.08)"/><text x="18" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif">ระดับชั้น</text><text x="230" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">ชาย</text><text x="330" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">หญิง</text><text x="432" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">รวม</text><text x="18" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif">มัธยมศึกษาปีที่ 4</text><text x="230" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">41</text><text x="330" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">60</text><text x="432" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">101</text><rect x="6" y="70" width="488" height="36" rx="6" fill="rgba(0,229,255,0.1)" stroke="rgba(0,229,255,0.3)" stroke-width="1"/><text x="18" y="93" fill="#00e5ff" font-size="14" font-weight="700" font-family="sans-serif">มัธยมศึกษาปีที่ 5</text><text x="230" y="93" fill="#ffffff" font-size="14" font-family="sans-serif" text-anchor="middle">69</text><text x="330" y="93" fill="#ffffff" font-size="14" font-family="sans-serif" text-anchor="middle">66</text><ellipse cx="432" cy="88" rx="40" ry="22" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="2.5"/><text x="432" y="94" fill="#ffd700" font-size="19" font-weight="900" font-family="sans-serif" text-anchor="middle">135</text><text x="18" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif">มัธยมศึกษาปีที่ 6</text><text x="230" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">57</text><text x="330" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">69</text><text x="432" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">126</text><line x1="10" y1="148" x2="490" y2="148" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><text x="18" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif">รวมมัธยมปลาย</text><text x="230" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif" text-anchor="middle">167</text><text x="330" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif" text-anchor="middle">195</text><text x="432" y="172" fill="rgba(255,255,255,0.65)" font-size="13" font-family="sans-serif" text-anchor="middle">362</text><text x="250" y="197" fill="rgba(255,255,255,0.22)" font-size="10" font-family="sans-serif" text-anchor="middle">ที่มา: school.webactivity.net · ปีการศึกษา 2569</text></svg>'},
+
+  {id:'i9',type:'intro',num:9},
+  {id:'q9',type:'q',num:9,t:60,lines:['พุทธศักราช &#8722; คริสต์ศักราช &#8722; 28 = ?']},
+  {id:'a9',type:'ans',qid:'q9',num:9,digits:['5','1','5'],ans:'515',formula:'พ.ศ. &#8722; ค.ศ. = 543  →  543 &#8722; 28 = 515  (ใช้ 12 คน)'},
+
+  {id:'i10',type:'intro',num:10},
+  {id:'q10',type:'q',num:10,t:60,lines:['ผลคูณของจำนวนเฉพาะ 4 ตัวแรก คือเท่าไร?']},
+  {id:'a10',type:'ans',qid:'q10',num:10,digits:['2','1','0'],ans:'210',formula:'2 × 3 × 5 × 7 = 210  (ใช้ 13 คน)'},
+
+  {id:'final',type:'final'},
+];
+
+/* ── 7-SEGMENT ── */
+const SEG_MAP = {
+  '0':{a:1,b:1,c:1,d:1,e:1,f:1,g:0},'1':{a:0,b:1,c:1,d:0,e:0,f:0,g:0},
+  '2':{a:1,b:1,c:0,d:1,e:1,f:0,g:1},'3':{a:1,b:1,c:1,d:1,e:0,f:0,g:1},
+  '4':{a:0,b:1,c:1,d:0,e:0,f:1,g:1},'5':{a:1,b:0,c:1,d:1,e:0,f:1,g:1},
+  '6':{a:1,b:0,c:1,d:1,e:1,f:1,g:1},'7':{a:1,b:1,c:1,d:0,e:0,f:0,g:0},
+  '8':{a:1,b:1,c:1,d:1,e:1,f:1,g:1},'9':{a:1,b:1,c:1,d:1,e:0,f:1,g:1},
+};
+
+function segSVG(d, sz, onC, offC) {
+  sz=sz||160; onC=onC||'#ff7700'; offC=offC||'#1a0900';
+  const s=SEG_MAP[d]; if(!s) return '';
+  const c=v=>v?onC:offC, g=v=>v?'filter="url(#seg-glow)"':'';
+  return `<svg width="${Math.round(sz*.66)}" height="${sz}" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="2"  width="40" height="9"  rx="3" fill="${c(s.a)}" ${g(s.a)}/>
+    <rect x="52" y="13" width="8"  height="31" rx="3" fill="${c(s.b)}" ${g(s.b)}/>
+    <rect x="52" y="56" width="8"  height="31" rx="3" fill="${c(s.c)}" ${g(s.c)}/>
+    <rect x="10" y="89" width="40" height="9"  rx="3" fill="${c(s.d)}" ${g(s.d)}/>
+    <rect x="0"  y="56" width="8"  height="31" rx="3" fill="${c(s.e)}" ${g(s.e)}/>
+    <rect x="0"  y="13" width="8"  height="31" rx="3" fill="${c(s.f)}" ${g(s.f)}/>
+    <rect x="10" y="46" width="40" height="9"  rx="3" fill="${c(s.g)}" ${g(s.g)}/>
+  </svg>`;
+}
+
+function labeledDigitSVG() {
+  const on='#ff7700';
+  return `<svg viewBox="0 0 160 264" style="height:min(44vh,250px);filter:drop-shadow(0 0 12px rgba(255,119,0,.5))">
+    <rect x="20" y="4"   width="120" height="20" rx="5" fill="${on}"/>
+    <text x="80" y="19"  text-anchor="middle" fill="#000" font-size="13" font-weight="900">a</text>
+    <rect x="2"  y="28"  width="16"  height="88" rx="5" fill="${on}"/>
+    <text x="10" y="75"  text-anchor="middle" fill="#000" font-size="12" font-weight="900">f</text>
+    <rect x="142" y="28" width="16"  height="88" rx="5" fill="${on}"/>
+    <text x="150" y="75" text-anchor="middle" fill="#000" font-size="12" font-weight="900">b</text>
+    <rect x="20" y="120" width="120" height="20" rx="5" fill="${on}"/>
+    <text x="80" y="135" text-anchor="middle" fill="#000" font-size="13" font-weight="900">g</text>
+    <rect x="2"  y="144" width="16"  height="88" rx="5" fill="${on}"/>
+    <text x="10" y="191" text-anchor="middle" fill="#000" font-size="12" font-weight="900">e</text>
+    <rect x="142" y="144" width="16" height="88" rx="5" fill="${on}"/>
+    <text x="150" y="191" text-anchor="middle" fill="#000" font-size="12" font-weight="900">c</text>
+    <rect x="20" y="236" width="120" height="20" rx="5" fill="${on}"/>
+    <text x="80" y="251" text-anchor="middle" fill="#000" font-size="13" font-weight="900">d</text>
+  </svg>`;
+}
+
+/* ── BUILD SLIDES ── */
+function buildSlides() {
+  return SLIDES.map((s,i) => {
+    let cls='', inner='';
+
+    if (s.type==='cover') {
+      cls='bg-cover';
+      inner=`<div style="text-align:center">
+        <div style="font-size:clamp(48px,9vw,108px);line-height:1;margin-bottom:12px">🧮</div>
+        <div class="title-main">Mathematics<br>Human Code</div>
+        <div style="font-size:clamp(14px,2vw,22px);color:var(--gray);margin-top:10px">Mathematics Camp · มัธยมศึกษาตอนปลาย</div>
+        <div style="font-size:clamp(12px,1.6vw,18px);color:#3a3a6a;margin-top:6px">18 กรกฎาคม 2569 · โรงเรียนเต่างอยพัฒนศึกษา</div>
+        <div style="margin-top:20px;display:flex;gap:22px;justify-content:center;flex-wrap:wrap;color:#3a3a5a;font-size:clamp(12px,1.7vw,17px)">
+          <span>👥 15 คน/กลุ่ม</span><span>🏆 6 กลุ่ม</span><span>⏱️ 30 นาที</span><span>📝 10 ข้อ</span>
+        </div>
+        <div style="margin-top:34px;color:#2a2a4a;font-size:12px;letter-spacing:2px">PRESS SPACE · → · ENTER TO START</div>
+      </div>`;
+    }
+
+    else if (s.type==='seg-explain') {
+      cls='bg-explain';
+      inner=`<div style="text-align:center;width:100%">
+        <div class="tag tag-orange">ทำไมถึงเรียกว่า 7-Segment?</div>
+        <div style="font-size:clamp(22px,3.8vw,46px);font-weight:900;margin-bottom:16px">
+          มี <span style="color:var(--orange)">7</span> ขีด  ·  7 Segments
+        </div>
+        <div class="explain-layout">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+            ${labeledDigitSVG()}
+            <div style="color:var(--gray);font-size:clamp(11px,1.4vw,14px)">เลข 8 = ทุก segment เปิด (ON)</div>
+          </div>
+          <div class="seg-legend">
+            <div style="font-size:clamp(12px,1.6vw,16px);color:var(--lgray);margin-bottom:6px">แต่ละ segment มีชื่อ a – g</div>
+            <div class="seg-legend-row"><div class="seg-chip">a</div><span class="seg-pos">บน (Top)</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">b</div><span class="seg-pos">บนขวา (Top Right)</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">c</div><span class="seg-pos">ล่างขวา (Bottom Right)</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">d</div><span class="seg-pos">ล่าง (Bottom)</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">e</div><span class="seg-pos">ล่างซ้าย (Bottom Left)</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">f</div><span class="seg-pos">บนซ้าย (Top Left)</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">g</div><span class="seg-pos">กลาง (Middle)</span></div>
+            <div style="margin-top:10px;padding:10px 16px;background:rgba(255,255,255,.05);border-radius:8px;font-size:clamp(12px,1.5vw,15px);color:var(--lgray);border:1px solid rgba(255,255,255,.08)">
+              แต่ละ segment เปิด / ปิดได้<br>
+              2<sup>7</sup> = 128 รูปแบบ → ใช้ 10 รูปแบบสำหรับ 0–9
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    else if (s.type==='rules') {
+      cls='bg-rules';
+      inner=`<div style="text-align:center;width:100%">
+        <div class="tag tag-cyan">ตัวเลข 0 – 9</div>
+        <div style="font-size:clamp(20px,3.5vw,44px);font-weight:900;margin:6px 0 3px">เลขแต่ละตัวมีหน้าตาอย่างนี้</div>
+        <div style="color:var(--gray);font-size:clamp(11px,1.5vw,16px);margin-bottom:16px">ใช้ร่างกายต่อกันเป็น segment</div>
+        <div class="digit-grid">${'0123456789'.split('').map(d=>`<div class="digit-item">${segSVG(d,64)}<span class="digit-num">${d}</span></div>`).join('')}</div>
+        <div style="margin-top:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 20px;max-width:640px;margin-left:auto;margin-right:auto;font-size:clamp(11px,1.5vw,15px);color:var(--lgray);line-height:2">
+          💡 ตอบ 2 หลัก → แบ่ง 2 กลุ่มย่อย ต่อพร้อมกัน &nbsp;|&nbsp;
+          3 กลุ่มแรก ได้ <span style="color:gold">🥇+3</span> <span style="color:silver">🥈+2</span> <span style="color:#cd7f32">🥉+1</span>
+        </div>
+      </div>`;
+    }
+
+    else if (s.type==='demo-intro') {
+      cls='bg-explain';
+      inner=`<div style="text-align:center">
+        <div class="tag tag-yellow">🎬 สาธิต</div>
+        <div style="font-size:clamp(44px,8vw,120px);font-weight:900;line-height:1;color:var(--yellow);text-shadow:0 0 40px rgba(255,215,0,.45)">ตัวอย่าง</div>
+        <div style="font-size:clamp(16px,2.4vw,28px);font-weight:700;color:rgba(255,255,255,.8);margin-top:14px">Mathematics Human Code</div>
+        <div style="color:#444;font-size:clamp(12px,1.5vw,16px);margin-top:18px;letter-spacing:3px">— ดูให้ดี ก่อนเริ่มแข่งจริง —</div>
+      </div>`;
+    }
+
+    else if (s.type==='demo-q') {
+      cls='bg-q';
+      inner=`<div class="pose-badge pose-t1" style="background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.4);color:var(--yellow)">🎬 ตัวอย่าง · สต๊าฟสาธิต</div>
+        <div class="tag tag-yellow">ตัวอย่าง</div>
+        <div class="q-text">${s.lines[0]}</div>
+        ${(s.lines.slice(1)||[]).map(l=>`<div class="q-sub">${l}</div>`).join('')}
+        <div class="timer-wrap">
+          <div class="timer-digits" id="td-demo-q">--:--</div>
+          <div class="timer-row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn-adj" onclick="adjT('demo-q',-30)">−</button>
+              <span class="time-preset" id="tp-demo-q">${fmt(s.t)}</span>
+              <button class="btn-adj" onclick="adjT('demo-q',30)">+</button>
+            </div>
+            <button class="btn btn-start" id="tb-demo-q" onclick="tAction('demo-q',${s.t})">▶ เริ่ม</button>
+            <button class="btn btn-reset" onclick="tReset('demo-q',${s.t})">↺ รีเซต</button>
+          </div>
+          <div style="color:#2a2a4a;font-size:11px;margin-top:3px">[Space] หยุด / ต่อ</div>
+        </div>`;
+    }
+
+    else if (s.type==='demo-ans') {
+      cls='bg-ans';
+      const n=s.digits.length, sz=n===1?200:n===2?168:126;
+      inner=`<div class="answer-wrap">
+        <div class="tag tag-yellow">✅ เฉลยตัวอย่าง</div>
+        <div class="seg-row">${s.digits.map(d=>segSVG(d,sz)).join('')}</div>
+        <div class="answer-equals">= ${s.ans}</div>
+        <div class="formula-text">${s.formula}</div>
+        <div style="margin-top:18px;padding:12px 24px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.2);border-radius:10px;color:var(--yellow);font-size:clamp(13px,1.8vw,18px)">
+          🎬 นี่คือวิธีเล่น — ตอนแข่งจริงทำแบบเดียวกันนี้เลย!
+        </div>
+      </div>`;
+    }
+
+    else if (s.type==='tier-ann') {
+      const t=TIERS[s.tier]; cls=t.bgCls;
+      inner=`<div style="text-align:center">
+        <div class="tag ${t.tagCls}">${t.label}</div>
+        <div style="font-size:clamp(34px,5.8vw,72px);font-weight:900;color:${t.color};margin:8px 0">${s.qRange}</div>
+        <div style="font-size:clamp(14px,1.9vw,22px);color:var(--lgray);margin-bottom:8px">${s.detail}</div>
+        <div style="font-size:clamp(20px,3vw,38px);font-weight:700;color:var(--white);margin:12px 0 6px">
+          👤 × <span style="color:${t.color}">${t.pps}</span> &nbsp;คน ต่อ 1 Segment
+        </div>
+        <div class="pose-chips">${s.bullets.map(b=>`<div class="pose-chip">${b}</div>`).join('')}</div>
+      </div>`;
+    }
+
+    else if (s.type==='intro') {
+      cls='bg-q';
+      inner=`<div style="text-align:center">
+        <div class="tag tag-cyan">ข้อที่</div>
+        <div class="intro-num" style="color:var(--cyan);text-shadow:0 0 40px rgba(0,229,255,.35)">${s.num}</div>
+        <div class="intro-hint">เตรียมพร้อม — โจทย์กำลังจะขึ้น...</div>
+      </div>`;
+    }
+
+    else if (s.type==='q') {
+      cls='bg-q';
+      const qCls=s.compact?'q-text compact':'q-text';
+      inner=`<div class="tag tag-cyan">ข้อที่ ${s.num}</div>
+        ${s.lines.map(l=>`<div class="${qCls}">${l}</div>`).join('')}
+        <div class="timer-wrap">
+          <div class="timer-digits" id="td-${s.id}">--:--</div>
+          <div class="timer-row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn-adj" onclick="adjT('${s.id}',-30)">−</button>
+              <span class="time-preset" id="tp-${s.id}">${fmt(s.t)}</span>
+              <button class="btn-adj" onclick="adjT('${s.id}',30)">+</button>
+            </div>
+            <button class="btn btn-start" id="tb-${s.id}" onclick="tAction('${s.id}',${s.t})">▶ เริ่ม</button>
+            <button class="btn btn-reset" onclick="tReset('${s.id}',${s.t})">↺ รีเซต</button>
+          </div>
+          <div style="color:#2a2a4a;font-size:11px;margin-top:3px">[Space] หยุด / ต่อ</div>
+        </div>`;
+    }
+
+    else if (s.type==='ans') {
+      cls='bg-ans';
+      const n=s.digits.length, sz=n===1?200:n===2?168:126;
+      inner=`<div class="answer-wrap">
+        <div class="tag tag-yellow">✅ เฉลย ข้อที่ ${s.num}</div>
+        <div class="seg-row">${s.digits.map(d=>segSVG(d,sz)).join('')}</div>
+        <div class="answer-equals">= ${s.ans}</div>
+        <div class="formula-text">${s.formula}</div>
+        <div class="scoring-area">
+          <div class="scoring-hint">กดกลุ่มที่ตอบถูก · กดอีกครั้งเพื่อยกเลิก</div>
+          <div class="scoring-btns" id="sbtns-${s.qid}"></div>
+        </div>
+      </div>`;
+    }
+
+    else if (s.type==='timeout') {
+      cls='bg-timeout';
+      inner=`<div style="text-align:center">
+        <div class="tag tag-yellow">⏸ พักระหว่างเซต</div>
+        <div style="font-size:clamp(34px,5.8vw,68px);font-weight:900;color:var(--yellow)">Tactical Timeout</div>
+        <div style="color:var(--gray);font-size:clamp(13px,1.8vw,20px);margin:8px 0 24px">
+          คุยกันว่าเมื่อกี้พังตรงไหน — วางแผนแก้เกม Tier 2
+        </div>
+        <div class="timer-wrap">
+          <div class="timer-digits" id="td-timeout">02:00</div>
+          <div class="timer-row">
+            <button class="btn btn-start" id="tb-timeout" onclick="tAction('timeout',180)" style="background:var(--yellow);color:#000">▶ เริ่มพัก</button>
+            <button class="btn btn-reset" onclick="tReset('timeout',180)">↺</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    else if (s.type==='final') {
+      cls='bg-final';
+      inner=`<div style="text-align:center;width:100%">
+        <div style="font-size:clamp(28px,5vw,56px);font-weight:900;background:linear-gradient(135deg,gold,var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+          🏆 ผลการแข่งขัน
+        </div>
+        <div style="color:var(--gray);font-size:clamp(12px,1.6vw,17px);margin-top:6px">Mathematics Human Code · 10 ข้อ · คะแนนสูงสุด 10 แต้ม</div>
+        <div class="final-board" id="final-board"></div>
+        <div style="margin-top:22px;color:#333;font-size:14px">🧘 ยืดเหยียดกล้ามเนื้อ · Cool Down · 4 นาที</div>
+      </div>`;
+    }
+
+    return `<div class="slide ${cls}" id="sl-${i}">${inner}</div>`;
+  }).join('');
+}
+
+/* ── TIMER ── */
+let timerSt={};
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function initT(id,def){if(!timerSt[id])timerSt[id]={rem:def,total:def,running:false,iv:null};}
+function adjT(id,delta){
+  const st=timerSt[id]; if(!st||st.running)return;
+  st.total=Math.max(15,st.total+delta); st.rem=st.total;
+  const td=document.getElementById('td-'+id),tp=document.getElementById('tp-'+id);
+  if(td){td.textContent=fmt(st.rem);td.className='timer-digits';} if(tp)tp.textContent=fmt(st.total);
+}
+function tAction(id,def){
+  initT(id,def); const st=timerSt[id],btn=document.getElementById('tb-'+id);
+  if(st.running){
+    st.running=false; clearInterval(st.iv);
+    if(btn){btn.textContent=id==='timeout'?'▶ ต่อพัก':'▶ ต่อ';btn.className='btn btn-start';}
+  } else {
+    if(st.rem<=0)st.rem=st.total; st.running=true;
+    if(btn){btn.textContent='⏸ หยุด';btn.className='btn btn-stop';}
+    st.iv=setInterval(()=>{
+      st.rem--;
+      const td=document.getElementById('td-'+id); if(!td)return;
+      if(st.rem>0){td.textContent=fmt(st.rem);td.className=st.rem<=10?'timer-digits danger':'timer-digits';}
+      else{
+        clearInterval(st.iv);st.running=false;
+        td.textContent='⏰ หมดเวลา!';td.className='timer-digits done';
+        if(btn){btn.textContent='▶ เริ่มใหม่';btn.className='btn btn-start';}
+        playBeep();
+        document.getElementById('sc').classList.add('flashing');
+        setTimeout(()=>document.getElementById('sc').classList.remove('flashing'),800);
+      }
+    },1000);
+  }
+}
+function tReset(id,def){
+  const st=timerSt[id];
+  if(st){clearInterval(st.iv);st.running=false;st.rem=st.total;}
+  else timerSt[id]={rem:def,total:def,running:false,iv:null};
+  const td=document.getElementById('td-'+id),btn=document.getElementById('tb-'+id);
+  if(td){td.textContent=fmt(timerSt[id].rem);td.className='timer-digits';}
+  if(btn){btn.className='btn btn-start';btn.textContent=id==='timeout'?'▶ เริ่มพัก':'▶ เริ่ม';}
+}
+function playBeep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [880,660,440].forEach((f,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);o.frequency.value=f;
+      const t=ctx.currentTime+i*.18;
+      g.gain.setValueAtTime(.28,t);g.gain.exponentialRampToValueAtTime(.001,t+.28);
+      o.start(t);o.stop(t+.3);
+    });
+  }catch(e){}
+}
+
+/* ── SCORING ── */
+let scores=new Array(6).fill(0),qScores={};
+function renderScoringBtns(qid){
+  const c=document.getElementById('sbtns-'+qid);
+  if(!c)return;
+  const awarded=(qScores[qid]||[]);
+  c.innerHTML=GROUPS.map((g,gi)=>{
+    const correct=awarded.includes(gi);
+    return `<button class="grp-btn${correct?' aw0':''}" style="${correct?'':'border-color:rgba(255,255,255,.2);color:#ddd'}" onclick="award('${qid}',${gi})"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${correct?'#00ff88':'#555'};margin-right:5px;vertical-align:middle"></span>${g.name}${correct?'<br><small>✓ +1 คะแนน</small>':''}</button>`;
+  }).join('');
+}
+function award(qid,gi){
+  if(!qScores[qid])qScores[qid]=[];
+  const idx=qScores[qid].indexOf(gi);
+  if(idx>=0){qScores[qid].splice(idx,1);scores[gi]-=1;}
+  else{qScores[qid].push(gi);scores[gi]+=1;}
+  renderScoringBtns(qid); renderSB();
+}
+function renderSB(){
+  const el=document.getElementById('sb-rows'); if(!el)return;
+  el.innerHTML=GROUPS.map((g,i)=>`<div class="sb-row"><span class="sb-name"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${g.color};margin-right:5px;vertical-align:middle"></span>${g.short}</span><span class="sb-pts" style="color:${g.color}">${scores[i]}</span></div>`).join('');
+}
+function renderFinal(){
+  const el=document.getElementById('final-board'); if(!el)return;
+  const sorted=GROUPS.map((g,i)=>({...g,s:scores[i]})).sort((a,b)=>b.s-a.s);
+  const medals=['🥇','🥈','🥉','4.','5.','6.','7.','8.'],mc=['gold','silver','#cd7f32','#888','#888','#888','#888','#888'];
+  el.innerHTML=sorted.map((g,i)=>`<div class="final-row" style="${i<3?`border:1px solid ${mc[i]};background:rgba(255,255,255,.07)`:``}"><span style="font-weight:700">${medals[i]} <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${g.color};margin:0 6px;vertical-align:middle"></span>${g.name}</span><span style="font-weight:900;color:${mc[i]}">${g.s} คะแนน</span></div>`).join('');
+}
+
+/* ── NAVIGATION ── */
+let cur=0;
+function go(dir){
+  const n=Math.max(0,Math.min(SLIDES.length-1,cur+dir)); if(n===cur)return;
+  document.getElementById('sl-'+cur).classList.remove('active');
+  cur=n;
+  document.getElementById('sl-'+cur).classList.add('active');
+  updateNav(); onEnter();
+}
+function updateNav(){
+  document.getElementById('prev-btn').disabled=cur===0;
+  document.getElementById('next-btn').disabled=cur===SLIDES.length-1;
+  document.getElementById('sl-num').textContent=(cur+1)+' / '+SLIDES.length;
+  document.getElementById('progress').style.width=(cur/(SLIDES.length-1)*100)+'%';
+}
+function onEnter(){
+  const s=SLIDES[cur];
+  if(s.type==='q'){
+    initT(s.id,s.t);
+    const st=timerSt[s.id];
+    // auto-start only if fresh (not already ran or running)
+    if(st&&!st.running&&st.rem===st.total&&st.rem>0){
+      setTimeout(()=>tAction(s.id,s.t),200);
+    } else {
+      const td=document.getElementById('td-'+s.id);
+      if(td&&st&&!st.running){td.textContent=fmt(st.rem);td.className='timer-digits';}
+    }
+  }
+  if(s.type==='demo-q'||s.type==='timeout'){
+    initT(s.id,s.t);
+    const td=document.getElementById('td-'+s.id),st=timerSt[s.id];
+    if(td&&st&&!st.running){td.textContent=fmt(st.rem);td.className='timer-digits';}
+  }
+  if(s.type==='ans')setTimeout(()=>renderScoringBtns(s.qid),20);
+  if(s.type==='final')setTimeout(renderFinal,20);
+}
+
+document.addEventListener('keydown',e=>{
+  const s=SLIDES[cur],k=e.key;
+  if(k==='ArrowRight'||k==='PageDown'||k==='Enter'){e.preventDefault();go(1);}
+  else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();go(-1);}
+  else if(k===' '){
+    e.preventDefault();
+    if(s.type==='q'||s.type==='demo-q')tAction(s.id,s.t);
+    else if(s.type==='timeout')tAction(s.id,s.t);
+    else go(1);
+  }
+  else if(k==='f'||k==='F')fs();
+});
+let tx0=0;
+document.addEventListener('touchstart',e=>tx0=e.changedTouches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx0;if(dx<-50)go(1);else if(dx>50)go(-1);},{passive:true});
+function fs(){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen().catch(()=>{});}
+
+/* ── INIT ── */
+document.getElementById('sc').innerHTML=buildSlides();
+SLIDES.forEach(s=>{if(s.t)initT(s.id,s.t);});
+initT('demo-q',60);
+document.getElementById('sl-0').classList.add('active');
+renderSB(); updateNav();
+</script>
+</body>
+</html>
