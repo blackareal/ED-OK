@@ -7,14 +7,14 @@
 <style>
 :root {
   --bg: #050510;
-  --cyan: #00e5ff;
+  --cyan: #3399ff;
   --green: #00ff88;
   --red: #ff4455;
   --yellow: #ffd700;
-  --orange: #ff7700;
+  --orange: #ff6600;
   --t1: #00ff88;
-  --t2: #00e5ff;
-  --t3: #ff7700;
+  --t2: #3399ff;
+  --t3: #ff6600;
   --gray: #555;
   --lgray: #aaa;
   --white: #f0f0f0;
@@ -38,31 +38,31 @@ html, body {
 .slide.active { display: flex; }
 
 /* Backgrounds */
-.bg-cover   { background: radial-gradient(ellipse 90% 80% at 50% 50%, #08163a 0%, #000 100%); }
-.bg-explain { background: linear-gradient(160deg, #050c1e 0%, #000 100%); }
-.bg-rules   { background: linear-gradient(160deg, #050b1c 0%, #000 100%); }
+.bg-cover   { background: radial-gradient(ellipse 100% 90% at 30% 50%, #001a40 0%, #0d0500 60%, #1a0800 100%); }
+.bg-explain { background: linear-gradient(160deg, #001228 0%, #000 100%); }
+.bg-rules   { background: linear-gradient(160deg, #001228 0%, #000 100%); }
 .bg-t1      { background: radial-gradient(ellipse 80% 70% at 50% 40%, #021108 0%, #000 100%); }
-.bg-t2      { background: radial-gradient(ellipse 80% 70% at 50% 40%, #020c18 0%, #000 100%); }
-.bg-t3      { background: radial-gradient(ellipse 80% 70% at 50% 40%, #180800 0%, #000 100%); }
-.bg-q       { background: radial-gradient(ellipse 65% 70% at 50% 35%, #06062a 0%, #000 100%); }
-.bg-ans     { background: radial-gradient(ellipse 65% 65% at 50% 45%, #160900 0%, #000 100%); }
+.bg-t2      { background: radial-gradient(ellipse 80% 70% at 50% 40%, #001228 0%, #000 100%); }
+.bg-t3      { background: radial-gradient(ellipse 80% 70% at 50% 40%, #1a0800 0%, #000 100%); }
+.bg-q       { background: radial-gradient(ellipse 65% 70% at 50% 35%, #001433 0%, #000 100%); }
+.bg-ans     { background: radial-gradient(ellipse 65% 65% at 50% 45%, #1a0800 0%, #000 100%); }
 .bg-timeout { background: radial-gradient(ellipse 65% 70% at 50% 38%, #161000 0%, #000 100%); }
-.bg-final   { background: radial-gradient(ellipse 70% 70% at 50% 40%, #0a0c22 0%, #000 100%); }
+.bg-final   { background: radial-gradient(ellipse 70% 70% at 50% 40%, #001228 0%, #000 100%); }
 
 /* Typography */
 .title-main {
   font-size: clamp(44px, 7.5vw, 96px); font-weight: 900; line-height: 1.1; text-align: center;
-  background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 100%);
+  background: linear-gradient(135deg, var(--orange) 0%, var(--cyan) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .tag {
   font-size: clamp(11px, 1.4vw, 15px); letter-spacing: 4px; text-transform: uppercase;
   padding: 5px 16px; border-radius: 20px; margin-bottom: 14px; display: inline-block;
 }
-.tag-cyan   { color: var(--cyan);   border: 1px solid rgba(0,229,255,.35); background: rgba(0,229,255,.06); }
+.tag-cyan   { color: var(--cyan);   border: 1px solid rgba(51,153,255,.35); background: rgba(51,153,255,.06); }
 .tag-green  { color: var(--green);  border: 1px solid rgba(0,255,136,.35); background: rgba(0,255,136,.06); }
 .tag-yellow { color: var(--yellow); border: 1px solid rgba(255,215,0,.35);  background: rgba(255,215,0,.06); }
-.tag-orange { color: var(--orange); border: 1px solid rgba(255,119,0,.35); background: rgba(255,119,0,.06); }
+.tag-orange { color: var(--orange); border: 1px solid rgba(255,102,0,.35); background: rgba(255,102,0,.06); }
 
 /* Question */
 .q-text { font-size: clamp(28px, 5vw, 64px); font-weight: 700; text-align: center; line-height: 1.5; max-width: 900px; }
@@ -72,8 +72,8 @@ html, body {
 /* Pose badge */
 .pose-badge { position: absolute; top: 16px; left: 24px; font-size: 13px; padding: 5px 13px; border-radius: 14px; font-weight: 600; }
 .pose-t1 { color: var(--t1); border: 1px solid rgba(0,255,136,.4); background: rgba(0,255,136,.08); }
-.pose-t2 { color: var(--t2); border: 1px solid rgba(0,229,255,.4); background: rgba(0,229,255,.08); }
-.pose-t3 { color: var(--t3); border: 1px solid rgba(255,119,0,.4); background: rgba(255,119,0,.08); }
+.pose-t2 { color: var(--t2); border: 1px solid rgba(51,153,255,.4); background: rgba(51,153,255,.08); }
+.pose-t3 { color: var(--t3); border: 1px solid rgba(255,102,0,.4); background: rgba(255,102,0,.08); }
 
 /* Timer */
 .timer-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 22px; }
@@ -91,7 +91,7 @@ html, body {
 .btn-start { background: var(--green); color: #000; font-size: 18px; padding: 11px 32px; }
 .btn-stop  { background: var(--red);   color: #fff; font-size: 18px; padding: 11px 32px; }
 .btn-reset { background: rgba(255,255,255,.09); color: var(--lgray); border: 1px solid rgba(255,255,255,.14); }
-.btn-adj   { width: 34px; height: 34px; border-radius: 50%; font-size: 20px; background: rgba(255,255,255,.07); color: var(--cyan); border: 1px solid rgba(0,229,255,.35); cursor: pointer; transition: transform .14s; display: inline-flex; align-items: center; justify-content: center; }
+.btn-adj   { width: 34px; height: 34px; border-radius: 50%; font-size: 20px; background: rgba(255,255,255,.07); color: var(--cyan); border: 1px solid rgba(51,153,255,.35); cursor: pointer; transition: transform .14s; display: inline-flex; align-items: center; justify-content: center; }
 .btn-adj:hover { transform: scale(1.1); }
 .time-preset { color: var(--yellow); font-size: 17px; font-weight: 700; min-width: 48px; text-align: center; }
 
@@ -102,9 +102,9 @@ html, body {
 
 /* Answer */
 .answer-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.seg-row { display: flex; gap: 8px; align-items: center; filter: drop-shadow(0 0 14px rgba(255,119,0,.65)); }
+.seg-row { display: flex; gap: 8px; align-items: center; filter: drop-shadow(0 0 14px rgba(255,102,0,.65)); }
 .formula-text { font-size: clamp(12px, 1.7vw, 20px); color: var(--cyan); text-align: center; max-width: 700px; }
-.answer-equals { font-size: clamp(22px, 3.5vw, 46px); font-weight: 900; color: var(--orange); padding: 8px 26px; border: 2px solid rgba(255,119,0,.4); border-radius: 10px; background: rgba(255,119,0,.07); }
+.answer-equals { font-size: clamp(22px, 3.5vw, 46px); font-weight: 900; color: var(--orange); padding: 8px 26px; border: 2px solid rgba(255,102,0,.4); border-radius: 10px; background: rgba(255,102,0,.07); }
 
 /* Scoring */
 .scoring-area { margin-top: 14px; text-align: center; }
@@ -156,7 +156,7 @@ html, body {
 .explain-layout { display: flex; gap: 36px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 860px; }
 .seg-legend { display: flex; flex-direction: column; gap: 8px; }
 .seg-legend-row { display: flex; align-items: center; gap: 12px; font-size: clamp(13px, 1.7vw, 17px); }
-.seg-chip { width: 30px; height: 30px; border-radius: 5px; background: var(--orange); color: #000; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; filter: drop-shadow(0 0 5px rgba(255,119,0,.7)); }
+.seg-chip { width: 30px; height: 30px; border-radius: 5px; background: var(--orange); color: #000; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; filter: drop-shadow(0 0 5px rgba(255,102,0,.7)); }
 .seg-pos  { color: var(--lgray); }
 </style>
 </head>
@@ -191,8 +191,8 @@ html, body {
 /* ── TIER DATA ── */
 const TIERS = {
   1: { color:'#00ff88', bgCls:'bg-t1', poseCls:'pose-t1', tagCls:'tag-green',  pps:1, ppsLabel:'1 คน / Segment', label:'Tier 1' },
-  2: { color:'#00e5ff', bgCls:'bg-t2', poseCls:'pose-t2', tagCls:'tag-cyan',   pps:2, ppsLabel:'2 คน / Segment', label:'Tier 2' },
-  3: { color:'#ff7700', bgCls:'bg-t3', poseCls:'pose-t3', tagCls:'tag-orange', pps:3, ppsLabel:'3 คน / Segment', label:'Tier 3' },
+  2: { color:'#3399ff', bgCls:'bg-t2', poseCls:'pose-t2', tagCls:'tag-cyan',   pps:2, ppsLabel:'2 คน / Segment', label:'Tier 2' },
+  3: { color:'#ff6600', bgCls:'bg-t3', poseCls:'pose-t3', tagCls:'tag-orange', pps:3, ppsLabel:'3 คน / Segment', label:'Tier 3' },
 };
 const GROUPS = [
   {name:'กลุ่ม 1', short:'G1', color:'#e0e0e0'},
@@ -217,7 +217,7 @@ const SLIDES = [
 
   // Questions — 1 คน / Segment ทุกข้อ (เรียงตามจำนวนคนที่ใช้ 5→13 คน)
   {id:'i1',type:'intro',num:1},
-  {id:'q1',type:'q',num:1,t:60,lines:['<svg viewBox="0 0 260 215" style="height:min(32vh,210px);display:block;margin:4px auto;filter:drop-shadow(0 0 10px rgba(0,229,255,0.35))"><polygon points="40,175 205,175 40,30" fill="rgba(0,229,255,0.07)" stroke="#00e5ff" stroke-width="3" stroke-linejoin="round"/><polyline points="40,155 60,155 60,175" fill="none" stroke="#00e5ff" stroke-width="2.5"/><text x="122" y="200" text-anchor="middle" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="700">4</text><text x="16" y="107" text-anchor="middle" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="700">3</text><text x="148" y="90" text-anchor="middle" fill="#ffd700" font-size="24" font-family="sans-serif" font-weight="900">x = ?</text></svg>', 'จงหาค่า x']},
+  {id:'q1',type:'q',num:1,t:60,lines:['<svg viewBox="0 0 260 215" style="height:min(32vh,210px);display:block;margin:4px auto;filter:drop-shadow(0 0 10px rgba(51,153,255,0.35))"><polygon points="40,175 205,175 40,30" fill="rgba(51,153,255,0.07)" stroke="#3399ff" stroke-width="3" stroke-linejoin="round"/><polyline points="40,155 60,155 60,175" fill="none" stroke="#3399ff" stroke-width="2.5"/><text x="122" y="200" text-anchor="middle" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="700">4</text><text x="16" y="107" text-anchor="middle" fill="#ffffff" font-size="22" font-family="sans-serif" font-weight="700">3</text><text x="148" y="90" text-anchor="middle" fill="#ffd700" font-size="24" font-family="sans-serif" font-weight="900">x = ?</text></svg>', 'จงหาค่า x']},
   {id:'a1',type:'ans',qid:'q1',num:1,digits:['5'],ans:'5',formula:'ทฤษฎีบทพีทาโกรัส: 3² + 4² = 9 + 16 = 25  →  x = √25 = 5  (ใช้ 5 คน)'},
 
   {id:'i2',type:'intro',num:2},
@@ -230,7 +230,7 @@ const SLIDES = [
 
   {id:'i4',type:'intro',num:4},
   {id:'q4',type:'q',num:4,t:60,lines:['จากโรงเรียนเต่างอยพัฒนศึกษา ถึงวนอุทยานภูผาแด่น','เส้นทางที่เร็วที่สุดระยะทางกี่กิโลเมตร?']},
-  {id:'a4',type:'ans',qid:'q4',num:4,digits:['1','0'],ans:'10 กม.',formula:'<svg viewBox="0 0 500 130" style="width:min(480px,88%);display:block;margin:6px auto" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="130" rx="10" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><rect x="8" y="8" width="484" height="56" rx="8" fill="rgba(0,229,255,0.1)" stroke="#00e5ff" stroke-width="1.5"/><circle cx="28" cy="36" r="7" fill="#00e5ff"/><text x="46" y="30" fill="rgba(255,255,255,0.65)" font-size="12" font-family="sans-serif">ผ่านถนนหมายเลข 2339 · เส้นทางที่เร็วที่สุด</text><text x="46" y="52" fill="#ffffff" font-size="15" font-weight="700" font-family="sans-serif">14 นาที</text><text x="330" y="52" fill="#ffd700" font-size="20" font-weight="900" font-family="sans-serif">10.0 กม.</text><rect x="8" y="72" width="484" height="50" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><circle cx="28" cy="97" r="7" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/><text x="46" y="91" fill="rgba(255,255,255,0.38)" font-size="12" font-family="sans-serif">ผ่านถนนหมายเลข 2339</text><text x="46" y="112" fill="rgba(255,255,255,0.38)" font-size="15" font-family="sans-serif">14 นาที  ·  9.9 กม.</text></svg>'},
+  {id:'a4',type:'ans',qid:'q4',num:4,digits:['1','0'],ans:'10 กม.',formula:'<svg viewBox="0 0 500 130" style="width:min(480px,88%);display:block;margin:6px auto" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="130" rx="10" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><rect x="8" y="8" width="484" height="56" rx="8" fill="rgba(51,153,255,0.1)" stroke="#3399ff" stroke-width="1.5"/><circle cx="28" cy="36" r="7" fill="#3399ff"/><text x="46" y="30" fill="rgba(255,255,255,0.65)" font-size="12" font-family="sans-serif">ผ่านถนนหมายเลข 2339 · เส้นทางที่เร็วที่สุด</text><text x="46" y="52" fill="#ffffff" font-size="15" font-weight="700" font-family="sans-serif">14 นาที</text><text x="330" y="52" fill="#ffd700" font-size="20" font-weight="900" font-family="sans-serif">10.0 กม.</text><rect x="8" y="72" width="484" height="50" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><circle cx="28" cy="97" r="7" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/><text x="46" y="91" fill="rgba(255,255,255,0.38)" font-size="12" font-family="sans-serif">ผ่านถนนหมายเลข 2339</text><text x="46" y="112" fill="rgba(255,255,255,0.38)" font-size="15" font-family="sans-serif">14 นาที  ·  9.9 กม.</text></svg>'},
 
   // พักกลางเกม
   {id:'timeout',type:'timeout',t:120},
@@ -249,7 +249,7 @@ const SLIDES = [
 
   {id:'i8',type:'intro',num:8},
   {id:'q8',type:'q',num:8,t:60,lines:['จำนวนนักเรียนระดับชั้น ม.5 ของโรงเรียนเต่างอยพัฒนศึกษา','ในปีการศึกษา 2569 คือเท่าไร?']},
-  {id:'a8',type:'ans',qid:'q8',num:8,digits:['1','3','5'],ans:'135 คน',formula:'<svg viewBox="0 0 500 205" style="width:min(480px,88%);display:block;margin:6px auto" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="205" rx="10" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><rect x="0" y="0" width="500" height="34" rx="10" fill="rgba(255,255,255,0.08)"/><rect x="0" y="20" width="500" height="14" fill="rgba(255,255,255,0.08)"/><text x="18" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif">ระดับชั้น</text><text x="230" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">ชาย</text><text x="330" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">หญิง</text><text x="432" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">รวม</text><text x="18" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif">มัธยมศึกษาปีที่ 4</text><text x="230" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">41</text><text x="330" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">60</text><text x="432" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">101</text><rect x="6" y="70" width="488" height="36" rx="6" fill="rgba(0,229,255,0.1)" stroke="rgba(0,229,255,0.3)" stroke-width="1"/><text x="18" y="93" fill="#00e5ff" font-size="14" font-weight="700" font-family="sans-serif">มัธยมศึกษาปีที่ 5</text><text x="230" y="93" fill="#ffffff" font-size="14" font-family="sans-serif" text-anchor="middle">69</text><text x="330" y="93" fill="#ffffff" font-size="14" font-family="sans-serif" text-anchor="middle">66</text><ellipse cx="432" cy="88" rx="40" ry="22" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="2.5"/><text x="432" y="94" fill="#ffd700" font-size="19" font-weight="900" font-family="sans-serif" text-anchor="middle">135</text><text x="18" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif">มัธยมศึกษาปีที่ 6</text><text x="230" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">57</text><text x="330" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">69</text><text x="432" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">126</text><line x1="10" y1="148" x2="490" y2="148" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><text x="18" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif">รวมมัธยมปลาย</text><text x="230" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif" text-anchor="middle">167</text><text x="330" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif" text-anchor="middle">195</text><text x="432" y="172" fill="rgba(255,255,255,0.65)" font-size="13" font-family="sans-serif" text-anchor="middle">362</text><text x="250" y="197" fill="rgba(255,255,255,0.22)" font-size="10" font-family="sans-serif" text-anchor="middle">ที่มา: school.webactivity.net · ปีการศึกษา 2569</text></svg>'},
+  {id:'a8',type:'ans',qid:'q8',num:8,digits:['1','3','5'],ans:'135 คน',formula:'<svg viewBox="0 0 500 205" style="width:min(480px,88%);display:block;margin:6px auto" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="205" rx="10" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><rect x="0" y="0" width="500" height="34" rx="10" fill="rgba(255,255,255,0.08)"/><rect x="0" y="20" width="500" height="14" fill="rgba(255,255,255,0.08)"/><text x="18" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif">ระดับชั้น</text><text x="230" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">ชาย</text><text x="330" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">หญิง</text><text x="432" y="22" fill="rgba(255,255,255,0.6)" font-size="12" font-family="sans-serif" text-anchor="middle">รวม</text><text x="18" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif">มัธยมศึกษาปีที่ 4</text><text x="230" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">41</text><text x="330" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">60</text><text x="432" y="60" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">101</text><rect x="6" y="70" width="488" height="36" rx="6" fill="rgba(51,153,255,0.1)" stroke="rgba(51,153,255,0.3)" stroke-width="1"/><text x="18" y="93" fill="#3399ff" font-size="14" font-weight="700" font-family="sans-serif">มัธยมศึกษาปีที่ 5</text><text x="230" y="93" fill="#ffffff" font-size="14" font-family="sans-serif" text-anchor="middle">69</text><text x="330" y="93" fill="#ffffff" font-size="14" font-family="sans-serif" text-anchor="middle">66</text><ellipse cx="432" cy="88" rx="40" ry="22" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="2.5"/><text x="432" y="94" fill="#ffd700" font-size="19" font-weight="900" font-family="sans-serif" text-anchor="middle">135</text><text x="18" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif">มัธยมศึกษาปีที่ 6</text><text x="230" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">57</text><text x="330" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">69</text><text x="432" y="132" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif" text-anchor="middle">126</text><line x1="10" y1="148" x2="490" y2="148" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><text x="18" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif">รวมมัธยมปลาย</text><text x="230" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif" text-anchor="middle">167</text><text x="330" y="172" fill="rgba(255,255,255,0.6)" font-size="13" font-family="sans-serif" text-anchor="middle">195</text><text x="432" y="172" fill="rgba(255,255,255,0.65)" font-size="13" font-family="sans-serif" text-anchor="middle">362</text><text x="250" y="197" fill="rgba(255,255,255,0.22)" font-size="10" font-family="sans-serif" text-anchor="middle">ที่มา: school.webactivity.net · ปีการศึกษา 2569</text></svg>'},
 
   {id:'i9',type:'intro',num:9},
   {id:'q9',type:'q',num:9,t:60,lines:['พุทธศักราช &#8722; คริสต์ศักราช &#8722; 28 = ?']},
@@ -272,7 +272,7 @@ const SEG_MAP = {
 };
 
 function segSVG(d, sz, onC, offC) {
-  sz=sz||160; onC=onC||'#ff7700'; offC=offC||'#1a0900';
+  sz=sz||160; onC=onC||'#ff6600'; offC=offC||'#1a0900';
   const s=SEG_MAP[d]; if(!s) return '';
   const c=v=>v?onC:offC, g=v=>v?'filter="url(#seg-glow)"':'';
   return `<svg width="${Math.round(sz*.66)}" height="${sz}" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
@@ -287,8 +287,8 @@ function segSVG(d, sz, onC, offC) {
 }
 
 function labeledDigitSVG() {
-  const on='#ff7700';
-  return `<svg viewBox="0 0 160 264" style="height:min(44vh,250px);filter:drop-shadow(0 0 12px rgba(255,119,0,.5))">
+  const on='#ff6600';
+  return `<svg viewBox="0 0 160 264" style="height:min(44vh,250px);filter:drop-shadow(0 0 12px rgba(255,102,0,.5))">
     <rect x="20" y="4"   width="120" height="20" rx="5" fill="${on}"/>
     <text x="80" y="19"  text-anchor="middle" fill="#000" font-size="13" font-weight="900">a</text>
     <rect x="2"  y="28"  width="16"  height="88" rx="5" fill="${on}"/>
@@ -431,7 +431,7 @@ function buildSlides() {
       cls='bg-q';
       inner=`<div style="text-align:center">
         <div class="tag tag-cyan">ข้อที่</div>
-        <div class="intro-num" style="color:var(--cyan);text-shadow:0 0 40px rgba(0,229,255,.35)">${s.num}</div>
+        <div class="intro-num" style="color:var(--cyan);text-shadow:0 0 40px rgba(51,153,255,.35)">${s.num}</div>
         <div class="intro-hint">เตรียมพร้อม — โจทย์กำลังจะขึ้น...</div>
       </div>`;
     }
