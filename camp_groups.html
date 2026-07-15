@@ -349,6 +349,98 @@
     letter-spacing: 2px;
     color: #e9c46a;
   }
+
+  /* Print envelope pages */
+  .print-toolbar {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .print-toolbar button {
+    background: #e63946;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+
+  .a4-page {
+    background: #111;
+    border: 2px dashed #333;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto 24px;
+    padding: 60px 40px;
+    text-align: center;
+  }
+
+  .env-mission {
+    font-size: 1.2rem;
+    letter-spacing: 4px;
+    color: #888;
+    margin-bottom: 8px;
+  }
+
+  .env-group {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: 4px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .env-count {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 28px;
+    letter-spacing: 2px;
+  }
+
+  .env-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .env-chip {
+    background: #1a1a1a;
+    border: 2px solid #e63946;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #e63946;
+  }
+
+  @media print {
+    @page { size: A4; margin: 0; }
+    body { background: #fff; color: #000; padding: 0; }
+    h1, .subtitle, .tabs, .print-toolbar { display: none !important; }
+    .round { display: none !important; }
+    .round#printsheet { display: block !important; }
+    .a4-page {
+      background: #fff;
+      border: none;
+      border-radius: 0;
+      width: auto;
+      max-width: none;
+      margin: 0;
+      padding: 20mm;
+      page-break-after: always;
+      box-sizing: border-box;
+    }
+    .env-mission { color: #555; }
+    .env-group { color: #000; }
+    .env-count { color: #777; }
+    .env-chip { background: #fff; border-color: #000; color: #000; }
+  }
 </style>
 </head>
 <body>
@@ -365,6 +457,7 @@
   <button class="tab" id="tab4" onclick="show('r4','D')">Mission 4 · 11:30</button>
   <button class="tab" id="tab5" onclick="show('mission5','N')">Mission 5 · 13:00</button>
   <button class="tab" id="tab6" onclick="show('finalmission','N')">Final Mission · 14:00</button>
+  <button class="tab" id="tab7" onclick="show('printsheet','S')">🖨️ พิมพ์ซองภารกิจ</button>
 </div>
 
 <!-- NUMBERS -->
@@ -946,7 +1039,7 @@ function show(panel, color) {
   document.querySelectorAll('.round').forEach(r => r.classList.remove('visible'));
   document.getElementById(panel).classList.add('visible');
   document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
-  const map = { 'schedule': 'tab-sched', 'numbers': 'tab0', 'r1': 'tab1', 'r2': 'tab2', 'r3': 'tab3', 'r4': 'tab4', 'mission5': 'tab5', 'finalmission': 'tab6' };
+  const map = { 'schedule': 'tab-sched', 'numbers': 'tab0', 'r1': 'tab1', 'r2': 'tab2', 'r3': 'tab3', 'r4': 'tab4', 'mission5': 'tab5', 'finalmission': 'tab6', 'printsheet': 'tab7' };
   document.getElementById(map[panel]).classList.add('active-' + color);
 }
 </script>
