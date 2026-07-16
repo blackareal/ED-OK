@@ -109,25 +109,6 @@
     display: none;
   }
 
-  .filters {
-    display: flex;
-    gap: 0.5em;
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 1em;
-  }
-  .filters button {
-    border: 1px solid #333;
-    background: var(--card);
-    border-radius: 100px;
-    padding: 0.45em 1.1em;
-    font-size: 0.83rem;
-    cursor: pointer;
-    font-weight: 600;
-    color: #bbb;
-  }
-  .filters button.active { background: var(--orange); color: #1a1a1a; border-color: var(--orange); }
-
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -235,14 +216,6 @@
 
 <div class="config-warning" id="configWarning"></div>
 
-<div class="filters" id="filters">
-  <button data-f="all" class="active">ทั้งหมด</button>
-  <button data-f="A">📐 การวัดและเรขาคณิต</button>
-  <button data-f="B">🔢 จำนวนและพีชคณิต</button>
-  <button data-f="C">🎲 สถิติและความน่าจะเป็น</button>
-  <button data-f="S">🎯 พิเศษ</button>
-</div>
-
 <div class="grid" id="grid"></div>
 <div class="empty" id="emptyMsg" style="display:none;">ไม่มีภารกิจในหมวดนี้</div>
 
@@ -319,7 +292,6 @@
   const configWarning = document.getElementById('configWarning');
 
   let currentGroup = null;
-  let currentFilter = 'all';
   const uploadState = {}; // { [no]: { status: 'loading'|'ready'|'success'|'error', message: string } }
   const pendingFile = {}; // { [no]: File }
   const pendingBase64 = {}; // { [no]: string } — ผลลัพธ์บีบอัดที่เตรียมไว้ล่วงหน้าแล้ว (บีบอัดทันทีตอนเลือกรูป ไม่ต้องรอถึงตอนกดส่ง)
@@ -328,7 +300,7 @@
 
   if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
     configWarning.style.display = 'block';
-    configWarning.textContent = "⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ในไฟล์นี้ — ครูต้องตั้งค่า Google Apps Script ก่อนใช้งาน";
+    configWarning.textContent = "⚠️ SCRIPT_URL not set — teacher must configure Google Apps Script first";
   }
 
   function statusHtml(no) {
@@ -339,10 +311,9 @@
 
   const CAT_LABELS = { A: '📐 เรขาคณิต', B: '🔢 พีชคณิต', C: '🎲 สถิติ', S: '🎯 พิเศษ' };
 
-  function render(filter) {
-    currentFilter = filter;
+  function render() {
     grid.innerHTML = "";
-    const items = MISSIONS.filter(m => filter === 'all' || m[1] === filter);
+    const items = MISSIONS;
     emptyMsg.style.display = items.length ? 'none' : 'block';
     for (const [no, cat, text] of items) {
       const card = document.createElement('div');
@@ -366,15 +337,7 @@
     }
   }
 
-  document.getElementById('filters').addEventListener('click', (e) => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    document.querySelectorAll('#filters button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    render(btn.dataset.f);
-  });
-
-  render('all');
+  render();
 
   // =====================================================================
   // เลือกกลุ่ม — เลือกครั้งเดียว ใช้กับการส่งคำตอบทุกภารกิจจนกว่าจะกด "เปลี่ยนกลุ่ม"
@@ -398,7 +361,7 @@
     for (const key of Object.keys(pendingBase64)) delete pendingBase64[key];
     for (const key of Object.keys(compressing)) delete compressing[key];
     for (const key of Object.keys(compressGen)) delete compressGen[key];
-    render(currentFilter);
+    render();
   }
 
   groupButtonsEl.addEventListener('click', (e) => {
@@ -492,10 +455,10 @@
   function compressImage(file, maxDim, quality) {
     const attempt = new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onerror = () => reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
+      reader.onerror = () => reject(new Error("Failed to read file"));
       reader.onload = (e) => {
         const img = new Image();
-        img.onerror = () => reject(new Error("เปิดไฟล์รูปไม่สำเร็จ"));
+        img.onerror = () => reject(new Error("Failed to open photo"));
         img.onload = () => {
           try {
             let { width, height } = img;
@@ -518,7 +481,7 @@
       };
       reader.readAsDataURL(file);
     });
-    return withTimeout(attempt, 25000, 'เตรียมรูปนานเกิน 25 วินาที ลองถ่ายรูปใหม่แทนการเลือกรูปเก่า หรือลองใหม่อีกครั้ง');
+    return withTimeout(attempt, 25000, 'Photo prep took over 25s — try taking a new photo instead of an old one, or try again');
   }
 
   function setStatus(no, status, message) {
@@ -551,17 +514,17 @@
     delete pendingBase64[no];
 
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      setStatus(no, 'error', `❌ ไฟล์รูปใหญ่เกินไป (${(file.size / 1024 / 1024).toFixed(1)}MB, จำกัดไม่เกิน ${MAX_FILE_SIZE_MB}MB) กรุณาถ่ายรูปใหม่หรือเลือกรูปอื่น`);
+      setStatus(no, 'error', `❌ File too large (${(file.size / 1024 / 1024).toFixed(1)}MB, max ${MAX_FILE_SIZE_MB}MB) — retake or choose another photo`);
       delete pendingFile[no];
       return;
     }
 
-    setStatus(no, 'loading', '⏳ กำลังเตรียมรูป... (รอสักครู่ ระบบกำลังบีบอัดให้อัตโนมัติ)');
+    setStatus(no, 'loading', '⏳ Preparing photo... (auto-compressing, please wait)');
 
     const task = compressImage(file, 1280, 0.72).then((base64) => {
       if (compressGen[no] !== myGen) return; // มีการเลือกรูปใหม่แซงไปแล้ว ผลลัพธ์นี้เก่าเกินไป ไม่ใช้
       pendingBase64[no] = base64;
-      setStatus(no, 'ready', '✅ เตรียมรูปพร้อมแล้ว (' + file.name + ') — พิมพ์คำตอบแล้วกดส่งได้เลย');
+      setStatus(no, 'ready', '✅ Photo ready (' + file.name + ') — type your answer and submit');
       // iOS/iPadOS บางเครื่องหลังใช้ native photo picker แล้ว หน้าเว็บไม่คืนสถานะ
       // touch/focus ให้ถูกต้อง (แตะ/พิมพ์อะไรต่อไม่ได้ทั้งที่ JS ทำงานเสร็จปกติแล้ว)
       // แก้โดยบังคับย้าย focus มาที่ช่องพิมพ์คำตอบตรง ๆ ด้วย JS ทันทีที่เตรียมรูปเสร็จ
@@ -572,7 +535,7 @@
     }).catch((err) => {
       if (compressGen[no] !== myGen) return;
       console.error(err);
-      setStatus(no, 'error', '❌ เตรียมรูปไม่สำเร็จ ลองเลือกรูปใหม่อีกครั้ง (' + err.message + ')');
+      setStatus(no, 'error', '❌ Photo prep failed — try choosing again (' + err.message + ')');
       delete pendingFile[no];
     });
     compressing[no] = task;
@@ -601,17 +564,17 @@
   });
 
   async function submitMission(no) {
-    if (!currentGroup) { alert('กรุณาเลือกกลุ่มก่อนส่งคำตอบ'); return; }
+    if (!currentGroup) { alert('Please choose your group before submitting'); return; }
     if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
-      alert('ยังไม่ได้ตั้งค่า SCRIPT_URL ในไฟล์นี้ — แจ้งครูให้ตั้งค่าก่อนใช้งาน');
+      alert('SCRIPT_URL not set — ask your teacher to configure this page');
       return;
     }
     const answerInput = document.getElementById('answer-' + no);
     const answerText = (answerInput ? answerInput.value : '').trim();
     const file = pendingFile[no];
 
-    if (!answerText) { alert('กรุณาพิมพ์คำตอบก่อนส่ง'); return; }
-    if (!file) { alert('กรุณาเลือกรูปภาพก่อนส่ง'); return; }
+    if (!answerText) { alert('Please type your answer before submitting'); return; }
+    if (!file) { alert('Please choose a photo before submitting'); return; }
     if (uploadState[no] && uploadState[no].status === 'loading') return;
 
     // ปิดปุ่ม + เปลี่ยนข้อความปุ่มให้ชัดเจนว่ากำลังทำงานอยู่ (ไม่ใช่ค้าง)
@@ -620,7 +583,7 @@
     // native picker มา — ดูคอมเมนต์ใน startCompressing ด้านบน)
     const btn = document.getElementById('submitBtn-' + no);
     const originalBtnText = btn ? btn.textContent : '';
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังส่ง...'; }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Submitting...'; }
 
     try {
       // ปกติรูปจะถูกบีบอัดเตรียมไว้ล่วงหน้าตั้งแต่ตอนเลือกไฟล์แล้ว (ดู startCompressing)
@@ -628,10 +591,10 @@
       // ก็รอ promise ที่กำลังทำอยู่แทนที่จะเริ่มบีบอัดซ้ำใหม่
       let base64 = pendingBase64[no];
       if (!base64) {
-        setStatus(no, 'loading', '⏳ กำลังบีบอัดรูป...');
+        setStatus(no, 'loading', '⏳ Compressing photo...');
         base64 = await (compressing[no] || compressImage(file, 1280, 0.72));
       }
-      setStatus(no, 'loading', '⏳ กำลังอัปโหลดขึ้นเซิร์ฟเวอร์... (อาจใช้เวลาสักครู่ถ้าเน็ตช้า)');
+      setStatus(no, 'loading', '⏳ Uploading... (may take longer on a slow connection)');
 
       // ห้ามใส่ header Content-Type เอง เพื่อไม่ให้เบราว์เซอร์ส่ง OPTIONS preflight
       // ซึ่ง Google Apps Script Web App ไม่รองรับ
@@ -648,7 +611,7 @@
       });
       const data = await res.json();
       if (data.status === 'ok') {
-        setStatus(no, 'success', '✅ ส่งสำเร็จ (ส่งใหม่ได้ถ้าอยากแก้คำตอบหรือเปลี่ยนรูป)');
+        setStatus(no, 'success', '✅ Complete (resubmit anytime to change your answer or photo)');
         // เคลียร์รูปที่บีบอัดไว้ในหน่วยความจำทิ้งหลังส่งสำเร็จ — ไม่ต้องเก็บไว้แล้ว
         // ถ้าไม่เคลียร์ ยิ่งทำหลายภารกิจในเซสชันเดียว (สูงสุด 32 ข้อ) ยิ่งสะสม
         // หน่วยความจำมากขึ้นเรื่อย ๆ จนอาจกระทบความเร็วของทั้งหน้าเว็บได้
@@ -656,11 +619,11 @@
         delete pendingFile[no];
         delete compressing[no];
       } else {
-        throw new Error(data.message || 'ไม่ทราบสาเหตุ');
+        throw new Error(data.message || 'Unknown error');
       }
     } catch (err) {
       console.error(err);
-      setStatus(no, 'error', '❌ ส่งไม่สำเร็จ ลองใหม่อีกครั้ง (' + err.message + ')');
+      setStatus(no, 'error', '❌ Submit failed — try again (' + err.message + ')');
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = originalBtnText || 'Submit'; }
     }
