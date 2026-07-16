@@ -188,6 +188,7 @@
     cursor: pointer;
   }
   .upload-btn.has-file { background: var(--teal); color: #062338; }
+  .upload-btn.compressing { opacity: 0.6; pointer-events: none; }
   .submit-btn {
     background: var(--orange);
     color: #1a1a1a;
@@ -203,6 +204,7 @@
   body.no-group .submit-btn, body.no-group .upload-btn { pointer-events: none; opacity: 0.4; }
   .upload-status { margin-top: 0.5em; font-size: 0.8rem; min-height: 1.1em; }
   .upload-status.loading { color: #99a; }
+  .upload-status.ready { color: #4fd8b8; font-weight: 700; }
   .upload-status.success { color: #4fd8b8; font-weight: 700; }
   .upload-status.error { color: #ff8585; font-weight: 700; }
 </style>
@@ -315,8 +317,11 @@
 
   let currentGroup = null;
   let currentFilter = 'all';
-  const uploadState = {}; // { [no]: { status: 'loading'|'success'|'error', message: string } }
+  const uploadState = {}; // { [no]: { status: 'loading'|'ready'|'success'|'error', message: string } }
   const pendingFile = {}; // { [no]: File }
+  const pendingBase64 = {}; // { [no]: string } — ผลลัพธ์บีบอัดที่เตรียมไว้ล่วงหน้าแล้ว (บีบอัดทันทีตอนเลือกรูป ไม่ต้องรอถึงตอนกดส่ง)
+  const compressing = {}; // { [no]: Promise } — งานบีบอัดที่กำลังทำอยู่ (เผื่อกดส่งเร็วกว่าที่บีบอัดจะเสร็จ)
+  const compressGen = {}; // { [no]: number } — กันผลลัพธ์เก่าทับผลลัพธ์ใหม่ ถ้าเลือกรูปซ้ำเร็ว ๆ ก่อนบีบอัดรอบแรกจะเสร็จ
 
   if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
     configWarning.style.display = 'block';
@@ -453,6 +458,11 @@
 
   // =====================================================================
   // บีบอัดรูปในเครื่องก่อนส่ง
+  // การ resize+encode ด้วย canvas (drawImage/toDataURL) เป็นงานหนักที่บล็อก
+  // main thread ของมือถือ — ถ้าเริ่มทำทันทีต่อจาก setStatus() เบราว์เซอร์อาจยัง
+  // ไม่ทันวาดข้อความ "กำลังโหลด..." ให้เห็นก่อนจอจะค้าง (ดูเหมือนไม่มีอะไรเกิดขึ้น
+  // ทั้งที่กำลังทำงานอยู่) จึงต้อง "ยอมให้เบราว์เซอร์ paint ก่อน" ด้วย
+  // requestAnimationFrame 2 รอบ ก่อนเริ่มงานหนักจริง ๆ
   // =====================================================================
   function compressImage(file, maxDim, quality) {
     return new Promise((resolve, reject) => {
@@ -462,18 +472,24 @@
         const img = new Image();
         img.onerror = () => reject(new Error("เปิดไฟล์รูปไม่สำเร็จ"));
         img.onload = () => {
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
-            else { width = Math.round(width * maxDim / height); height = maxDim; }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(dataUrl.split(',')[1]);
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            try {
+              let { width, height } = img;
+              if (width > maxDim || height > maxDim) {
+                if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+                else { width = Math.round(width * maxDim / height); height = maxDim; }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              const dataUrl = canvas.toDataURL('image/jpeg', quality);
+              resolve(dataUrl.split(',')[1]);
+            } catch (err) {
+              reject(err);
+            }
+          }));
         };
         img.src = e.target.result;
       };
@@ -490,13 +506,54 @@
     }
   }
 
+  // =====================================================================
+  // เริ่มบีบอัดรูปทันทีตอนเลือกไฟล์ (ไม่รอถึงตอนกดปุ่มส่ง) เพื่อให้:
+  // 1) ผู้ใช้เห็นสถานะ "กำลังเตรียมรูป..." ตรงจังหวะที่เครื่องกำลังหนักจริง ๆ
+  // 2) ตอนพิมพ์คำตอบเสร็จแล้วกดส่ง มักจะเร็วเกือบทันที เพราะบีบอัดเตรียมไว้ล่วงหน้าแล้ว
+  // =====================================================================
+  function startCompressing(no, file) {
+    compressGen[no] = (compressGen[no] || 0) + 1;
+    const myGen = compressGen[no];
+    delete pendingBase64[no];
+
+    const label = document.getElementById('uploadLabel-' + no);
+    if (label) {
+      label.textContent = '⏳ กำลังเตรียมรูป...';
+      label.classList.remove('has-file');
+      label.classList.add('compressing');
+    }
+    setStatus(no, 'loading', '⏳ กำลังเตรียมรูป... (รอสักครู่ ระบบกำลังบีบอัดให้อัตโนมัติ)');
+
+    const task = compressImage(file, 1280, 0.72).then((base64) => {
+      if (compressGen[no] !== myGen) return; // มีการเลือกรูปใหม่แซงไปแล้ว ผลลัพธ์นี้เก่าเกินไป ไม่ใช้
+      pendingBase64[no] = base64;
+      if (label) {
+        label.textContent = '📷 เลือกแล้ว: ' + file.name;
+        label.classList.remove('compressing');
+        label.classList.add('has-file');
+      }
+      setStatus(no, 'ready', '✅ เตรียมรูปพร้อมแล้ว — พิมพ์คำตอบแล้วกดส่งได้เลย');
+    }).catch((err) => {
+      if (compressGen[no] !== myGen) return;
+      console.error(err);
+      if (label) {
+        label.textContent = '📷 เลือกรูป';
+        label.classList.remove('compressing', 'has-file');
+      }
+      setStatus(no, 'error', '❌ เตรียมรูปไม่สำเร็จ ลองเลือกรูปใหม่อีกครั้ง (' + err.message + ')');
+      delete pendingFile[no];
+    });
+    compressing[no] = task;
+    return task;
+  }
+
   grid.addEventListener('change', (e) => {
     const input = e.target.closest('.file-input');
     if (!input || !input.files || !input.files.length) return;
     const no = parseInt(input.dataset.no, 10);
-    pendingFile[no] = input.files[0];
-    const label = document.getElementById('uploadLabel-' + no);
-    if (label) { label.textContent = '📷 เลือกแล้ว: ' + input.files[0].name; label.classList.add('has-file'); }
+    const file = input.files[0];
+    pendingFile[no] = file;
+    startCompressing(no, file);
   });
 
   grid.addEventListener('click', (e) => {
@@ -528,9 +585,15 @@
     if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังส่ง...'; }
     if (label) label.style.pointerEvents = 'none';
 
-    setStatus(no, 'loading', '⏳ กำลังบีบอัดรูป...');
     try {
-      const base64 = await compressImage(file, 1280, 0.72);
+      // ปกติรูปจะถูกบีบอัดเตรียมไว้ล่วงหน้าตั้งแต่ตอนเลือกไฟล์แล้ว (ดู startCompressing)
+      // ตรงนี้จึงมักจะได้ผลลัพธ์ทันทีแทบไม่ต้องรอ — เผื่อกรณีกดส่งเร็วกว่าที่บีบอัดจะเสร็จ
+      // ก็รอ promise ที่กำลังทำอยู่แทนที่จะเริ่มบีบอัดซ้ำใหม่
+      let base64 = pendingBase64[no];
+      if (!base64) {
+        setStatus(no, 'loading', '⏳ กำลังบีบอัดรูป...');
+        base64 = await (compressing[no] || compressImage(file, 1280, 0.72));
+      }
       setStatus(no, 'loading', '⏳ กำลังอัปโหลดขึ้นเซิร์ฟเวอร์... (อาจใช้เวลาสักครู่ถ้าเน็ตช้า)');
 
       // ห้ามใส่ header Content-Type เอง เพื่อไม่ให้เบราว์เซอร์ส่ง OPTIONS preflight
