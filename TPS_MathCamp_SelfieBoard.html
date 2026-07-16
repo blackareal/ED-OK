@@ -236,7 +236,7 @@
     padding: 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.9rem;
   }
   .leaderboard { background: var(--card); border-radius: 14px; padding: 1.2em; margin-bottom: 1.5em; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
-  .leaderboard h3 { margin: 0 0 0.8em; font-size: 1.1rem; color: var(--orange); }
+  .leaderboard-divider { height: 2px; background: var(--orange); margin-top: 1.2em; }
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
   th, td { text-align: left; padding: 0.5em 0.6em; border-bottom: 1px solid #262626; }
   th { color: #888; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
@@ -253,6 +253,8 @@
   .photo-card .word { font-weight: 800; font-size: 0.85rem; color: var(--orange); }
   .photo-card .ans { font-size: 0.78rem; color: #ccc; margin-top: 0.25em; word-break: break-word; }
   .photo-card .sub { font-size: 0.72rem; color: #888; display: flex; justify-content: space-between; margin-top: 0.2em; }
+  .photo-card.excluded img { opacity: 0.3; filter: grayscale(1); }
+  .photo-card.excluded .meta { opacity: 0.5; }
   .empty { text-align: center; color: #888; padding: 3em 1em; }
 
   /* ================= ANSWER KEY ================= */
@@ -299,10 +301,18 @@
   .ak-hidden-content { margin-top: 0.6em; }
 
   .ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; margin-top: 0.6em; }
-  .ak-photo { width: 84px; text-align: center; text-decoration: none; color: inherit; }
+  .ak-photo { width: 84px; text-align: center; }
+  .ak-photo a { text-decoration: none; color: inherit; display: block; }
   .ak-photo img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; background: #222; display: block; }
   .ak-photo .grp { font-size: 0.65rem; color: #999; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ak-photo .ansmini { font-size: 0.62rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ak-photo.excluded img { opacity: 0.3; filter: grayscale(1); }
+  .ak-photo.excluded .grp, .ak-photo.excluded .ansmini { opacity: 0.5; }
+  .ak-photo .exclude-toggle {
+    display: flex; align-items: center; justify-content: center; gap: 0.2em;
+    margin-top: 2px; font-size: 0.6rem; color: #ff8a8a; cursor: pointer; user-select: none;
+  }
+  .ak-photo .exclude-toggle input { accent-color: #ff4d4d; cursor: pointer; width: 11px; height: 11px; }
   .ak-empty-photos { color: #888; font-size: 0.85rem; align-self: center; }
 </style>
 </head>
@@ -372,13 +382,6 @@
   </header>
   <div class="wrap">
     <div class="config-warning" id="configWarning" style="display:none;"></div>
-    <div class="leaderboard">
-      <h3>🏆 คะแนนรวมแต่ละกลุ่ม</h3>
-      <table>
-        <thead><tr><th>อันดับ</th><th>กลุ่ม</th><th>ภารกิจสำเร็จ (จาก 32)</th><th>จำนวนไฟล์ภาพที่ส่ง</th></tr></thead>
-        <tbody id="leaderboardBody"><tr><td colspan="4" style="color:#888;">—</td></tr></tbody>
-      </table>
-    </div>
     <div id="groups"></div>
     <div class="empty" id="emptyMsg" style="display:none;">ยังไม่มีภาพส่งเข้ามา</div>
   </div>
@@ -386,11 +389,14 @@
 
 <!-- ============ ANSWER KEY PANEL (ครูเท่านั้น) ============ -->
 <div class="panel" id="panel-answerkey">
-  <header>
-    <h2>🔑 Answer Key — 32 Missions</h2>
-    <p>Teachers/judges only — never show during student briefing</p>
-  </header>
   <div class="wrap">
+    <div class="leaderboard">
+      <table>
+        <thead><tr><th>Rank</th><th>Group</th><th>Success</th><th>Photo</th></tr></thead>
+        <tbody id="leaderboardBody"><tr><td colspan="4" style="color:#888;">—</td></tr></tbody>
+      </table>
+      <div class="leaderboard-divider"></div>
+    </div>
     <div class="ak-list" id="akList"></div>
   </div>
 </div>
@@ -410,7 +416,7 @@
     Object.entries(panels).forEach(([k, el]) => el.classList.toggle('active', k === name));
     tabbar.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     if (name === 'dashboard') loadDashboardData();
-    if (name === 'answerkey') renderAnswerKey();
+    if (name === 'answerkey') { renderAnswerKey(); loadDashboardData(); }
   }
   tabbar.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
@@ -478,7 +484,7 @@
   // =====================================================================
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxGCvMtn37MJk5WJGrg5TbFdYEhVS2CJUzUcQpa4H_lVmPpMIYZ9AIogvbfaUlcjJG_A/exec';
 
-  const GROUPS = ['กลุ่ม1','กลุ่ม2','กลุ่ม3','กลุ่ม4','กลุ่ม5','กลุ่ม6','กลุ่ม7','กลุ่ม8','กลุ่ม9'];
+  const GROUPS = ['group1','group2','group3','group4','group5','group6','group7','group8','group9'];
   const GROUP_COLORS = ['#f4a261','#e63946','#457b9d','#e9c46a','#a8dadc','#2a9d8f','#e76f51','#a855f7','#22c55e'];
   function groupColor(id) { const i = GROUPS.indexOf(id); return i >= 0 ? GROUP_COLORS[i] : '#666'; }
 
@@ -531,14 +537,15 @@
     list.innerHTML = ANSWER_KEY.map(([no, cat, loc, mission, answer]) => `
       <div class="ak-row">
         <div>
-          <div class="ak-no">ภารกิจที่ ${no} <span class="cat-badge cat${cat}">${cat === 'A' ? '📐 เรขาคณิต' : cat === 'B' ? '🔢 พีชคณิต' : cat === 'C' ? '🎲 สถิติ' : '🎯 พิเศษ'}</span></div>
+          <div class="ak-no">Selfie #${no} <span class="cat-badge cat${cat}">${cat === 'A' ? '📐 เรขาคณิต' : cat === 'B' ? '🔢 พีชคณิต' : cat === 'C' ? '🎲 สถิติ' : '🎯 พิเศษ'}</span></div>
           <div class="ak-mission">🔍 ${mission}</div>
           <div class="ak-reveal-buttons">
-            <button class="ak-reveal-btn" data-target="ak-loc-${no}">📍 กดเพื่อเฉลยสถานที่</button>
-            <button class="ak-reveal-btn" data-target="ak-ans-${no}">🔑 กดเพื่อเฉลยคำตอบ</button>
+            <button class="ak-reveal-btn" data-target="ak-reveal-${no}">🔑 Answer</button>
           </div>
-          <div class="ak-loc ak-hidden-content" id="ak-loc-${no}" style="display:none;">📍 เฉลยสถานที่: ${loc}</div>
-          <div class="ak-hidden-content" id="ak-ans-${no}" style="display:none;"><div class="ak-answer-box">${answer}</div></div>
+          <div class="ak-hidden-content" id="ak-reveal-${no}" style="display:none;">
+            <div class="ak-loc">📍 ${loc}</div>
+            <div class="ak-answer-box">${answer}</div>
+          </div>
         </div>
         <div>
           <div class="ak-photos" id="ak-photos-${no}"><span class="ak-empty-photos">กำลังโหลดภาพ…</span></div>
@@ -557,10 +564,7 @@
     const isHidden = target.style.display === 'none';
     target.style.display = isHidden ? 'block' : 'none';
     btn.classList.toggle('revealed', isHidden);
-    const isLoc = btn.dataset.target.startsWith('ak-loc-');
-    btn.textContent = isHidden
-      ? (isLoc ? '🙈 ซ่อนสถานที่' : '🙈 ซ่อนคำตอบ')
-      : (isLoc ? '📍 กดเพื่อเฉลยสถานที่' : '🔑 กดเพื่อเฉลยคำตอบ');
+    btn.textContent = isHidden ? '🙈 Hide Answer' : '🔑 Answer';
   });
 
   async function fetchMissions() {
@@ -583,6 +587,8 @@
   function driveThumbUrl(id) { return `https://drive.google.com/thumbnail?id=${id}&sz=w400`; }
   function driveViewUrl(id) { return `https://drive.google.com/file/d/${id}/view`; }
 
+  let lastAkHeaders = [], lastAkRows = [];
+
   async function loadAnswerKeyPhotos() {
     const panelsEl = document.querySelectorAll('.ak-photos');
     if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -592,37 +598,68 @@
     try {
       const { headers, rows } = await fetchMissions();
       if (!rows || !rows.length) { panelsEl.forEach(el => el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>'); return; }
-      const groupColIdx = headers.findIndex(h => h === 'กลุ่ม');
-
-      for (const [no] of ANSWER_KEY) {
-        const el = document.getElementById(`ak-photos-${no}`);
-        if (!el) continue;
-        const photoCol = headers.findIndex(h => h === `M${no}_PHOTO`);
-        const answerCol = headers.findIndex(h => h === `M${no}_ANSWER`);
-        if (photoCol < 0) { el.innerHTML = `<span class="ak-empty-photos">ไม่พบคอลัมน์ M${no}_PHOTO</span>`; continue; }
-        const entries = [];
-        for (const r of rows) {
-          const cell = (r[photoCol] || '').toString().trim();
-          if (!cell) continue;
-          const group = (r[groupColIdx] || '?').toString().trim();
-          const ansText = answerCol >= 0 ? (r[answerCol] || '').toString().trim() : '';
-          const ids = extractDriveIds(cell);
-          if (ids.length) ids.forEach(id => entries.push({ group, driveId: id, ansText }));
-          else entries.push({ group, driveId: null, cell, ansText });
-        }
-        if (!entries.length) { el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>'; continue; }
-        el.innerHTML = entries.map(e => `
-          <a class="ak-photo" href="${e.driveId ? driveViewUrl(e.driveId) : e.cell}" target="_blank" rel="noopener" style="border:2px solid ${groupColor(e.group)}; border-radius:8px;">
-            <img src="${e.driveId ? driveThumbUrl(e.driveId) : ''}" loading="lazy" onerror="this.style.opacity=0.15">
-            <div class="grp" style="color:${groupColor(e.group)}">${e.group}</div>
-            <div class="ansmini">${e.ansText || '—'}</div>
-          </a>`).join('');
-      }
+      lastAkHeaders = headers; lastAkRows = rows;
+      renderAnswerKeyPhotos(headers, rows);
     } catch (err) {
       console.error(err);
       panelsEl.forEach(el => el.innerHTML = '<span class="ak-empty-photos">โหลดภาพไม่สำเร็จ</span>');
     }
   }
+
+  function renderAnswerKeyPhotos(headers, rows) {
+    const excludedSet = getExcludedSet();
+    const groupColIdx = headers.findIndex(h => h === 'กลุ่ม');
+
+    for (const [no] of ANSWER_KEY) {
+      const el = document.getElementById(`ak-photos-${no}`);
+      if (!el) continue;
+      const photoCol = headers.findIndex(h => h === `M${no}_PHOTO`);
+      const answerCol = headers.findIndex(h => h === `M${no}_ANSWER`);
+      if (photoCol < 0) { el.innerHTML = `<span class="ak-empty-photos">ไม่พบคอลัมน์ M${no}_PHOTO</span>`; continue; }
+      const entries = [];
+      for (const r of rows) {
+        const cell = (r[photoCol] || '').toString().trim();
+        if (!cell) continue;
+        const group = (r[groupColIdx] || '?').toString().trim();
+        const ansText = answerCol >= 0 ? (r[answerCol] || '').toString().trim() : '';
+        const ids = extractDriveIds(cell);
+        if (ids.length) ids.forEach(id => entries.push({ group, driveId: id, ansText }));
+        else entries.push({ group, driveId: null, cell, ansText });
+      }
+      if (!entries.length) { el.innerHTML = '<span class="ak-empty-photos">ยังไม่มีภาพส่งเข้ามา</span>'; continue; }
+      el.innerHTML = entries.map(e => {
+        const isExcluded = excludedSet.has(excludeKey(e.group, no));
+        return `
+          <div class="ak-photo${isExcluded ? ' excluded' : ''}">
+            <a href="${e.driveId ? driveViewUrl(e.driveId) : e.cell}" target="_blank" rel="noopener" style="border:2px solid ${groupColor(e.group)}; border-radius:8px;">
+              <img src="${e.driveId ? driveThumbUrl(e.driveId) : ''}" loading="lazy" onerror="this.style.opacity=0.15">
+              <div class="grp" style="color:${groupColor(e.group)}">${e.group}</div>
+              <div class="ansmini">${e.ansText || '—'}</div>
+            </a>
+            <label class="exclude-toggle">
+              <input type="checkbox" class="exclude-checkbox" data-group="${encodeURIComponent(e.group)}" data-no="${no}" ${isExcluded ? 'checked' : ''}>
+              false
+            </label>
+          </div>`;
+      }).join('');
+    }
+  }
+
+  // ติ๊กกากบาตใต้ภาพ = ตัดภาพนั้นออกจากคะแนน "ภารกิจสำเร็จ" ในหน้า Submission
+  // (จำไว้เฉพาะเครื่อง/เบราว์เซอร์นี้ผ่าน localStorage) — ผูก listener ไว้ที่ #akList
+  // ครั้งเดียวเหมือนปุ่มเฉลย เพราะ #akList เองไม่ได้ถูกแทนที่ตอน render ใหม่
+  document.getElementById('akList').addEventListener('change', (e) => {
+    const cb = e.target.closest('.exclude-checkbox');
+    if (!cb) return;
+    const group = decodeURIComponent(cb.dataset.group);
+    const no = cb.dataset.no;
+    const set = getExcludedSet();
+    if (cb.checked) set.add(excludeKey(group, no));
+    else set.delete(excludeKey(group, no));
+    saveExcludedSet(set);
+    renderAnswerKeyPhotos(lastAkHeaders, lastAkRows);
+    if (lastRows.length) renderDashboard(lastHeaders, lastRows);
+  });
 
   // =====================================================================
   // DASHBOARD
@@ -632,6 +669,19 @@
   const groupsEl = document.getElementById('groups');
   const leaderboardBody = document.getElementById('leaderboardBody');
   const emptyMsg = document.getElementById('emptyMsg');
+  let lastHeaders = [], lastRows = [];
+
+  // ตัดคะแนนภาพรายรูป — จำไว้เฉพาะในเครื่อง/เบราว์เซอร์นี้ (localStorage) ไม่ sync
+  // ข้ามเครื่อง/กรรมการคนอื่น ใช้กรณีภาพไม่เข้าเกณฑ์ ไม่ต้องการให้นับใน "ภารกิจสำเร็จ"
+  const EXCLUDE_KEY = 'tpsMathCamp_excludedPhotos';
+  function excludeKey(group, no) { return group + '__' + no; }
+  function getExcludedSet() {
+    try { return new Set(JSON.parse(localStorage.getItem(EXCLUDE_KEY) || '[]')); }
+    catch { return new Set(); }
+  }
+  function saveExcludedSet(set) {
+    try { localStorage.setItem(EXCLUDE_KEY, JSON.stringify([...set])); } catch {}
+  }
 
   async function loadDashboardData() {
     if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -656,6 +706,8 @@
   }
 
   function renderDashboard(headers, rows) {
+    lastHeaders = headers; lastRows = rows;
+    const excludedSet = getExcludedSet();
     if (!rows.length) {
       groupsEl.innerHTML = "";
       leaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#888;">—</td></tr>`;
@@ -685,13 +737,14 @@
         const cell = pIdx >= 0 ? (row[pIdx] || "").toString().trim() : "";
         if (!cell) continue;
         const ansText = aIdx >= 0 ? (row[aIdx] || "").toString().trim() : "";
-        score += 1;
+        const isExcluded = excludedSet.has(excludeKey(group, no));
+        if (!isExcluded) score += 1;
         const ids = extractDriveIds(cell);
         photoCount += ids.length || 1;
         const driveId = ids[0] || null;
 
         cardsHtml += `
-          <a class="photo-card" href="${driveId ? driveViewUrl(driveId) : cell}" target="_blank" rel="noopener">
+          <a class="photo-card${isExcluded ? ' excluded' : ''}" href="${driveId ? driveViewUrl(driveId) : cell}" target="_blank" rel="noopener">
             <img src="${driveId ? driveThumbUrl(driveId) : ''}" loading="lazy" alt="ภารกิจ ${no}"
                  onerror="this.style.opacity=0.15;">
             <div class="meta">
@@ -699,7 +752,7 @@
               <div class="ans">${ansText || '—'}</div>
               <div class="sub">
                 <span class="cat-badge cat${cat}">${cat}</span>
-                <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}</span>
+                <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}${isExcluded ? ' · ❌ false' : ''}</span>
               </div>
             </div>
           </a>`;
@@ -721,7 +774,7 @@
     groupSummaries.sort((a, b) => b.score - a.score);
     leaderboardBody.innerHTML = groupSummaries.map((g, i) => `
       <tr>
-        <td>${i + 1}</td>
+        <td>#${i + 1}</td>
         <td style="color:${groupColor(g.group)}; font-weight:800;">${g.group}</td>
         <td>${g.score}</td>
         <td>${g.photoCount}</td>
