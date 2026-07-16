@@ -29,27 +29,38 @@
     background: var(--bg);
   }
 
+  /* แถบแท็บด้านบน — เปลี่ยนจาก "ลอยทับ" (position: fixed) มาเป็น sticky แบบ
+     เต็มความกว้างที่อยู่ใน flow ปกติของหน้า ทำให้เนื้อหาด้านล่าง (เช่น ปุ่มรีเฟรช
+     ของหน้า Dashboard) ไม่มีทางถูกบังอีกต่อไป เพราะแถบนี้ "ดันเนื้อหาลง" แทนที่จะ
+     ลอยทับเนื้อหาแบบเดิม ยังคงติดขอบบนตลอดเวลาเวลาเลื่อนหน้าจอ (sticky)
+  */
   .tabbar {
-    position: fixed;
-    top: 12px; right: 12px;
+    position: sticky;
+    top: 0;
+    left: 0; right: 0;
+    height: 54px;
     z-index: 50;
     display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 6px;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(6px);
-    padding: 6px;
-    border-radius: 100px;
+    background: rgba(13,13,13,0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--orange);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   }
   .tabbar button {
     border: none;
     background: transparent;
     color: #cfd8ea;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 700;
-    padding: 0.5em 1em;
+    padding: 0.55em 1.2em;
     border-radius: 100px;
     cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
   }
+  .tabbar button:hover { background: rgba(255,255,255,0.08); }
   .tabbar button.active { background: var(--orange); color: #1a1a1a; }
 
   .panel { display: none; }
@@ -59,8 +70,8 @@
   #panel-intro, #panel-timer {
     background: radial-gradient(circle at top, #241a10, var(--bg));
     color: #fff;
-    height: 100vh;
-    height: 100dvh;
+    height: calc(100vh - 54px);
+    height: calc(100dvh - 54px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -79,6 +90,14 @@
   }
   .subtitle { font-size: clamp(0.95rem, 1vw + 1vh, 1.3rem); color: #ddd; margin-bottom: 0.6em; }
   .meta { font-size: clamp(0.75rem, 0.7vw + 0.7vh, 1rem); color: #999; margin-bottom: 1em; }
+  .eyebrow {
+    font-size: clamp(0.85rem, 0.9vw + 0.8vh, 1.1rem);
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.3em;
+  }
 
   .intro-columns {
     display: flex;
@@ -120,10 +139,31 @@
     font-size: 0.9rem;
   }
 
+  /* ---------- กรอบ QR ธีม "Math Selfie" — มุมกล้อง (viewfinder) + สติกเกอร์
+     คณิต/กล้องเอียงมุม ล้อมกรอบ QR สีขาวเดิมไว้ด้านใน โดยไม่แตะสี/ลวดลายของ
+     ตัว QR เอง (คงเป็นขาว-ดำมาตรฐาน) เพื่อการันตีว่าสแกนได้จริงเสมอ ---------- */
+  .qr-frame { position: relative; display: inline-block; padding: 22px; }
+  .qr-corner {
+    position: absolute; width: 30px; height: 30px;
+    border: 4px solid var(--orange);
+  }
+  .qr-corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 10px 0 0 0; }
+  .qr-corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; border-radius: 0 10px 0 0; }
+  .qr-corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; border-radius: 0 0 0 10px; }
+  .qr-corner-br { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
+  .qr-badge {
+    position: absolute; top: -16px; right: -12px; z-index: 2;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.35rem; transform: rotate(14deg);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+  }
   .qr-wrap {
     display: inline-flex; flex-direction: column; align-items: center; gap: 0.5em;
     background: #fff; border-radius: 20px; padding: 0.9em 1.4em;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    transform: rotate(-2deg);
   }
   .qr-label { color: #1a1a1a; font-weight: 700; font-size: clamp(0.85rem, 0.8vw + 0.8vh, 1.1rem); }
   .qr-url { color: #667; font-size: 0.75rem; word-break: break-all; max-width: 320px; }
@@ -174,7 +214,7 @@
   /* ================= DASHBOARD ================= */
   #panel-dashboard { background: var(--bg); min-height: 100vh; }
   #panel-dashboard header {
-    background: var(--card); color: #fff; padding: 1.2em 1.2em 1.2em 5.5em;
+    background: var(--card); color: #fff; padding: 1.2em;
     display: flex; justify-content: space-between; align-items: center;
     flex-wrap: wrap; gap: 0.6em; border-bottom: 2px solid var(--orange);
   }
@@ -218,7 +258,7 @@
   /* ================= ANSWER KEY ================= */
   #panel-answerkey { background: var(--bg); min-height: 100vh; }
   #panel-answerkey header {
-    background: var(--card); color: #fff; padding: 1.2em 1.2em 1.2em 5.5em; border-bottom: 2px solid var(--orange);
+    background: var(--card); color: #fff; padding: 1.2em; border-bottom: 2px solid var(--orange);
   }
   #panel-answerkey header h2 { margin: 0; font-size: 1.3rem; color: var(--orange); }
   #panel-answerkey header p { margin: 0.2em 0 0; font-size: 0.8rem; color: #999; }
@@ -249,6 +289,15 @@
   }
   .ak-answer-box b { color: var(--gold); }
 
+  /* ---------- ปุ่มกดเฉลยทีละป้าย (สถานที่ / คำตอบ) ---------- */
+  .ak-reveal-buttons { display: flex; gap: 0.5em; margin-top: 0.6em; flex-wrap: wrap; }
+  .ak-reveal-btn {
+    background: #222; border: 1px solid var(--orange); color: var(--orange);
+    font-weight: 700; font-size: 0.78rem; padding: 0.45em 0.9em; border-radius: 100px; cursor: pointer;
+  }
+  .ak-reveal-btn.revealed { background: var(--orange); color: #1a1a1a; }
+  .ak-hidden-content { margin-top: 0.6em; }
+
   .ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; margin-top: 0.6em; }
   .ak-photo { width: 84px; text-align: center; text-decoration: none; color: inherit; }
   .ak-photo img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; background: #222; display: block; }
@@ -260,43 +309,47 @@
 <body>
 
 <div class="tabbar" id="tabbar">
-  <button data-tab="intro" class="active">🎬 แนะนำ</button>
-  <button data-tab="timer">⏱️ จับเวลา</button>
-  <button data-tab="dashboard">🖼️ Dashboard</button>
-  <button data-tab="answerkey">🔑 เฉลย</button>
+  <button data-tab="intro" class="active">🎬 Intro</button>
+  <button data-tab="timer">⏱️ Timer</button>
+  <button data-tab="dashboard">🖼️ Submission</button>
+  <button data-tab="answerkey">🔑 Review</button>
 </div>
 
 <!-- ============ INTRO PANEL ============ -->
 <div class="panel active" id="panel-intro">
   <div class="inner">
-    <h1 class="title">🧮📸 ภารกิจเซลฟี่คณิต</h1>
-    <div class="subtitle">ค่ายคณิตศาสตร์ เต่างอยพัฒนศึกษา — แก้โจทย์คณิต ไปให้ถึงสถานที่ ถ่ายภาพ แล้วพิมพ์คำตอบ</div>
-    <div class="meta">โรงเรียนเต่างอยพัฒนศึกษา · นักเรียน ม.ปลาย 88 คน · 9 กลุ่ม (กลุ่มเดียวกับกิจกรรม STEM ต่อจากนี้)</div>
+    <div class="eyebrow">Mission 5</div>
+    <h1 class="title">Math Selfie</h1>
+    <div class="meta">ค่ายคณิตศาสตร์ โรงเรียนเต่างอยพัฒนศึกษา</div>
 
     <div class="intro-columns">
       <div class="rules-grid">
-        <div class="rule-card"><div class="num">1</div><p>สแกน QR ด้านขวาเพื่อดูภารกิจปริศนาทั้งหมด <b>32 ข้อ</b> เลือกกลุ่มของตัวเองก่อนเริ่ม</p></div>
-        <div class="rule-card"><div class="num">2</div><p><b>ถอดรหัส</b> ว่าโจทย์แต่ละข้อพูดถึงสถานที่ไหนในโรงเรียน — โจทย์ไม่บอกสถานที่ตรง ๆ ต้องตีความเอง</p></div>
-        <div class="rule-card"><div class="num">3</div><p>ไปยังจุดนั้น <b>จัดท่า/มุมกล้องให้สร้างสรรค์</b> ถ่ายภาพกลุ่มครบทุกคน แล้ว<b>แก้โจทย์คณิต</b>พิมพ์คำตอบส่งคู่กัน ภายใน <b>40 นาที</b></p></div>
-        <div class="rule-card"><div class="num">4</div><p>ไม่บังคับทำให้ครบ สมาชิกคนไหนในกลุ่มก็ส่งได้ ส่งใหม่ทับของเดิมได้ถ้าอยากแก้ไข</p></div>
+        <div class="rule-card"><div class="num">1</div><p>สแกน <b>QR Code</b> เพื่อดูโจทย์ปริศนา</p></div>
+        <div class="rule-card"><div class="num">2</div><p><b>ถอดรหัส</b> ว่าโจทย์แต่ละข้อ มีความเกี่ยวข้องกับสถานที่ใดในโรงเรียน</p></div>
+        <div class="rule-card"><div class="num">3</div><p>ไปยังจุดนั้นแล้วถ่ายภาพพร้อมสมาชิกทุกคนในกลุ่ม แล้ว<b>แก้โจทย์ปัญหา</b> อัพโหลดภาพ พร้อมพิมพ์<b>คำตอบที่ถูกต้อง</b> แล้วกดส่ง</p></div>
+        <div class="rule-card"><div class="num">4</div><p>สถานที่ถูกต้องและคำตอบถูกต้อง ได้ <b>1 คะแนน</b> ทีมที่ได้คะแนนสูงสุด <b>จะไม่โดนยึดการ์ด(หัวใจ)</b></p></div>
       </div>
       <div class="qr-col">
-        <div class="qr-wrap">
-          <div class="qr-box" id="qrBox"><img id="qrImg" alt="QR code"></div>
-          <div class="qr-label">📱 สแกนเพื่อดูภารกิจทั้งหมด</div>
-          <div class="qr-url" id="qrUrlText"></div>
+        <div class="qr-frame">
+          <span class="qr-corner qr-corner-tl"></span>
+          <span class="qr-corner qr-corner-tr"></span>
+          <span class="qr-corner qr-corner-bl"></span>
+          <span class="qr-corner qr-corner-br"></span>
+          <div class="qr-badge">🧮📸</div>
+          <div class="qr-wrap">
+            <div class="qr-box" id="qrBox"><img id="qrImg" alt="QR code"></div>
+          </div>
         </div>
         <button class="start-btn" id="btnGoTimer">⏱️ เริ่มจับเวลา 40 นาที</button>
       </div>
     </div>
-    <footer class="hint">ภารกิจเซลฟี่คณิต ค่ายคณิตศาสตร์ เต่างอยพัฒนศึกษา · หน้าจอสำหรับฉายในกิจกรรม 13:30-14:30</footer>
   </div>
 </div>
 
 <!-- ============ TIMER PANEL ============ -->
 <div class="panel" id="panel-timer">
   <div class="inner">
-    <div class="timer-label">⏳ เวลาที่เหลือในการถ่ายภาพ</div>
+    <div class="timer-label">⏳ Time remaining</div>
     <div class="timer-display" id="timerDisplay">40:00</div>
     <div class="timer-controls">
       <button id="btnStartPause">▶️ เริ่ม</button>
@@ -309,12 +362,12 @@
 <div class="panel" id="panel-dashboard">
   <header>
     <div>
-      <h2>🖼️ Dashboard ครู — ภารกิจเซลฟี่คณิต</h2>
+      <h2>🖼️ Submission Dashboard</h2>
       <div class="status" id="statusText">ยังไม่ได้โหลดข้อมูล</div>
     </div>
     <div class="controls">
-      <label><input type="checkbox" id="autoRefresh"> รีเฟรชอัตโนมัติ (30s)</label>
-      <button id="btnRefresh">🔄 รีเฟรชตอนนี้</button>
+      <label><input type="checkbox" id="autoRefresh"> Auto refresh (30s)</label>
+      <button id="btnRefresh">🔄 Refresh now</button>
     </div>
   </header>
   <div class="wrap">
@@ -338,7 +391,6 @@
     <p>สำหรับครู/กรรมการเท่านั้น — มีสถานที่เฉลยอยู่ในนี้ อย่าฉายแท็บนี้ตอนบรีฟนักเรียนเด็ดขาด</p>
   </header>
   <div class="wrap">
-    <div class="draft-banner">⚠️ สถานที่เฉลย (📍) ของทั้ง 32 ข้อยังไม่ได้ตรวจสอบกับผังโรงเรียนเต่างอยพัฒนศึกษาจริง เป็นการตีความจากเนื้อหาโจทย์เท่านั้น กรุณาเดินสำรวจจริงก่อนใช้งาน ถ้าสถานที่ที่ตีความไม่ตรงกับของจริงในโรงเรียน หรือมีมากกว่า 1 จุดที่ตีความได้ ให้ครู/กรรมการใช้ดุลยพินิจตอนให้คะแนนจากความสมเหตุสมผลของภาพแทน (ดูรายละเอียดใน README)</div>
     <div class="ak-list" id="akList"></div>
   </div>
 </div>
@@ -371,7 +423,6 @@
   // แก้ MISSION_PAGE_URL ให้ตรงกับลิงก์จริงหลังอัปขึ้น GitHub Pages แล้ว
   // =====================================================================
   const MISSION_PAGE_URL = "https://blackareal.github.io/ED-OK/TPS_MathCamp_SelfieMission.html";
-  document.getElementById('qrUrlText').textContent = MISSION_PAGE_URL;
   document.getElementById('qrImg').src =
     "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(MISSION_PAGE_URL);
 
@@ -472,22 +523,45 @@
     [31, "S", "โดมของโรงเรียน (คำนวณจากพิกัด GPS ที่ถอดรหัสได้)", "ถอดรหัสพิกัด X = [10×tan31°]+[10×cos45°]+3.919484 , Y = [200×sin30°]+[10×tan23°]−0.076294 แล้วปักหมุนบนแผนที่", "X ≈ <b>16.999154</b> , Y ≈ <b>104.168454</b> → ปักหมุน Google Maps ที่ 16.999154, 104.168454 จะตรงกับ <b>โดมของโรงเรียน</b>"],
   ];
 
+  // แสดงโจทย์ก่อนเสมอ ส่วนสถานที่/คำตอบซ่อนไว้เป็นป้ายให้กดเฉลยทีละอย่าง (กันเผลอ
+  // เห็นเฉลยก่อนอยากได้ + ให้ครูเลือกเฉลยแค่บางส่วนตามจังหวะที่ต้องการ เช่น เฉลย
+  // สถานที่ก่อนเพื่อเช็คว่านักเรียนไปถูกจุด แล้วค่อยเฉลยคำตอบทีหลัง)
   function renderAnswerKey() {
     const list = document.getElementById('akList');
     list.innerHTML = ANSWER_KEY.map(([no, cat, loc, mission, answer]) => `
       <div class="ak-row">
         <div>
           <div class="ak-no">ภารกิจที่ ${no} <span class="cat-badge cat${cat}">${cat === 'A' ? '📐 เรขาคณิต' : cat === 'B' ? '🔢 พีชคณิต' : cat === 'C' ? '🎲 สถิติ' : '🎯 พิเศษ'}</span></div>
-          <div class="ak-loc">📍 เฉลยสถานที่: ${loc}</div>
           <div class="ak-mission">🔍 ${mission}</div>
+          <div class="ak-reveal-buttons">
+            <button class="ak-reveal-btn" data-target="ak-loc-${no}">📍 กดเพื่อเฉลยสถานที่</button>
+            <button class="ak-reveal-btn" data-target="ak-ans-${no}">🔑 กดเพื่อเฉลยคำตอบ</button>
+          </div>
+          <div class="ak-loc ak-hidden-content" id="ak-loc-${no}" style="display:none;">📍 เฉลยสถานที่: ${loc}</div>
+          <div class="ak-hidden-content" id="ak-ans-${no}" style="display:none;"><div class="ak-answer-box">${answer}</div></div>
         </div>
         <div>
-          <div class="ak-answer-box">${answer}</div>
           <div class="ak-photos" id="ak-photos-${no}"><span class="ak-empty-photos">กำลังโหลดภาพ…</span></div>
         </div>
       </div>`).join('');
     loadAnswerKeyPhotos();
   }
+
+  // ปุ่มเฉลย toggle แสดง/ซ่อน — ผูก listener ไว้ที่ #akList ครั้งเดียว (ไม่ต้องผูกใหม่
+  // ทุกครั้งที่ renderAnswerKey เขียน innerHTML ใหม่ เพราะตัว #akList เองไม่ได้ถูกแทนที่)
+  document.getElementById('akList').addEventListener('click', (e) => {
+    const btn = e.target.closest('.ak-reveal-btn');
+    if (!btn) return;
+    const target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    const isHidden = target.style.display === 'none';
+    target.style.display = isHidden ? 'block' : 'none';
+    btn.classList.toggle('revealed', isHidden);
+    const isLoc = btn.dataset.target.startsWith('ak-loc-');
+    btn.textContent = isHidden
+      ? (isLoc ? '🙈 ซ่อนสถานที่' : '🙈 ซ่อนคำตอบ')
+      : (isLoc ? '📍 กดเพื่อเฉลยสถานที่' : '🔑 กดเพื่อเฉลยคำตอบ');
+  });
 
   async function fetchMissions() {
     const url = new URL(SCRIPT_URL);
