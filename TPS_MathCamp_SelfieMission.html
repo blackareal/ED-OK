@@ -459,23 +459,14 @@
   // =====================================================================
   // บีบอัดรูปในเครื่องก่อนส่ง
   //
-  // สาเหตุที่รูปจากกล้องมือถือ (ความละเอียดสูงมาก เช่น 12MP+) ทำให้หน้าจอค้างนาน
-  // ไม่ใช่ขั้นตอน resize เอง แต่คือขั้นตอน "ถอดรหัสภาพต้นฉบับเต็มความละเอียด" ก่อน
-  // จะย่อ — วิธีเดิม (<img> + FileReader.readAsDataURL) บังคับให้เบราว์เซอร์ decode
-  // และ base64-encode ไฟล์ทั้งไฟล์เข้าหน่วยความจำก่อนเสมอ ซึ่งหนักมากบนมือถือ
-  //
-  // วิธีใหม่ (compressImageFast) ใช้ createImageBitmap แบบ resize-ระหว่าง-decode
-  // ให้เบราว์เซอร์ย่อขนาดภาพไปพร้อมกับการถอดรหัสเลย (ไม่ต้องสร้างบิตแมปเต็ม
-  // ความละเอียดในหน่วยความจำก่อน) เร็ว/เบากว่าวิธีเดิมมากโดยเฉพาะบน iOS Safari
-  // — ขอขนาดภาพจริงแบบเบา ๆ ก่อน (แค่อ่านหัวไฟล์ผ่าน object URL ไม่ต้อง base64
-  // ทั้งไฟล์) แล้วค่อยขอบิตแมปที่ resize มาแล้วโดยตรง
-  //
-  // ถ้าเบราว์เซอร์ไม่รองรับ createImageBitmap (หรือรองรับแต่ resize ไม่ได้) จะ
-  // fallback ไปใช้วิธีเดิมโดยอัตโนมัติ เพื่อความเข้ากันได้กับทุกเบราว์เซอร์
+  // เคยลองสลับไปใช้ createImageBitmap แบบ resize-ระหว่าง-decode เพื่อหวังว่าจะเร็ว
+  // ขึ้นบนมือถือ แต่จากการทดสอบจริงพบว่ามันกลับค้าง/ช้ากว่าเดิมมากบน iOS Safari
+  // บางเครื่อง (แม้กับรูปขนาดปกติ) จึงตัดออก แล้วกลับไปใช้วิธีเดิมแบบเดียวกับที่ใช้ใน
+  // Selfie Vocab Run (clues.html) ซึ่งพิสูจน์แล้วว่าเสถียรกับรูปทุกแบบในงานจริง —
+  // <img> + FileReader.readAsDataURL + canvas resize ธรรมดา ห่อด้วย
+  // requestAnimationFrame 2 รอบก่อนเริ่มงานหนัก เพื่อให้เบราว์เซอร์วาดข้อความ
+  // "กำลังเตรียมรูป..." ให้เห็นก่อนจอจะไม่ตอบสนองชั่วคราว
   // =====================================================================
-  // กันเหตุการณ์ "ค้างไม่รู้จบ" ไม่ว่าจะเกิดจากสาเหตุอะไร (เช่น บั๊กของเบราว์เซอร์บาง
-  // รุ่นกับ createImageBitmap แบบ resize) — ถ้าเตรียมรูปนานเกิน 15 วินาที จะยกเลิก
-  // แล้วแจ้งผู้ใช้ทันที แทนที่จะปล่อยให้หน้าจอค้างไม่มีทางออกแบบที่เจอมา
   function withTimeout(promise, ms, message) {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error(message)), ms);
@@ -487,49 +478,7 @@
   }
 
   function compressImage(file, maxDim, quality) {
-    const attempt = window.createImageBitmap
-      ? compressImageFast(file, maxDim, quality).catch((err) => {
-          console.warn('บีบอัดแบบเร็ว (createImageBitmap) ไม่สำเร็จ ใช้วิธีสำรองแทน:', err);
-          return compressImageFallback(file, maxDim, quality);
-        })
-      : compressImageFallback(file, maxDim, quality);
-    return withTimeout(attempt, 15000, 'เตรียมรูปนานเกิน 15 วินาที — รูปอาจใหญ่เกินไป หรือกำลังโหลดจาก iCloud ไม่เสร็จ ลองถ่ายรูปใหม่แทนการเลือกรูปเก่า หรือลองใหม่อีกครั้ง');
-  }
-
-  function compressImageFast(file, maxDim, quality) {
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file);
-      const probe = new Image();
-      probe.onerror = () => { URL.revokeObjectURL(url); reject(new Error("อ่านขนาดรูปไม่สำเร็จ")); };
-      probe.onload = async () => {
-        const srcW = probe.naturalWidth, srcH = probe.naturalHeight;
-        URL.revokeObjectURL(url);
-        let width = srcW, height = srcH;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
-          else { width = Math.round(width * maxDim / height); height = maxDim; }
-        }
-        try {
-          const bitmap = await createImageBitmap(file, { resizeWidth: width, resizeHeight: height, resizeQuality: 'medium' });
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(bitmap, 0, 0);
-          bitmap.close();
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(dataUrl.split(',')[1]);
-        } catch (err) {
-          reject(err);
-        }
-      };
-      probe.src = url;
-    });
-  }
-
-  // วิธีสำรอง (แบบเดิม) — ใช้เมื่อเบราว์เซอร์ไม่รองรับ createImageBitmap เท่านั้น
-  function compressImageFallback(file, maxDim, quality) {
-    return new Promise((resolve, reject) => {
+    const attempt = new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onerror = () => reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
       reader.onload = (e) => {
@@ -559,6 +508,7 @@
       };
       reader.readAsDataURL(file);
     });
+    return withTimeout(attempt, 25000, 'เตรียมรูปนานเกิน 25 วินาที ลองถ่ายรูปใหม่แทนการเลือกรูปเก่า หรือลองใหม่อีกครั้ง');
   }
 
   function setStatus(no, status, message) {
