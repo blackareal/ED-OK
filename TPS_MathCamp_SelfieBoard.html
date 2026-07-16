@@ -638,7 +638,7 @@
             </a>
             <label class="exclude-toggle">
               <input type="checkbox" class="exclude-checkbox" data-group="${encodeURIComponent(e.group)}" data-no="${no}" ${isExcluded ? 'checked' : ''}>
-              false
+              failed
             </label>
           </div>`;
       }).join('');
@@ -752,7 +752,7 @@
               <div class="ans">${ansText || '—'}</div>
               <div class="sub">
                 <span class="cat-badge cat${cat}">${cat}</span>
-                <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}${isExcluded ? ' · ❌ false' : ''}</span>
+                <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}${isExcluded ? ' · ❌ failed' : ''}</span>
               </div>
             </div>
           </a>`;
