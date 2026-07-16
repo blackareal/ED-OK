@@ -348,7 +348,7 @@
         <div class="answer-block">
           <input type="text" class="answer-input" id="answer-${no}" data-no="${no}" placeholder="พิมพ์คำตอบที่นี่...">
           <div class="file-row">
-            <input type="file" accept="image/*" capture="environment" class="file-input" id="file-${no}" data-no="${no}">
+            <input type="file" accept="image/*" class="file-input" id="file-${no}" data-no="${no}">
             <label for="file-${no}" class="upload-btn" id="uploadLabel-${no}">📷 เลือกรูป</label>
             <button class="submit-btn" id="submitBtn-${no}" data-no="${no}">ส่งคำตอบ + รูป</button>
           </div>
@@ -520,10 +520,18 @@
     if (!file) { alert('กรุณาเลือกรูปภาพก่อนส่ง'); return; }
     if (uploadState[no] && uploadState[no].status === 'loading') return;
 
-    setStatus(no, 'loading', 'กำลังบีบอัดรูป...');
+    // ปิดปุ่ม + เปลี่ยนข้อความปุ่มให้ชัดเจนว่ากำลังทำงานอยู่ (ไม่ใช่ค้าง)
+    // กันการกดซ้ำระหว่างรอ และแก้ปัญหา "ไม่รู้ว่ากำลังโหลดอยู่หรือเปล่า"
+    const btn = document.getElementById('submitBtn-' + no);
+    const label = document.getElementById('uploadLabel-' + no);
+    const originalBtnText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังส่ง...'; }
+    if (label) label.style.pointerEvents = 'none';
+
+    setStatus(no, 'loading', '⏳ กำลังบีบอัดรูป...');
     try {
       const base64 = await compressImage(file, 1280, 0.72);
-      setStatus(no, 'loading', 'กำลังส่ง...');
+      setStatus(no, 'loading', '⏳ กำลังอัปโหลดขึ้นเซิร์ฟเวอร์... (อาจใช้เวลาสักครู่ถ้าเน็ตช้า)');
 
       // ห้ามใส่ header Content-Type เอง เพื่อไม่ให้เบราว์เซอร์ส่ง OPTIONS preflight
       // ซึ่ง Google Apps Script Web App ไม่รองรับ
@@ -547,6 +555,9 @@
     } catch (err) {
       console.error(err);
       setStatus(no, 'error', '❌ ส่งไม่สำเร็จ ลองใหม่อีกครั้ง (' + err.message + ')');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = originalBtnText || 'ส่งคำตอบ + รูป'; }
+      if (label) label.style.pointerEvents = '';
     }
   }
 </script>
