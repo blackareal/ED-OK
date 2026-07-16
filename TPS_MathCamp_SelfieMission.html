@@ -386,6 +386,18 @@
     `<button data-group="${g.id}">${g.id}</button>`
   ).join('');
 
+  // สลับกลุ่มแล้วต้องล้างสถานะของกลุ่มเก่าทิ้งทั้งหมดก่อน — ไม่งั้นข้อความ "ส่งแล้ว"
+  // หรือคำตอบที่เคยพิมพ์ไว้ของกลุ่มก่อนหน้าจะค้างติดหน้าจออยู่ ทั้งที่กลุ่มใหม่ยังไม่ได้
+  // ส่งอะไรเลย (uploadState เป็นตัวแปรเดียวใช้ร่วมกันทุกกลุ่ม ไม่ได้แยกเก็บตามกลุ่ม)
+  function resetAllMissionState() {
+    for (const key of Object.keys(uploadState)) delete uploadState[key];
+    for (const key of Object.keys(pendingFile)) delete pendingFile[key];
+    for (const key of Object.keys(pendingBase64)) delete pendingBase64[key];
+    for (const key of Object.keys(compressing)) delete compressing[key];
+    for (const key of Object.keys(compressGen)) delete compressGen[key];
+    render(currentFilter);
+  }
+
   groupButtonsEl.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
@@ -398,6 +410,7 @@
     groupSelect.style.display = 'none';
     groupActiveBar.style.display = 'block';
     document.body.classList.remove('no-group');
+    resetAllMissionState();
     refreshUploadStatus();
   });
 
@@ -562,6 +575,13 @@
         label.classList.add('has-file');
       }
       setStatus(no, 'ready', '✅ เตรียมรูปพร้อมแล้ว — พิมพ์คำตอบแล้วกดส่งได้เลย');
+      // iOS/iPadOS บางเครื่องหลังใช้ native photo picker แล้ว หน้าเว็บไม่คืนสถานะ
+      // touch/focus ให้ถูกต้อง (แตะ/พิมพ์อะไรต่อไม่ได้ทั้งที่ JS ทำงานเสร็จปกติแล้ว)
+      // แก้โดยบังคับย้าย focus มาที่ช่องพิมพ์คำตอบตรง ๆ ด้วย JS ทันทีที่เตรียมรูปเสร็จ
+      // ซึ่งมักจะ "ปลุก" ให้เบราว์เซอร์คืนสถานะ interactive ให้หน้าเว็บ พร้อมเปิดคีย์บอร์ด
+      // ให้พิมพ์ต่อได้เลยในตัว (ไม่ต้องแตะเพิ่มเอง)
+      const answerInputEl = document.getElementById('answer-' + no);
+      if (answerInputEl) answerInputEl.focus();
     }).catch((err) => {
       if (compressGen[no] !== myGen) return;
       console.error(err);
@@ -576,14 +596,16 @@
     return task;
   }
 
-  // เรียกทันทีตรง ๆ ใน event handler (แบบเดียวกับ clues.html) — ไม่หน่วงเวลา ไม่ blur
-  // อะไรเพิ่มเติม เพราะสิ่งเหล่านั้นเป็นการเดาที่ยังไม่มีหลักฐานว่าช่วยจริง และเพิ่ม
-  // ความซับซ้อนโดยไม่จำเป็น ตัดออกให้เหมือนเวอร์ชันที่พิสูจน์แล้วว่าเสถียรที่สุด
+  // เรียกทันทีตรง ๆ ใน event handler (แบบเดียวกับ clues.html) แต่เพิ่มการรีเซ็ต
+  // input.value ทิ้งทันทีหลังอ่านไฟล์เสร็จ เพื่อให้เบราว์เซอร์ปล่อย reference ของ
+  // native picker session ที่เพิ่งใช้ไป ไม่ค้างสถานะอะไรไว้ (ไม่กระทบตัวแปร file ที่
+  // อ้างอิงไว้แล้ว เพราะ File object เป็นอิสระจาก input.value)
   grid.addEventListener('change', (e) => {
     const input = e.target.closest('.file-input');
     if (!input || !input.files || !input.files.length) return;
     const no = parseInt(input.dataset.no, 10);
     const file = input.files[0];
+    input.value = '';
     pendingFile[no] = file;
     startCompressing(no, file);
   });
@@ -644,6 +666,12 @@
       const data = await res.json();
       if (data.status === 'ok') {
         setStatus(no, 'success', '✅ ส่งสำเร็จ (ส่งใหม่ได้ถ้าอยากแก้คำตอบหรือเปลี่ยนรูป)');
+        // เคลียร์รูปที่บีบอัดไว้ในหน่วยความจำทิ้งหลังส่งสำเร็จ — ไม่ต้องเก็บไว้แล้ว
+        // ถ้าไม่เคลียร์ ยิ่งทำหลายภารกิจในเซสชันเดียว (สูงสุด 32 ข้อ) ยิ่งสะสม
+        // หน่วยความจำมากขึ้นเรื่อย ๆ จนอาจกระทบความเร็วของทั้งหน้าเว็บได้
+        delete pendingBase64[no];
+        delete pendingFile[no];
+        delete compressing[no];
       } else {
         throw new Error(data.message || 'ไม่ทราบสาเหตุ');
       }
