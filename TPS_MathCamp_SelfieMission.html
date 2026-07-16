@@ -11,6 +11,7 @@
     --card2: #1a1a1a;
     --orange: #F4650C;
     --teal: #0EA5E9;
+    --gold: #e9c46a;
     --catA: #0EA5E9;
     --catB: #F4650C;
     --catC: #e9c46a;
@@ -35,6 +36,10 @@
     position: sticky;
     top: 0;
     z-index: 5;
+  }
+  header .eyebrow {
+    font-size: 0.72rem; color: var(--gold); font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.25em;
   }
   header h1 { margin: 0 0 0.15em; font-size: 1.3rem; color: var(--orange); }
   header p { margin: 0; font-size: 0.82rem; color: #aaa; }
@@ -77,14 +82,14 @@
 
   .group-active-bar {
     display: none;
-    background: #0a2233;
-    border-bottom: 1px solid #164a66;
-    color: #7ec8f0;
+    background: var(--card);
+    border-bottom: 1px solid #262626;
+    color: var(--teal);
     text-align: center;
     padding: 0.6em 1em;
     font-size: 0.87rem;
   }
-  .group-active-bar b { color: #bfe4fb; }
+  .group-active-bar b { color: #fff; }
   .group-active-bar button {
     margin-left: 0.6em;
     border: none;
@@ -96,7 +101,7 @@
     font-weight: 700;
   }
   .group-active-bar button:disabled { opacity: 0.5; text-decoration: none; cursor: default; }
-  .group-codes { font-size: 0.75rem; color: #6fae9f; margin-top: 0.3em; letter-spacing: 1px; word-break: break-word; }
+  .group-codes { font-size: 0.75rem; color: var(--gold); margin-top: 0.3em; letter-spacing: 1px; word-break: break-word; }
 
   .config-warning {
     background: #3a1414; border-bottom: 2px solid var(--warn); color: #ffb0b0;
@@ -212,22 +217,20 @@
 <body class="no-group">
 
 <header>
-  <h1>🧮📸 ภารกิจเซลฟี่คณิต</h1>
-  <p>ค่ายคณิตศาสตร์ โรงเรียนเต่างอยพัฒนศึกษา · 1) ถอดรหัสว่าโจทย์พูดถึงที่ไหน 2) ไปที่นั่นแล้วถ่ายภาพให้สร้างสรรค์ 3) แก้โจทย์คณิตส่งคำตอบ</p>
+  <div class="eyebrow">Mission 5</div>
+  <h1>Math Selfie</h1>
+  <p>ค่ายคณิตศาสตร์ โรงเรียนเต่างอยพัฒนศึกษา</p>
 </header>
 
-<div class="notice">✅ ทุกภาพต้องมีสมาชิกกลุ่มครบทุกคน · ไม่บังคับทำครบ 32 ข้อ ทำให้ได้มากที่สุดใน 40 นาที · แต่ละข้อต้องส่ง "รูปภาพ + คำตอบ" คู่กัน · ยิ่งตีความสถานที่สร้างสรรค์ ยิ่งสนุก!</div>
-
 <div class="group-select" id="groupSelect">
-  <div class="group-select-label">👥 เลือกกลุ่มของคุณก่อนเริ่ม (กลุ่มเดียวกับกิจกรรม STEM ช่วงบ่าย)</div>
+  <div class="group-select-label">Choose your group</div>
   <div class="group-buttons" id="groupButtons"></div>
 </div>
 
 <div class="group-active-bar" id="groupActiveBar">
-  ✅ กำลังส่งคำตอบในนาม <b id="activeGroupName"></b>
+  👥 <b id="activeGroupName"></b>
   <div class="group-codes" id="activeGroupCodes"></div>
-  <button id="btnChangeGroup">เปลี่ยนกลุ่ม</button>
-  <button id="btnRefreshStatus">🔄 เช็คสถานะล่าสุด</button>
+  <button id="btnRefreshStatus">🔄 Refresh</button>
 </div>
 
 <div class="config-warning" id="configWarning"></div>
@@ -346,7 +349,7 @@
       card.className = `card cat${cat}`;
       card.innerHTML = `
         <div class="card-top">
-          <div class="card-no">ภารกิจที่ ${no}</div>
+          <div class="card-no">Selfie#${no}</div>
           <span class="cat-badge cat${cat}">${CAT_LABELS[cat] || cat}</span>
         </div>
         <div class="mission-text">🔍 ${text}</div>
@@ -355,7 +358,7 @@
           <div class="file-row">
             <input type="file" accept="image/*" class="file-input" id="file-${no}" data-no="${no}">
             <label for="file-${no}" class="upload-btn" id="uploadLabel-${no}">📷 เลือกรูป</label>
-            <button class="submit-btn" id="submitBtn-${no}" data-no="${no}">ส่งคำตอบ + รูป</button>
+            <button class="submit-btn" id="submitBtn-${no}" data-no="${no}">Submit</button>
           </div>
           ${statusHtml(no)}
         </div>`;
@@ -404,7 +407,7 @@
     currentGroup = btn.dataset.group;
     const group = GROUPS.find(g => g.id === currentGroup);
     activeGroupName.textContent = currentGroup;
-    activeGroupCodes.textContent = group ? ('รหัสในกลุ่มนี้: ' + group.codes.join(', ')) : '';
+    activeGroupCodes.textContent = group ? ('สมาชิกในกลุ่ม : ' + group.codes.join(', ')) : '';
     document.querySelectorAll('#groupButtons button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     groupSelect.style.display = 'none';
@@ -412,11 +415,6 @@
     document.body.classList.remove('no-group');
     resetAllMissionState();
     refreshUploadStatus();
-  });
-
-  document.getElementById('btnChangeGroup').addEventListener('click', () => {
-    groupSelect.style.display = 'block';
-    groupActiveBar.style.display = 'none';
   });
 
   document.getElementById('btnRefreshStatus').addEventListener('click', refreshUploadStatus);
@@ -455,7 +453,7 @@
         const photoCell = (myRow[photoColIdx] || '').toString().trim();
         const answerCell = answerColIdx >= 0 ? (myRow[answerColIdx] || '').toString().trim() : '';
         if (photoCell) {
-          setStatus(no, 'success', '✅ ส่งแล้ว — คำตอบที่บันทึกไว้: ' + (answerCell || '(ไม่มี)'));
+          setStatus(no, 'success', '✅ Upload complete — Your answer is : ' + (answerCell || '(none)'));
           const answerInput = document.getElementById('answer-' + no);
           if (answerInput && !answerInput.value) answerInput.value = answerCell;
         }
@@ -664,7 +662,7 @@
       console.error(err);
       setStatus(no, 'error', '❌ ส่งไม่สำเร็จ ลองใหม่อีกครั้ง (' + err.message + ')');
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = originalBtnText || 'ส่งคำตอบ + รูป'; }
+      if (btn) { btn.disabled = false; btn.textContent = originalBtnText || 'Submit'; }
     }
   }
 </script>
