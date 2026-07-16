@@ -459,13 +459,14 @@
   // =====================================================================
   // บีบอัดรูปในเครื่องก่อนส่ง
   //
-  // เคยลองสลับไปใช้ createImageBitmap แบบ resize-ระหว่าง-decode เพื่อหวังว่าจะเร็ว
-  // ขึ้นบนมือถือ แต่จากการทดสอบจริงพบว่ามันกลับค้าง/ช้ากว่าเดิมมากบน iOS Safari
-  // บางเครื่อง (แม้กับรูปขนาดปกติ) จึงตัดออก แล้วกลับไปใช้วิธีเดิมแบบเดียวกับที่ใช้ใน
-  // Selfie Vocab Run (clues.html) ซึ่งพิสูจน์แล้วว่าเสถียรกับรูปทุกแบบในงานจริง —
-  // <img> + FileReader.readAsDataURL + canvas resize ธรรมดา ห่อด้วย
-  // requestAnimationFrame 2 รอบก่อนเริ่มงานหนัก เพื่อให้เบราว์เซอร์วาดข้อความ
-  // "กำลังเตรียมรูป..." ให้เห็นก่อนจอจะไม่ตอบสนองชั่วคราว
+  // สำคัญ: ห้ามห่อขั้นตอนหนัก (drawImage/toDataURL) ด้วย requestAnimationFrame
+  // เด็ดขาด — เคยลองทำแบบนั้นมาก่อนโดยหวังว่าจะให้เบราว์เซอร์วาดข้อความ "กำลัง
+  // เตรียมรูป..." ให้เห็นก่อน แต่ requestAnimationFrame จะ "หยุดทำงานทั้งหมด" เมื่อ
+  // หน้าเว็บไม่ visible ชั่วคราว ซึ่งเกิดขึ้นได้พอดีตอน native photo picker ของ iOS
+  // กำลังจะปิดตัวลง — ผลคือโค้ดที่ห่อด้วย rAF ไม่ทำงานเลยจนกว่าเบราว์เซอร์จะกลับมา
+  // visible อีกครั้ง (ซึ่งบางเครื่อง/บางจังหวะไม่กลับมาเร็วพอ ทำให้ดูเหมือนค้างไม่รู้จบ)
+  // — Selfie Vocab Run (clues.html) ไม่เคยห่อด้วย rAF เลยและไม่เคยเจอปัญหานี้ จึงตัด
+  // rAF ออกทั้งหมด ให้ทำงานตรง ๆ เหมือน clues.html เป๊ะ
   // =====================================================================
   function withTimeout(promise, ms, message) {
     return new Promise((resolve, reject) => {
@@ -485,24 +486,22 @@
         const img = new Image();
         img.onerror = () => reject(new Error("เปิดไฟล์รูปไม่สำเร็จ"));
         img.onload = () => {
-          requestAnimationFrame(() => requestAnimationFrame(() => {
-            try {
-              let { width, height } = img;
-              if (width > maxDim || height > maxDim) {
-                if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
-                else { width = Math.round(width * maxDim / height); height = maxDim; }
-              }
-              const canvas = document.createElement('canvas');
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, width, height);
-              const dataUrl = canvas.toDataURL('image/jpeg', quality);
-              resolve(dataUrl.split(',')[1]);
-            } catch (err) {
-              reject(err);
+          try {
+            let { width, height } = img;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+              else { width = Math.round(width * maxDim / height); height = maxDim; }
             }
-          }));
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(dataUrl.split(',')[1]);
+          } catch (err) {
+            reject(err);
+          }
         };
         img.src = e.target.result;
       };
@@ -563,7 +562,6 @@
         label.classList.add('has-file');
       }
       setStatus(no, 'ready', '✅ เตรียมรูปพร้อมแล้ว — พิมพ์คำตอบแล้วกดส่งได้เลย');
-      wakeUpTouchHandling();
     }).catch((err) => {
       if (compressGen[no] !== myGen) return;
       console.error(err);
@@ -573,36 +571,21 @@
       }
       setStatus(no, 'error', '❌ เตรียมรูปไม่สำเร็จ ลองเลือกรูปใหม่อีกครั้ง (' + err.message + ')');
       delete pendingFile[no];
-      wakeUpTouchHandling();
     });
     compressing[no] = task;
     return task;
   }
 
-  // บั๊กที่รู้จักกันของ iOS Safari (WKWebView): หลังใช้ <input type="file"> ผ่าน
-  // native photo picker แล้ว บางครั้งหน้าเว็บจะไม่คืนสถานะ touch/focus ให้ถูกต้อง
-  // ทำให้แตะ/พิมพ์อะไรต่อไม่ได้ทั้งที่ JS ทำงานเสร็จปกติแล้ว — วิธีแก้ที่ใช้กันทั่วไป
-  // คือบังคับให้เบราว์เซอร์ทำ reflow/recalculate hit-test ใหม่ด้วยการสลับ transform
-  // ไปมาเบา ๆ (เทคนิคนี้ไม่กระทบการแสดงผลที่ตาเห็นเลย)
-  function wakeUpTouchHandling() {
-    requestAnimationFrame(() => {
-      document.body.style.transform = 'translateZ(0)';
-      requestAnimationFrame(() => {
-        document.body.style.transform = '';
-      });
-    });
-  }
-
+  // เรียกทันทีตรง ๆ ใน event handler (แบบเดียวกับ clues.html) — ไม่หน่วงเวลา ไม่ blur
+  // อะไรเพิ่มเติม เพราะสิ่งเหล่านั้นเป็นการเดาที่ยังไม่มีหลักฐานว่าช่วยจริง และเพิ่ม
+  // ความซับซ้อนโดยไม่จำเป็น ตัดออกให้เหมือนเวอร์ชันที่พิสูจน์แล้วว่าเสถียรที่สุด
   grid.addEventListener('change', (e) => {
     const input = e.target.closest('.file-input');
     if (!input || !input.files || !input.files.length) return;
     const no = parseInt(input.dataset.no, 10);
     const file = input.files[0];
     pendingFile[no] = file;
-    input.blur();
-    // หน่วงเริ่มงานออกไปเล็กน้อย (แทนที่จะเริ่มทันทีตรง ๆ ใน event handler) เพื่อให้
-    // WKWebView คืนสถานะ touch/focus จาก native picker ที่เพิ่งปิดไปให้เรียบร้อยก่อน
-    setTimeout(() => startCompressing(no, file), 50);
+    startCompressing(no, file);
   });
 
   grid.addEventListener('click', (e) => {
