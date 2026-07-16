@@ -473,14 +473,27 @@
   // ถ้าเบราว์เซอร์ไม่รองรับ createImageBitmap (หรือรองรับแต่ resize ไม่ได้) จะ
   // fallback ไปใช้วิธีเดิมโดยอัตโนมัติ เพื่อความเข้ากันได้กับทุกเบราว์เซอร์
   // =====================================================================
+  // กันเหตุการณ์ "ค้างไม่รู้จบ" ไม่ว่าจะเกิดจากสาเหตุอะไร (เช่น บั๊กของเบราว์เซอร์บาง
+  // รุ่นกับ createImageBitmap แบบ resize) — ถ้าเตรียมรูปนานเกิน 15 วินาที จะยกเลิก
+  // แล้วแจ้งผู้ใช้ทันที แทนที่จะปล่อยให้หน้าจอค้างไม่มีทางออกแบบที่เจอมา
+  function withTimeout(promise, ms, message) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(message)), ms);
+      promise.then(
+        (v) => { clearTimeout(timer); resolve(v); },
+        (e) => { clearTimeout(timer); reject(e); }
+      );
+    });
+  }
+
   function compressImage(file, maxDim, quality) {
-    if (window.createImageBitmap) {
-      return compressImageFast(file, maxDim, quality).catch((err) => {
-        console.warn('บีบอัดแบบเร็ว (createImageBitmap) ไม่สำเร็จ ใช้วิธีสำรองแทน:', err);
-        return compressImageFallback(file, maxDim, quality);
-      });
-    }
-    return compressImageFallback(file, maxDim, quality);
+    const attempt = window.createImageBitmap
+      ? compressImageFast(file, maxDim, quality).catch((err) => {
+          console.warn('บีบอัดแบบเร็ว (createImageBitmap) ไม่สำเร็จ ใช้วิธีสำรองแทน:', err);
+          return compressImageFallback(file, maxDim, quality);
+        })
+      : compressImageFallback(file, maxDim, quality);
+    return withTimeout(attempt, 15000, 'เตรียมรูปนานเกิน 15 วินาที — รูปอาจใหญ่เกินไป หรือกำลังโหลดจาก iCloud ไม่เสร็จ ลองถ่ายรูปใหม่แทนการเลือกรูปเก่า หรือลองใหม่อีกครั้ง');
   }
 
   function compressImageFast(file, maxDim, quality) {
