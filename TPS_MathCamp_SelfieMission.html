@@ -575,12 +575,28 @@
   // 1) ผู้ใช้เห็นสถานะ "กำลังเตรียมรูป..." ตรงจังหวะที่เครื่องกำลังหนักจริง ๆ
   // 2) ตอนพิมพ์คำตอบเสร็จแล้วกดส่ง มักจะเร็วเกือบทันที เพราะบีบอัดเตรียมไว้ล่วงหน้าแล้ว
   // =====================================================================
+  // ไฟล์รูปที่ใหญ่ผิดปกติ (เช่น ภาพพาโนรามา, ภาพ RAW, หรือสกรีนช็อตความละเอียดสูงมาก)
+  // คือสาเหตุที่พบบ่อยที่สุดของอาการ "ค้างไม่รู้จบ" บนมือถือ — เช็คขนาดไฟล์ก่อนเริ่ม
+  // ทำอะไรเลย ถ้าใหญ่เกินไปให้ปฏิเสธทันทีแทนที่จะปล่อยให้ไปค้างตอน decode
+  const MAX_FILE_SIZE_MB = 20;
+
   function startCompressing(no, file) {
     compressGen[no] = (compressGen[no] || 0) + 1;
     const myGen = compressGen[no];
     delete pendingBase64[no];
 
     const label = document.getElementById('uploadLabel-' + no);
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      if (label) {
+        label.textContent = '📷 เลือกรูป';
+        label.classList.remove('compressing', 'has-file');
+      }
+      setStatus(no, 'error', `❌ ไฟล์รูปใหญ่เกินไป (${(file.size / 1024 / 1024).toFixed(1)}MB, จำกัดไม่เกิน ${MAX_FILE_SIZE_MB}MB) กรุณาถ่ายรูปใหม่หรือเลือกรูปอื่น`);
+      delete pendingFile[no];
+      return;
+    }
+
     if (label) {
       label.textContent = '⏳ กำลังเตรียมรูป...';
       label.classList.remove('has-file');
