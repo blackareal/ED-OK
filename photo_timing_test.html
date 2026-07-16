@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ทดสอบความเร็วเลือกรูป</title>
+<style>
+  body {
+    margin: 0;
+    font-family: "Tahoma", sans-serif;
+    background: #0d0d0d;
+    color: #eee;
+    padding: 1.2em;
+  }
+  h1 { font-size: 1.2rem; color: #F4650C; }
+  p.desc { color: #aaa; font-size: 0.9rem; }
+  .file-input { display: none; }
+  .upload-btn {
+    display: inline-block;
+    background: #0EA5E9;
+    color: #062338;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.8em 1.5em;
+    border-radius: 100px;
+    cursor: pointer;
+    margin: 1em 0;
+  }
+  .log {
+    background: #151515;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 1em;
+    font-family: monospace;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    min-height: 4em;
+  }
+  .log .ok { color: #4fd8b8; }
+  .log .warn { color: #ffb347; }
+  .log .bad { color: #ff6b6b; }
+</style>
+</head>
+<body>
+
+<h1>🧪 ทดสอบความเร็วเลือกรูป (ไม่เกี่ยวกับระบบภารกิจ)</h1>
+<p class="desc">กดปุ่มด้านล่าง เลือกรูปจากอัลบั้มหรือถ่ายรูปใหม่ก็ได้ — หน้านี้จะจับเวลาแต่ละขั้นตอนแล้วแสดงผลด้านล่างให้อ่านได้เลย ไม่ต้องต่อคอมพิวเตอร์หรือดู console ใด ๆ ถ่ายภาพหน้าจอผลลัพธ์ส่งกลับมาได้เลย</p>
+
+<input type="file" accept="image/*" class="file-input" id="fileInput">
+<label for="fileInput" class="upload-btn" id="pickLabel">📷 เลือกรูปเพื่อทดสอบ</label>
+
+<div class="log" id="log">ยังไม่ได้เลือกรูป...</div>
+
+<script>
+  const logEl = document.getElementById('log');
+  const fileInput = document.getElementById('fileInput');
+  let lines = [];
+
+  function addLine(text, cls) {
+    lines.push(cls ? `<span class="${cls}">${text}</span>` : text);
+    logEl.innerHTML = lines.join('\n');
+  }
+
+  function fmt(ms) {
+    return (ms / 1000).toFixed(2) + ' วิ';
+  }
+
+  fileInput.addEventListener('change', () => {
+    lines = [];
+    if (!fileInput.files || !fileInput.files.length) {
+      addLine('ไม่พบไฟล์ที่เลือก', 'bad');
+      return;
+    }
+    const file = fileInput.files[0];
+    const t0 = performance.now();
+    addLine(`[T+0.00 วิ] change event เริ่มทำงาน (ตอนนี้คือเวลาที่ JS ของหน้าเว็บรับรู้ว่าเลือกไฟล์เสร็จแล้ว)`);
+    addLine(`ชื่อไฟล์: ${file.name}`);
+    addLine(`ขนาดไฟล์: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+    addLine(`ชนิดไฟล์: ${file.type}`);
+    addLine('');
+    addLine('เริ่มอ่านไฟล์ (FileReader)...');
+
+    const reader = new FileReader();
+    reader.onerror = () => addLine('❌ FileReader อ่านไฟล์ไม่สำเร็จ', 'bad');
+    reader.onload = (e) => {
+      const t1 = performance.now();
+      addLine(`[T+${fmt(t1 - t0)}] FileReader อ่านไฟล์เสร็จ (ขั้นตอนนี้ไม่ควรเกิน 1-2 วิ)`, (t1 - t0) > 3000 ? 'warn' : 'ok');
+
+      const img = new Image();
+      img.onerror = () => addLine('❌ ถอดรหัสรูปไม่สำเร็จ', 'bad');
+      img.onload = () => {
+        const t2 = performance.now();
+        addLine(`[T+${fmt(t2 - t0)}] ถอดรหัสรูป (decode) เสร็จ — ขนาดจริง ${img.naturalWidth}x${img.naturalHeight} พิกเซล`, (t2 - t1) > 3000 ? 'warn' : 'ok');
+
+        try {
+          let { width, height } = img;
+          const maxDim = 1280;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const t3 = performance.now();
+          addLine(`[T+${fmt(t3 - t2)}] วาดลง canvas (resize เหลือ ${width}x${height}) เสร็จ`, (t3 - t2) > 2000 ? 'warn' : 'ok');
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          const t4 = performance.now();
+          addLine(`[T+${fmt(t4 - t3)}] บีบอัดเป็น JPEG (toDataURL) เสร็จ — ขนาดหลังบีบอัด ${(dataUrl.length / 1024).toFixed(0)} KB`, (t4 - t3) > 2000 ? 'warn' : 'ok');
+
+          addLine('');
+          addLine(`✅ รวมเวลาทั้งหมดตั้งแต่เลือกไฟล์เสร็จ: ${fmt(t4 - t0)}`, (t4 - t0) > 5000 ? 'warn' : 'ok');
+          addLine('(หมายเหตุ: เวลานี้ยังไม่นับรวมเวลาที่โทรศัพท์ใช้ "ก่อน" change event จะทำงาน เช่น ตอนที่ปิดหน้าเลือกรูปแล้วรอเบราว์เซอร์รับไฟล์ — ถ้าฉีกจากตอนกดเลือกรูปเสร็จจริง ๆ นานกว่าเลขด้านบนมาก แปลว่าติดช่วงก่อนหน้านี้ ไม่ใช่ที่หน้าเว็บ)');
+        } catch (err) {
+          addLine('❌ เกิดข้อผิดพลาดตอนประมวลผลรูป: ' + err.message, 'bad');
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+</script>
+</body>
+</html>
