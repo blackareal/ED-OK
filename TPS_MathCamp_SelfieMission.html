@@ -542,39 +542,28 @@
   // ทำอะไรเลย ถ้าใหญ่เกินไปให้ปฏิเสธทันทีแทนที่จะปล่อยให้ไปค้างตอน decode
   const MAX_FILE_SIZE_MB = 20;
 
+  // สำคัญ: ห้ามแก้ textContent/classList ของ <label for="file-N"> (ปุ่มเลือกรูป)
+  // เลยหลังไฟล์ถูกเลือก — clues.html ที่เสถียรไม่เคยแตะ label ตัวนี้เลย มันผูกอยู่กับ
+  // <input type="file"> ตัวเดียวกับที่เพิ่งเปิด native picker มา การไปรีเฟรช DOM ของ
+  // label ตัวนี้ทันทีหลังปิด picker น่าจะเป็นสาเหตุที่ทำให้ iOS บางเครื่องค้าง — ย้าย
+  // ข้อความ/สถานะทั้งหมดไปแสดงที่ .upload-status (คนละ element) แทน เหมือน clues.html
   function startCompressing(no, file) {
     compressGen[no] = (compressGen[no] || 0) + 1;
     const myGen = compressGen[no];
     delete pendingBase64[no];
 
-    const label = document.getElementById('uploadLabel-' + no);
-
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      if (label) {
-        label.textContent = '📷 เลือกรูป';
-        label.classList.remove('compressing', 'has-file');
-      }
       setStatus(no, 'error', `❌ ไฟล์รูปใหญ่เกินไป (${(file.size / 1024 / 1024).toFixed(1)}MB, จำกัดไม่เกิน ${MAX_FILE_SIZE_MB}MB) กรุณาถ่ายรูปใหม่หรือเลือกรูปอื่น`);
       delete pendingFile[no];
       return;
     }
 
-    if (label) {
-      label.textContent = '⏳ กำลังเตรียมรูป...';
-      label.classList.remove('has-file');
-      label.classList.add('compressing');
-    }
     setStatus(no, 'loading', '⏳ กำลังเตรียมรูป... (รอสักครู่ ระบบกำลังบีบอัดให้อัตโนมัติ)');
 
     const task = compressImage(file, 1280, 0.72).then((base64) => {
       if (compressGen[no] !== myGen) return; // มีการเลือกรูปใหม่แซงไปแล้ว ผลลัพธ์นี้เก่าเกินไป ไม่ใช้
       pendingBase64[no] = base64;
-      if (label) {
-        label.textContent = '📷 เลือกแล้ว: ' + file.name;
-        label.classList.remove('compressing');
-        label.classList.add('has-file');
-      }
-      setStatus(no, 'ready', '✅ เตรียมรูปพร้อมแล้ว — พิมพ์คำตอบแล้วกดส่งได้เลย');
+      setStatus(no, 'ready', '✅ เตรียมรูปพร้อมแล้ว (' + file.name + ') — พิมพ์คำตอบแล้วกดส่งได้เลย');
       // iOS/iPadOS บางเครื่องหลังใช้ native photo picker แล้ว หน้าเว็บไม่คืนสถานะ
       // touch/focus ให้ถูกต้อง (แตะ/พิมพ์อะไรต่อไม่ได้ทั้งที่ JS ทำงานเสร็จปกติแล้ว)
       // แก้โดยบังคับย้าย focus มาที่ช่องพิมพ์คำตอบตรง ๆ ด้วย JS ทันทีที่เตรียมรูปเสร็จ
@@ -585,10 +574,6 @@
     }).catch((err) => {
       if (compressGen[no] !== myGen) return;
       console.error(err);
-      if (label) {
-        label.textContent = '📷 เลือกรูป';
-        label.classList.remove('compressing', 'has-file');
-      }
       setStatus(no, 'error', '❌ เตรียมรูปไม่สำเร็จ ลองเลือกรูปใหม่อีกครั้ง (' + err.message + ')');
       delete pendingFile[no];
     });
@@ -633,11 +618,11 @@
 
     // ปิดปุ่ม + เปลี่ยนข้อความปุ่มให้ชัดเจนว่ากำลังทำงานอยู่ (ไม่ใช่ค้าง)
     // กันการกดซ้ำระหว่างรอ และแก้ปัญหา "ไม่รู้ว่ากำลังโหลดอยู่หรือเปล่า"
+    // (ตั้งใจไม่แตะ uploadLabel-N เลย เพราะมันผูกกับ <input type="file"> ที่เพิ่งเปิด
+    // native picker มา — ดูคอมเมนต์ใน startCompressing ด้านบน)
     const btn = document.getElementById('submitBtn-' + no);
-    const label = document.getElementById('uploadLabel-' + no);
     const originalBtnText = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังส่ง...'; }
-    if (label) label.style.pointerEvents = 'none';
 
     try {
       // ปกติรูปจะถูกบีบอัดเตรียมไว้ล่วงหน้าตั้งแต่ตอนเลือกไฟล์แล้ว (ดู startCompressing)
@@ -680,7 +665,6 @@
       setStatus(no, 'error', '❌ ส่งไม่สำเร็จ ลองใหม่อีกครั้ง (' + err.message + ')');
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = originalBtnText || 'ส่งคำตอบ + รูป'; }
-      if (label) label.style.pointerEvents = '';
     }
   }
 </script>
