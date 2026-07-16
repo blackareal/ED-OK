@@ -33,9 +33,7 @@
     color: #fff;
     padding: 1.3em 1.2em 1.1em;
     text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 5;
+    position: relative;
   }
   header .eyebrow {
     font-size: 0.72rem; color: var(--gold); font-weight: 700;
@@ -43,6 +41,22 @@
   }
   header h1 { margin: 0 0 0.15em; font-size: 1.3rem; color: var(--orange); }
   header p { margin: 0; font-size: 0.82rem; color: #aaa; }
+  #btnRefreshStatus {
+    position: fixed;
+    top: 0.8em;
+    right: 0.9em;
+    border: 1px solid var(--orange);
+    background: #1a1a1a;
+    color: var(--orange);
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.4em 0.9em;
+    border-radius: 100px;
+    cursor: pointer;
+    z-index: 50;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  }
+  #btnRefreshStatus:disabled { opacity: 0.6; cursor: default; }
 
   .notice {
     background: #2a1f10;
@@ -90,17 +104,6 @@
     font-size: 0.87rem;
   }
   .group-active-bar b { color: #fff; }
-  .group-active-bar button {
-    margin-left: 0.6em;
-    border: none;
-    background: none;
-    color: var(--orange);
-    text-decoration: underline;
-    font-size: 0.83rem;
-    cursor: pointer;
-    font-weight: 700;
-  }
-  .group-active-bar button:disabled { opacity: 0.5; text-decoration: none; cursor: default; }
   .group-codes { font-size: 0.75rem; color: var(--gold); margin-top: 0.3em; letter-spacing: 1px; word-break: break-word; }
 
   .config-warning {
@@ -201,6 +204,7 @@
   <div class="eyebrow">Mission 5</div>
   <h1>Math Selfie</h1>
   <p>ค่ายคณิตศาสตร์ โรงเรียนเต่างอยพัฒนศึกษา</p>
+  <button id="btnRefreshStatus">🔄 Refresh</button>
 </header>
 
 <div class="group-select" id="groupSelect">
@@ -211,7 +215,6 @@
 <div class="group-active-bar" id="groupActiveBar">
   👥 <b id="activeGroupName"></b>
   <div class="group-codes" id="activeGroupCodes"></div>
-  <button id="btnRefreshStatus">🔄 Refresh</button>
 </div>
 
 <div class="config-warning" id="configWarning"></div>
