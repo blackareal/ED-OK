@@ -537,7 +537,7 @@
     list.innerHTML = ANSWER_KEY.map(([no, cat, loc, mission, answer]) => `
       <div class="ak-row">
         <div>
-          <div class="ak-no">Selfie #${no} <span class="cat-badge cat${cat}">${cat === 'A' ? '📐 เรขาคณิต' : cat === 'B' ? '🔢 พีชคณิต' : cat === 'C' ? '🎲 สถิติ' : '🎯 พิเศษ'}</span></div>
+          <div class="ak-no">Selfie#${no} <span class="cat-badge cat${cat}">${cat === 'A' ? '📐 เรขาคณิต' : cat === 'B' ? '🔢 พีชคณิต' : cat === 'C' ? '🎲 สถิติ' : '🎯 พิเศษ'}</span></div>
           <div class="ak-mission">🔍 ${mission}</div>
           <div class="ak-reveal-buttons">
             <button class="ak-reveal-btn" data-target="ak-reveal-${no}">🔑 Answer</button>
