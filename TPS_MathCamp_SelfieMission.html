@@ -613,6 +613,7 @@
         label.classList.add('has-file');
       }
       setStatus(no, 'ready', '✅ เตรียมรูปพร้อมแล้ว — พิมพ์คำตอบแล้วกดส่งได้เลย');
+      wakeUpTouchHandling();
     }).catch((err) => {
       if (compressGen[no] !== myGen) return;
       console.error(err);
@@ -622,9 +623,24 @@
       }
       setStatus(no, 'error', '❌ เตรียมรูปไม่สำเร็จ ลองเลือกรูปใหม่อีกครั้ง (' + err.message + ')');
       delete pendingFile[no];
+      wakeUpTouchHandling();
     });
     compressing[no] = task;
     return task;
+  }
+
+  // บั๊กที่รู้จักกันของ iOS Safari (WKWebView): หลังใช้ <input type="file"> ผ่าน
+  // native photo picker แล้ว บางครั้งหน้าเว็บจะไม่คืนสถานะ touch/focus ให้ถูกต้อง
+  // ทำให้แตะ/พิมพ์อะไรต่อไม่ได้ทั้งที่ JS ทำงานเสร็จปกติแล้ว — วิธีแก้ที่ใช้กันทั่วไป
+  // คือบังคับให้เบราว์เซอร์ทำ reflow/recalculate hit-test ใหม่ด้วยการสลับ transform
+  // ไปมาเบา ๆ (เทคนิคนี้ไม่กระทบการแสดงผลที่ตาเห็นเลย)
+  function wakeUpTouchHandling() {
+    requestAnimationFrame(() => {
+      document.body.style.transform = 'translateZ(0)';
+      requestAnimationFrame(() => {
+        document.body.style.transform = '';
+      });
+    });
   }
 
   grid.addEventListener('change', (e) => {
@@ -633,7 +649,10 @@
     const no = parseInt(input.dataset.no, 10);
     const file = input.files[0];
     pendingFile[no] = file;
-    startCompressing(no, file);
+    input.blur();
+    // หน่วงเริ่มงานออกไปเล็กน้อย (แทนที่จะเริ่มทันทีตรง ๆ ใน event handler) เพื่อให้
+    // WKWebView คืนสถานะ touch/focus จาก native picker ที่เพิ่งปิดไปให้เรียบร้อยก่อน
+    setTimeout(() => startCompressing(no, file), 50);
   });
 
   grid.addEventListener('click', (e) => {
