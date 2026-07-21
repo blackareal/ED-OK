@@ -219,8 +219,6 @@ main { display: flex; flex: 1; overflow: hidden; }
 .sf-rule-card p { flex: 1; margin: 0; font-size: clamp(0.76rem, 0.5vw + 0.9vh, 0.98rem); line-height: 1.4; }
 
 .sf-qr-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 0.5em; background: #fff; border-radius: 20px; padding: 0.9em 1.4em; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-.sf-qr-label { color: #1B4D3E; font-weight: 700; font-size: clamp(0.85rem, 0.8vw + 0.8vh, 1.05rem); }
-.sf-qr-url { color: #6b8f7a; font-size: 0.72rem; word-break: break-all; max-width: 320px; }
 .sf-qr-box { width: clamp(100px, 9vw + 9vh, 170px); height: clamp(100px, 9vw + 9vh, 170px); }
 .sf-qr-box img { display: block; width: 100%; height: 100%; }
 
@@ -317,7 +315,7 @@ main { display: flex; flex: 1; overflow: hidden; }
     <div class="camp-sub">ค่ายคณิตศาสตร์ ครั้งที่ 12 โรงเรียนสุวรรณภูมิพิทยไพศาล</div>
   </div>
   <div class="header-right">
-    <button class="header-qr-btn" onclick="openQrModal()">📱 QR นักเรียน</button>
+    <button class="header-qr-btn" onclick="openQrModal()">📱 QR Code</button>
     <div class="clock-wrap">
       <div class="clock" id="clock">--:--:--</div>
       <div class="refresh-label" id="refresh-label">อัปเดตอัตโนมัติทุก 60 วินาที</div>
@@ -330,8 +328,6 @@ main { display: flex; flex: 1; overflow: hidden; }
     <button class="qr-modal-close" onclick="closeQrModal()">✕</button>
     <div class="sf-qr-wrap">
       <div class="sf-qr-box" id="sfQrBox"><img id="sfQrImg" alt="QR code"></div>
-      <div class="sf-qr-label">📱 สแกนเพื่อเปิดหน้านักเรียน</div>
-      <div class="sf-qr-url" id="sfQrUrlText"></div>
     </div>
   </div>
 </div>
@@ -418,7 +414,7 @@ main { display: flex; flex: 1; overflow: hidden; }
     <div class="sf-meta">โรงเรียนสุวรรณภูมิพิทยไพศาล · ค่ายคณิตศาสตร์ · 8 ทีมสี</div>
 
     <div class="sf-rules-grid" style="margin: 0 auto 1.4em;">
-      <div class="sf-rule-card"><div class="num">1</div><p>สแกน QR จากปุ่ม 📱 QR นักเรียน มุมขวาบนของจอ เพื่อเปิดหน้าของนักเรียน (คะแนนทีม + ตารางฐาน + ภารกิจเซลฟี่) — เข้าได้ตั้งแต่เช้า ไม่ต้องรอถึงช่วงภารกิจเซลฟี่</p></div>
+      <div class="sf-rule-card"><div class="num">1</div><p>สแกน QR จากปุ่ม 📱 QR Code มุมขวาบนของจอ เพื่อเปิดหน้าของนักเรียน (คะแนนทีม + ตารางฐาน + ภารกิจเซลฟี่) — เข้าได้ตั้งแต่เช้า ไม่ต้องรอถึงช่วงภารกิจเซลฟี่</p></div>
       <div class="sf-rule-card"><div class="num">2</div><p>ไม่บังคับทำให้ครบ ทำให้ได้มากที่สุดภายในเวลาที่กำหนด</p></div>
       <div class="sf-rule-card"><div class="num">3</div><p>ทุกภาพต้องมี <b>สมาชิกครบทุกคน</b> ในทีมอยู่ในภาพ (ยกเว้นภารกิจระบุไว้เป็นอย่างอื่น)</p></div>
       <div class="sf-rule-card"><div class="num">4</div><p>สมาชิกคนไหนในทีมก็กดอัปโหลดภาพได้ ไม่ต้องเป็นตัวแทนคนเดียว</p></div>
@@ -951,11 +947,10 @@ function renderSchedule() {
 //  ไม่ใช่หน้า SelfieMission.html เดิมอีกต่อไป
 // ═══════════════════════════════════════════════════════
 const MISSION_PAGE_URL = "https://blackareal.github.io/ED-OK/SWP_MathCamp12_StudentView.html";
-document.getElementById('sfQrUrlText').textContent = MISSION_PAGE_URL;
 document.getElementById('sfQrImg').src =
   "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(MISSION_PAGE_URL);
 
-// QR อยู่ในแถบบนสุด (ปุ่ม 📱 QR นักเรียน) แล้ว ให้นักเรียนสแกนเข้าได้ตั้งแต่เช้า
+// QR อยู่ในแถบบนสุด (ปุ่ม 📱 QR Code) แล้ว ให้นักเรียนสแกนเข้าได้ตั้งแต่เช้า
 // ไม่ต้องรอถึงแท็บภารกิจเซลฟี่ — กดปุ่มแล้วเปิด modal แสดง QR เดิมตัวเดียวกัน
 function openQrModal() {
   document.getElementById('qrModalOverlay').classList.add('show');
