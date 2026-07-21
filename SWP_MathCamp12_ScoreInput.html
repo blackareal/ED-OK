@@ -139,11 +139,13 @@
   .sched-table th { background: #0f172a; color: #94a3b8; font-size: 0.72rem; }
   .sched-table td.rnd-lbl { background: #0f172a; color: #93c5fd; font-weight: 700; }
 
-  /* ── ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐาน) — แถบคงที่ ใช้ได้ทุกแท็บ ── */
+  /* ── ควบคุมรอบกิจกรรม + ภารกิจเซลฟี่ (แจ้ง/เปิดให้นักเรียนเห็น) — แถบคงที่ ใช้ได้ทุกแท็บ ── */
   #round-control-bar {
     background: #1e3a5f; border-bottom: 1px solid #3b82f6; padding: 10px 24px;
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    display: flex; flex-direction: column; gap: 8px;
   }
+  .rc-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rc-row + .rc-row { padding-top: 8px; border-top: 1px solid #33415555; }
   .rc-label { font-size: 0.78rem; font-weight: 700; color: #93c5fd; white-space: nowrap; }
   .rc-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
   .rc-btn {
@@ -153,6 +155,7 @@
   .rc-btn:hover { border-color: #475569; color: #e2e8f0; }
   .rc-btn.active { background: #16a34a; border-color: #16a34a; color: #fff; }
   .rc-btn.active.end { background: #7c3aed; border-color: #7c3aed; }
+  .rc-btn.active.locked { background: #dc2626; border-color: #dc2626; }
   .rc-status { font-size: 0.72rem; color: #64748b; margin-left: auto; }
 </style>
 </head>
@@ -183,9 +186,16 @@
 </header>
 
 <div id="round-control-bar">
-  <span class="rc-label">🔔 ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐานของนักเรียน)</span>
-  <div class="rc-buttons" id="rc-buttons"></div>
-  <span class="rc-status" id="rc-status">กำลังโหลด...</span>
+  <div class="rc-row">
+    <span class="rc-label">🔔 ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐานของนักเรียน)</span>
+    <div class="rc-buttons" id="rc-buttons"></div>
+    <span class="rc-status" id="rc-status">กำลังโหลด...</span>
+  </div>
+  <div class="rc-row">
+    <span class="rc-label">📸 ควบคุมภารกิจเซลฟี่ (เปิด/ปิดให้นักเรียนเห็น)</span>
+    <div class="rc-buttons" id="rc-selfie-buttons"></div>
+    <span class="rc-status" id="rc-selfie-status">กำลังโหลด...</span>
+  </div>
 </div>
 
 <nav>
@@ -414,7 +424,7 @@ const SCHEDULE = [
 ];
 
 let state = {
-  settings: { landPrice: 100000, winnerValue: 100000, loserValue: 80000, currentRound: 0, roundTriggerAt: 0 },
+  settings: { landPrice: 100000, winnerValue: 100000, loserValue: 80000, currentRound: 0, roundTriggerAt: 0, selfieUnlocked: 0 },
   transactions: [],
 };
 let prices = { btc: null, gold: null };
@@ -594,6 +604,42 @@ function setCurrentRound(val) {
   apiCall('saveSettings', { data: { currentRound: val, roundTriggerAt: triggerAt } });
   renderRoundControl();
   showToast(`🔔 แจ้งเตือนนักเรียนแล้ว: ${opt.label}`);
+}
+
+// ======================== ควบคุมภารกิจเซลฟี่ (เปิด/ปิดให้นักเรียนเห็น) ========================
+// ครูกดปุ่มตรงนี้เพื่อเปิด/ปิดแท็บ "เซลฟี่" ในหน้านักเรียนแบบสด — เดิมต้องแก้โค้ด
+// SELFIE_UNLOCKED ในไฟล์ StudentView ตรงๆ (ไม่สะดวกตอนใช้งานจริง) เปลี่ยนมาควบคุมผ่าน
+// แถบเดียวกับ currentRound ด้านบนนี้แทน (config key 'selfieUnlocked': 0=ล็อกอยู่, 1=เปิดแล้ว)
+const SELFIE_OPTIONS = [
+  { val: 0, label: '🔒 ปิดอยู่ (ล็อก)' },
+  { val: 1, label: '📸 เปิดให้ทำภารกิจ' },
+];
+
+function renderSelfieControl() {
+  const el = document.getElementById('rc-selfie-buttons');
+  if (!el) return;
+  const current = state.settings.selfieUnlocked ? 1 : 0;
+  el.innerHTML = SELFIE_OPTIONS.map(o => `
+    <button class="rc-btn ${o.val === current ? 'active' : ''} ${o.val === 0 ? 'locked' : ''}" onclick="setSelfieUnlocked(${o.val})">${o.label}</button>
+  `).join('');
+  const statusEl = document.getElementById('rc-selfie-status');
+  if (statusEl) {
+    const opt = SELFIE_OPTIONS.find(o => o.val === current);
+    statusEl.textContent = `สถานะปัจจุบัน: ${opt ? opt.label : '-'}`;
+  }
+}
+
+function setSelfieUnlocked(val) {
+  const opt = SELFIE_OPTIONS.find(o => o.val === val);
+  const msg = val === 1
+    ? 'ยืนยันเปิดภารกิจเซลฟี่?\nนักเรียนทุกทีมจะเห็นแท็บเซลฟี่และเริ่มส่งภารกิจได้ทันที'
+    : 'ยืนยันปิด/ล็อกภารกิจเซลฟี่?\nนักเรียนจะไม่เห็นแท็บเซลฟี่อีกจนกว่าจะเปิดใหม่';
+  if (!confirm(msg)) return;
+  state.settings.selfieUnlocked = val;
+  saveState();
+  apiCall('saveSettings', { data: { selfieUnlocked: val } });
+  renderSelfieControl();
+  showToast(val === 1 ? '📸 เปิดภารกิจเซลฟี่แล้ว' : '🔒 ปิดภารกิจเซลฟี่แล้ว');
 }
 
 function renderTeamList() {
@@ -1031,6 +1077,7 @@ async function init() {
   updatePriceDisplays();
   renderHistory();
   renderRoundControl();
+  renderSelfieControl();
 
   fetchPrices();
   setInterval(fetchPrices, 60000);
