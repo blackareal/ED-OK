@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>นักเรียน · SWP Math Camp12</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+/* ═══════ สีโทนโรงเรียน: เขียว-ขาว (สุวรรณภูมิพิทยไพศาล) ═══════
+   ปรับจากธีมกรมท่า/น้ำเงินเดิม → เขียว-ขาว ทั้งหมด ยกเว้นสีเฉพาะทีม (t.hex ต่อทีม
+   ที่ตั้งผ่าน --myhex/inline style) และสีสื่อความหมายสากล (แดง=error/ลบ,
+   เขียวสด=live/สำเร็จ, เหลือง/อำพัน=รอ) ซึ่งคงไว้ตามเดิมเพื่อความชัดเจนของ UX */
+body {
+  font-family: 'Sarabun', 'Segoe UI', sans-serif;
+  background: #04120a;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+button { font-family: inherit; }
+
+/* ═══════ TEAM SELECT (first launch) ═══════ */
+#teamSelectScreen {
+  position: fixed; inset: 0; z-index: 100;
+  background: radial-gradient(circle at top, #123a24, #04120a);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px; text-align: center;
+}
+#teamSelectScreen.hidden { display: none; }
+.ts-title { font-size: 1.3rem; font-weight: 800; color: #86efac; margin-bottom: 4px; }
+.ts-sub { font-size: 0.82rem; color: #6b8f7a; margin-bottom: 24px; }
+.ts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 380px; }
+.ts-btn {
+  border: 2px solid #1f3d2c; background: #0a1f14; color: #e2e8f0;
+  border-radius: 14px; padding: 16px 8px; font-weight: 800; font-size: 0.95rem;
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.ts-btn .dot { width: 22px; height: 22px; border-radius: 50%; }
+
+/* ═══════ APP SHELL ═══════ */
+#app { display: none; flex-direction: column; min-height: 100vh; }
+#app.active { display: flex; }
+
+#top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: linear-gradient(90deg, #0a1f14, #123a24);
+  border-bottom: 2px solid var(--myhex, #22c55e); flex-shrink: 0; position: sticky; top: 0; z-index: 20;
+}
+.tb-team { display: flex; align-items: center; gap: 8px; }
+.tb-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--myhex, #22c55e); flex-shrink: 0; }
+.tb-name { font-weight: 800; font-size: 0.95rem; }
+.tb-camp { font-size: 0.62rem; color: #6b8f7a; }
+.tb-right { text-align: right; }
+.tb-clock { font-size: 0.95rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tb-change { font-size: 0.65rem; color: #4ade80; text-decoration: underline; cursor: pointer; margin-top: 2px; }
+
+#content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 90px; }
+.pane { display: none; }
+.pane.active { display: block; }
+
+.card { background: #0a1f16; border: 1px solid #10241a; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+.card-title { font-size: 0.72rem; font-weight: 700; color: #6b8f7a; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+
+/* my team card */
+.mt-value { font-size: 2.1rem; font-weight: 900; color: var(--myhex, #86efac); line-height: 1.1; }
+.mt-gain { font-size: 0.9rem; font-weight: 700; margin-top: 4px; }
+.mt-rank-badge { display: inline-block; margin-top: 8px; background: #123a24; border: 1px solid #22c55e; border-radius: 100px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; color: #86efac; }
+
+.asset-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #10241a; }
+.asset-left { display: flex; align-items: center; gap: 8px; }
+.asset-icon { font-size: 1.3rem; }
+.asset-name { font-weight: 700; font-size: 0.88rem; }
+.asset-qty { font-size: 0.7rem; color: #6b8f7a; }
+.asset-val { font-weight: 800; text-align: right; }
+.asset-chg { font-size: 0.7rem; text-align: right; }
+
+.hist-item { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #10241a; font-size: 0.82rem; }
+.hist-time { color: #6b8f7a; min-width: 46px; flex-shrink: 0; }
+.hist-empty { color: #24413a; font-size: 0.85rem; text-align: center; padding: 20px 0; }
+
+/* ranking */
+.rank-row { display: flex; align-items: center; gap: 12px; background: #0a1f16; border: 1px solid #10241a; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+.rank-row.me { border-color: var(--myhex, #22c55e); background: #123a24; }
+.rank-num { font-size: 1.2rem; font-weight: 900; width: 30px; text-align: center; flex-shrink: 0; }
+.rank-info { flex: 1; }
+.rank-name { font-weight: 800; font-size: 0.9rem; }
+.rank-val { font-weight: 900; text-align: right; }
+
+/* station tab — live=เขียว, รอ=อำพัน (เพื่อให้แยกจาก live เห็นชัด), เสร็จแล้ว=เทากลาง */
+.status-banner { border-radius: 14px; padding: 16px; margin-bottom: 14px; text-align: center; }
+.status-banner.live { background: linear-gradient(135deg, #052e14, #0a1f16); border: 1px solid #16a34a; }
+.status-banner.wait { background: linear-gradient(135deg, #2a2410, #0a1f16); border: 1px solid #ca8a04; }
+.status-banner.done { background: #0a1f16; border: 1px solid #24413a; }
+.sb-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #9fc2ab; margin-bottom: 6px; }
+.sb-main { font-size: 1.15rem; font-weight: 900; }
+.sb-sub { font-size: 0.8rem; color: #9fc2ab; margin-top: 4px; }
+.sb-countdown { font-size: 1.6rem; font-weight: 900; font-variant-numeric: tabular-nums; margin-top: 6px; }
+
+.notif-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #2a4a3a; background: #0f2b1f; color: #9fc2ab; font-weight: 700; font-size: 0.85rem; margin-bottom: 14px; cursor: pointer; }
+.notif-btn.on { border-color: #16a34a; background: #052e14; color: #4ade80; }
+
+.rnd-row { display: flex; align-items: center; gap: 10px; background: #0a1f16; border: 1px solid #10241a; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+.rnd-row.current { border-color: #16a34a; background: #052e1444; }
+.rnd-num { font-size: 0.75rem; color: #6b8f7a; min-width: 54px; }
+.rnd-info { flex: 1; }
+.rnd-station { font-weight: 700; font-size: 0.88rem; }
+.rnd-vs { font-size: 0.78rem; color: #9fc2ab; margin-top: 2px; }
+.rnd-time { font-size: 0.75rem; color: #6b8f7a; text-align: right; }
+
+/* selfie lock */
+.lock-wrap { text-align: center; padding: 60px 20px; }
+.lock-icon { font-size: 3.5rem; margin-bottom: 12px; }
+.lock-title { font-size: 1.1rem; font-weight: 800; color: #9fc2ab; margin-bottom: 6px; }
+.lock-sub { font-size: 0.85rem; color: #6b8f7a; line-height: 1.6; }
+
+/* selfie mission cards (ms- = mission selfie) */
+.ms-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
+.ms-refresh-btn { padding: 8px 14px; border-radius: 100px; border: 1px solid #2a4a3a; background: #0f2b1f; color: #9fc2ab; font-weight: 700; font-size: 0.75rem; cursor: pointer; }
+.ms-card { background: #0a1f16; border: 1px solid #10241a; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.ms-card.done { border-color: #16a34a; }
+.ms-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ms-no { font-weight: 800; font-size: 0.8rem; color: #6b8f7a; }
+.ms-cat-badge { font-size: 0.65rem; font-weight: 700; padding: 0.2em 0.6em; border-radius: 100px; color: #04120a; white-space: nowrap; }
+.ms-cat-badge.catA { background: #22c55e; }
+.ms-cat-badge.catB { background: #4ade80; }
+.ms-cat-badge.catC { background: #a3e635; }
+.ms-cat-badge.catS { background: #facc15; }
+.ms-text { font-size: 0.85rem; line-height: 1.55; margin-bottom: 10px; color: #e2e8f0; }
+.ms-answer-input {
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #24413a;
+  background: #04120a; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 8px;
+}
+.ms-answer-input:focus { outline: none; border-color: #22c55e; }
+.ms-file-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ms-file-input { display: none; }
+.ms-upload-btn {
+  padding: 8px 12px; border-radius: 10px; border: 1px dashed #2a4a3a; background: #0f2b1f;
+  color: #9fc2ab; font-size: 0.78rem; font-weight: 700; cursor: pointer; flex-shrink: 0;
+}
+.ms-submit-btn {
+  padding: 8px 16px; border-radius: 10px; border: none; background: #22c55e;
+  color: #04120a; font-weight: 800; font-size: 0.8rem; cursor: pointer; flex-shrink: 0;
+}
+.ms-submit-btn:disabled { opacity: 0.6; cursor: default; }
+.ms-status { width: 100%; font-size: 0.72rem; margin-top: 6px; padding: 6px 10px; border-radius: 8px; }
+.ms-status.loading { background: #2a2410; color: #facc15; }
+.ms-status.ready   { background: #0f2b1f; color: #4ade80; }
+.ms-status.success { background: #052e14; color: #4ade80; }
+.ms-status.error   { background: #3a0d0d; color: #fca5a5; }
+.ms-config-warning { background: #3a0d0d; border: 1px solid #ef4444; color: #fca5a5; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; font-size: 0.78rem; display: none; }
+
+/* alert overlay */
+#stationAlert {
+  position: fixed; inset: 0; z-index: 200; display: none;
+  background: rgba(4,18,10,0.94); align-items: center; justify-content: center; padding: 24px; text-align: center;
+}
+#stationAlert.show { display: flex; }
+.alert-box { background: #0a1f14; border: 2px solid #16a34a; border-radius: 20px; padding: 32px 24px; max-width: 380px; }
+.alert-icon { font-size: 3rem; margin-bottom: 10px; }
+.alert-title { font-size: 1.3rem; font-weight: 900; color: #4ade80; margin-bottom: 8px; }
+.alert-detail { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.alert-sub { font-size: 0.85rem; color: #9fc2ab; margin-bottom: 18px; }
+.alert-close { padding: 10px 28px; border-radius: 100px; border: none; background: #16a34a; color: #fff; font-weight: 800; cursor: pointer; }
+
+/* bottom nav */
+#bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  display: flex; background: #071a10; border-top: 1px solid #123a24;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-btn {
+  flex: 1; background: none; border: none; color: #6b8f7a; padding: 10px 4px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; font-size: 0.66rem; font-weight: 700;
+}
+.nav-btn .icon { font-size: 1.25rem; }
+.nav-btn.active { color: #4ade80; }
+.nav-btn .lockdot { position: relative; }
+.nav-btn .lockdot::after { content: '🔒'; position: absolute; top: -4px; right: -8px; font-size: 0.55rem; }
+
+.positive { color: #22c55e; }
+.negative { color: #ef4444; }
+.neutral  { color: #6b8f7a; }
+</style>
+</head>
+<body>
+
+<!-- ═══════ TEAM SELECT ═══════ -->
+<div id="teamSelectScreen">
+  <div class="ts-title">🧮 SWP Math Camp12</div>
+  <div class="ts-sub">เลือกทีมสีของคุณก่อนเริ่มใช้งาน</div>
+  <div class="ts-grid" id="teamGrid"></div>
+</div>
+
+<!-- ═══════ STATION ALERT OVERLAY ═══════ -->
+<div id="stationAlert">
+  <div class="alert-box">
+    <div class="alert-icon">🔔</div>
+    <div class="alert-title">ถึงเวลาเปลี่ยนฐานแล้ว!</div>
+    <div class="alert-detail" id="alertDetail">-</div>
+    <div class="alert-sub" id="alertSub">-</div>
+    <button class="alert-close" onclick="closeStationAlert()">รับทราบ</button>
+  </div>
+</div>
+
+<!-- ═══════ APP SHELL ═══════ -->
+<div id="app">
+  <div id="top-bar">
+    <div class="tb-team">
+      <div class="tb-dot" id="tbDot"></div>
+      <div>
+        <div class="tb-name" id="tbName">-</div>
+        <div class="tb-camp">SWP Math Camp12</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-clock" id="tbClock">--:--:--</div>
+      <div class="tb-change" onclick="changeTeam()">เปลี่ยนทีม</div>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- PANE: My Team -->
+    <div class="pane active" id="pane-myteam">
+      <div class="card">
+        <div class="card-title">💼 มูลค่าพอร์ตทีมของฉัน</div>
+        <div class="mt-value" id="mtValue">฿–</div>
+        <div class="mt-gain" id="mtGain"></div>
+        <div class="mt-rank-badge" id="mtRankBadge">อันดับ –</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎁 สินทรัพย์ที่ได้รับ</div>
+        <div id="mtAssets"><div class="hist-empty">กำลังโหลด...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 ประวัติการบันทึกคะแนน</div>
+        <div id="mtHistory"><div class="hist-empty">กำลังโหลด...</div></div>
+      </div>
+    </div>
+
+    <!-- PANE: Ranking -->
+    <div class="pane" id="pane-ranking">
+      <div class="card-title" style="margin-bottom:10px;">📊 อันดับคะแนนทุกทีม</div>
+      <div id="rankingList"><div class="hist-empty">กำลังโหลด...</div></div>
+    </div>
+
+    <!-- PANE: Station -->
+    <div class="pane" id="pane-station">
+      <div id="statusBanner" class="status-banner wait">
+        <div class="sb-label">สถานะตอนนี้</div>
+        <div class="sb-main">กำลังตรวจสอบเวลา...</div>
+      </div>
+      <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()">🔔 เปิดการแจ้งเตือนเปลี่ยนฐาน</button>
+      <div class="card-title" style="margin-bottom:10px;">📍 ตารางฐานของทีมฉัน (4 รอบ)</div>
+      <div id="myScheduleList"></div>
+    </div>
+
+    <!-- PANE: Selfie (locked / unlocked) -->
+    <div class="pane" id="pane-selfie">
+      <div id="selfieLocked" class="lock-wrap">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-title">ภารกิจเซลฟี่ยังไม่เปิด</div>
+        <div class="lock-sub">ภารกิจเซลฟี่จะเปิดให้เห็นในหน้านี้เร็วๆ นี้<br>ติดตามประกาศจากครู/สต๊าฟค่ายอีกครั้ง</div>
+      </div>
+      <div id="selfieUnlockedContent" style="display:none;">
+        <div class="ms-config-warning" id="msConfigWarning"></div>
+        <div class="ms-toolbar">
+          <div class="card-title" style="margin-bottom:0;">📸 ภารกิจเซลฟี่คณิต (<span id="msDoneCount">0</span>/<span id="msTotalCount">0</span>)</div>
+          <button class="ms-refresh-btn" id="msBtnRefresh">🔄 เช็คสถานะ</button>
+        </div>
+        <div id="msGrid"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="bottom-nav">
+    <button class="nav-btn active" id="nav-myteam" onclick="switchPane('myteam')"><span class="icon">🏆</span>ทีมฉัน</button>
+    <button class="nav-btn" id="nav-ranking" onclick="switchPane('ranking')"><span class="icon">📊</span>อันดับ</button>
+    <button class="nav-btn" id="nav-station" onclick="switchPane('station')"><span class="icon">📍</span>ฐาน</button>
+    <button class="nav-btn" id="nav-selfie" onclick="switchPane('selfie')"><span class="icon lockdot">📸</span>เซลฟี่</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG — ใช้ชุดเดียวกับ ScoreBoard/ScoreInput (Apps Script + Sheet เดียวกัน)
+// ═══════════════════════════════════════════════════════
+const TEAMS = [
+  { id: 'แดง',    name: 'ทีมสีแดง',    emoji: '🔴', hex: '#ef4444' },
+  { id: 'ฟ้า',    name: 'ทีมสีฟ้า',    emoji: '🔵', hex: '#0ea5e9' },
+  { id: 'เหลือง', name: 'ทีมสีเหลือง', emoji: '🟡', hex: '#eab308' },
+  { id: 'ส้ม',    name: 'ทีมสีส้ม',    emoji: '🟠', hex: '#f97316' },
+  { id: 'เขียว',  name: 'ทีมสีเขียว',  emoji: '🟢', hex: '#22c55e' },
+  { id: 'ม่วง',   name: 'ทีมสีม่วง',   emoji: '🟣', hex: '#a855f7' },
+  { id: 'ชมพู',   name: 'ทีมสีชมพู',   emoji: '🩷', hex: '#ec4899' },
+  { id: 'น้ำเงิน', name: 'ทีมสีน้ำเงิน', emoji: '🔷', hex: '#1d4ed8' },
+];
+const STATIONS_ORDER = ['ฐาน 1 · โดม', 'ฐาน 2 · โดม', 'ฐาน 3 · HCEC', 'ฐาน 4 · สนามแบดมินตัน'];
+const SCHEDULE = [
+  { round: 1, time: '10:30–10:50', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'เขียว', teamB: 'ชมพู' },
+    { station: 'ฐาน 2 · โดม', teamA: 'แดง',   teamB: 'ม่วง' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'ฟ้า',   teamB: 'ส้ม' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เหลือง', teamB: 'น้ำเงิน' },
+  ]},
+  { round: 2, time: '10:50–11:10', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'ส้ม',   teamB: 'ม่วง' },
+    { station: 'ฐาน 2 · โดม', teamA: 'เหลือง', teamB: 'ชมพู' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'เขียว', teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'แดง', teamB: 'ฟ้า' },
+  ]},
+  { round: 3, time: '11:10–11:30', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'แดง',   teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 2 · โดม', teamA: 'ฟ้า',   teamB: 'เขียว' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'เหลือง', teamB: 'ม่วง' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'ส้ม', teamB: 'ชมพู' },
+  ]},
+  { round: 4, time: '11:30–11:50', matches: [
+    { station: 'ฐาน 1 · โดม', teamA: 'ฟ้า',   teamB: 'เหลือง' },
+    { station: 'ฐาน 2 · โดม', teamA: 'ส้ม',   teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 3 · HCEC', teamA: 'แดง',  teamB: 'ชมพู' },
+    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เขียว', teamB: 'ม่วง' },
+  ]},
+];
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAS7E41O7b9xkyHOunboZJL_vRhytH15Ft8bz-mfHbMhcNxuglgOM8ShcSxrLzORpN/exec';
+const GOLD_TROY_TO_BAHT = 15.244 / 31.1035;
+
+// ═══════════════════════════════════════════════════════
+//  SELFIE — ชุดโจทย์ใหม่ตามแนวทางค่ายเต่างอย "ถอดรหัส→ลงพื้นที่→แก้โจทย์"
+//  (20 ก.ค. 2569: เปลี่ยนจากชุดเดิม 30 ข้อ single-photo มาเป็นชุดนี้)
+//  ทีมส่ง "คำตอบข้อความ + รูปภาพ" คู่กันเสมอ ผ่าน POST เดียวกับ ScoreBoard/backend
+//  ⚠️ สถานที่เฉลย 30 จุด (ในไฟล์ ScoreBoard เท่านั้น) เป็นการตีความจากอาคาร/สถานที่
+//  ที่ยืนยันว่ามีอยู่จริงในโรงเรียน (ดู README "บริบทโรงเรียน") แต่ยังไม่ได้เดินสำรวจ
+//  เทียบพิกัดจริงทุกจุด — ข้อ 31 (พิกัด GPS) เป็นค่าประมาณ ยังไม่ยืนยัน ต้องให้ครู
+//  ตรวจสอบก่อนใช้งานจริงจากที่ระบุไว้ในหัวข้อสถานะของ README
+//  ห้ามแก้ข้อความภารกิจที่นี่โดยไม่แก้ ANSWER_KEY ใน SWP_MathCamp12_ScoreBoard.html
+//  ให้ตรงกันด้วย (ข้อความต้องเหมือนกันทุกตัวอักษร)
+// ═══════════════════════════════════════════════════════
+const SELFIE_UNLOCKED = true; // ครูปรับเป็น false ได้ถ้าต้องการซ่อนไว้ก่อนช่วงเช้า
+const MISSIONS = [
+  [0,  "S", "ถ่ายรูปรวมกับสมาชิกทุกคนในทีม (สถานที่ใดก็ได้) แล้วพิมพ์จำนวนสมาชิกในทีมเป็นคำตอบ"],
+  [1,  "A", "เงาของเสาสูงต้นหนึ่งกลางลานกว้างของโรงเรียน ซึ่งมีธงไตรรงค์โบกสะบัดอยู่บนยอดเสมอยามเช้า หากสมมติว่าเสาต้นนี้สูง 9 เมตร และทำมุมเงยกับดวงอาทิตย์ 45° ในเวลานั้น ความยาวของเงาที่ทอดลงบนพื้นจะมีค่ากี่เมตร?"],
+  [2,  "A", "โครงสร้างคอนกรีตที่ทำหน้าที่เชื่อมพื้นที่ต่างระดับระหว่างชั้นของอาคารเรียนถาวรหลังหนึ่ง มีความสูงของขั้น (ลูกตั้ง) 16 เซนติเมตร และความลึกของขั้น (ลูกนอน) 28 เซนติเมตร อัตราส่วนความชัน (สูง/ลึก) ของโครงสร้างนี้ คิดเป็นเศษส่วนอย่างต่ำได้เท่าใด?"],
+  [3,  "A", "เส้นรอบวงกลมที่ถูกลากไว้กึ่งกลางลานกีฬาซึ่งใช้เล่นกีฬาประเภทใช้ห่วงประตูยิงลูกบอลได้ หากเส้นรอบวงนี้มีรัศมียาว r หน่วย เส้นผ่านศูนย์กลางของวงกลมนี้จะมีขนาดเป็นกี่เท่าของรัศมี?"],
+  [4,  "A", "ภาชนะทรงกระบอกขนาดใหญ่ที่ทำหน้าที่กักเก็บน้ำสะอาดไว้ให้ชาวโรงเรียนมีน้ำใช้ยามจำเป็น หากภาชนะนี้วัดรัศมีที่ฐานได้ 1 เมตร และมีความสูง 2 เมตร จะมีปริมาตรความจุภายในกี่ลูกบาศก์เมตร? (กำหนดให้ π ≈ 3.14)"],
+  [5,  "A", "แผ่นไม้หรือแผ่นเหล็กหนาที่ยึดติดกับบานพับตรงทางเข้าห้องเรียน ทำหน้าที่เปิดต้อนรับนักเรียนยามเช้าและปิดลงเมื่อเริ่มการเรียน โครงสร้างแผ่นนี้โดยทั่วไปจัดเป็นรูปทรงเรขาคณิตสามมิติชนิดใด?"],
+  [6,  "A", "ป้ายอะลูมิเนียมทรงวงกลมสมบูรณ์ที่ติดอยู่ริมถนนภายในโรงเรียนเพื่อแจ้งเตือนกฎจราจร หากวัดความยาวเส้นรอบรูปของป้ายนี้ได้ 44 เซนติเมตร ป้ายนี้จะมีรัศมียาวกี่เซนติเมตร? (กำหนดให้ π ≈ 22/7)"],
+  [7,  "A", "พื้นที่สี่เหลี่ยมผืนผ้าสีเขียวหรือสีขาวขนาดใหญ่ที่ติดอยู่ผนังด้านหน้าสุดของห้องเรียน รองรับหยาดชอล์กหรือปากกาเคมีของครูมานาน หากพื้นที่นี้กว้าง 1.5 เมตร และยาว 3 เมตร จะมีพื้นที่รวมกี่ตารางเมตร?"],
+  [8,  "A", "บานกระจกใสที่ติดตั้งรอบผนังห้องเรียนซึ่งเลื่อนเปิดออกไปทางขนานกับผนังเพื่อระบายอากาศได้ การเคลื่อนที่เชิงพิกัดของบานกระจกลักษณะนี้ จัดเป็นการแปลงทางเรขาคณิตรูปแบบใด?"],
+  [9,  "A", "แผ่นแก้วฉาบโลหะเงินที่ติดอยู่บนผนังเหนืออ่างล้างมือในห้องน้ำ ทำหน้าที่สะท้อนภาพเสมือนหัวตั้งขนาดเท่าของจริง ปรากฏการณ์นี้ตรงกับการแปลงทางเรขาคณิตรูปแบบใด?"],
+  [10, "A", "อุปกรณ์ทรงโดมที่ติดตั้งอยู่มุมเพดานหรือเสาเพื่อตรวจตราความปลอดภัย สามารถหมุนเบนมุมมองไปรอบทิศทางรอบแกนคงที่ได้ การเคลื่อนที่ของอุปกรณ์นี้จัดเป็นการแปลงทางเรขาคณิตรูปแบบใด?"],
+  [11, "B", "ชุดที่นั่งปูนซีเมนต์ขัดหยาบตั้งเรียงรายใต้ร่มเงาไม้รอบโรงเรียน หากชุดที่นั่ง 1 ชุด ประกอบด้วยโต๊ะแกนกลาง 1 ตัว และม้านั่งยาวขนาบข้าง 4 ตัว ถ้ามีโต๊ะแกนกลางทั้งหมด 12 ตัว จะมีม้านั่งยาวรวมกันทั้งสิ้นกี่ตัว?"],
+  [12, "B", "ร้านค้าที่จำหน่ายสินค้าอุปโภคบริโภคให้นักเรียนภายในโรงเรียน ระบุว่านมกล่องรสหวานราคากล่องละ 10 บาท แต่หากสั่งซื้อยกลัง (ลังละ 24 กล่อง) จะได้ราคารวม 216 บาท การซื้อแบบยกลังประหยัดกว่าซื้อแยกทีละกล่องรวมกันกี่บาท?"],
+  [13, "B", "วาล์วจ่ายน้ำบริเวณจุดล้างมือ เมื่อเปิดใช้งานพบว่าแรงดันสม่ำเสมอ ปล่อยน้ำทิ้งไว้ 3 นาที ได้ปริมาตรน้ำรวม 12 ลิตร อัตราส่วนของเวลา(นาที)ต่อปริมาณน้ำ(ลิตร) ในรูปอย่างต่ำคือเท่าใด?"],
+  [14, "B", "ลานจอดพาหนะใต้หลังคาเหล็กที่สงวนไว้สำหรับคณะครูและบุคลากร หากมีรถยนต์จอดอยู่ x คัน และรถจักรยานยนต์จอดอยู่ y คัน จงเขียนนิพจน์พหุนามแสดงจำนวนล้อรวมทั้งหมดของพาหนะในลานนี้"],
+  [15, "B", "เครื่องกรองน้ำดื่มมุมอาคารที่ให้บริการนักเรียนตลอดวัน ใช้ไส้กรอง 2 ชนิดคือไส้กรองหยาบราคาชิ้นละ 100 บาท และไส้กรองละเอียดราคาชิ้นละ 180 บาท ปีนี้เปลี่ยนไส้กรองรวม 10 ชิ้น คิดเป็นเงิน 1,400 บาท จะมีไส้กรองละเอียดอยู่กี่ชิ้น?"],
+  [16, "B", "แนวต้นไม้ประดับปลูกเรียงรายเป็นแนวขอบสนามหญ้าอย่างเป็นระเบียบ แถวแรกมี 4 ต้น แถวที่สองมี 7 ต้น แถวที่สามมี 10 ต้น เพิ่มขึ้นตามลำดับเลขคณิต ในแถวที่ 10 จะมีต้นไม้ทั้งหมดกี่ต้น?"],
+  [17, "B", "พื้นที่สนามกีฬาหญ้าขนาดใหญ่ที่มีตาข่ายประตูขนาบสองฝั่ง มีลักษณะเป็นรูปสี่เหลี่ยมผืนผ้า กว้าง w เมตร ยาวมากกว่าความกว้างอยู่ 20 เมตร จงเขียนนิพจน์พหุนามแสดงพื้นที่สนามนี้ในรูปของ w"],
+  [18, "B", "ขวดน้ำยาฆ่าเชื้อที่วางบนชั้นอุปกรณ์ปฐมพยาบาล หากต้องผสมกับน้ำสะอาดตามอัตราส่วน 1:9 เพื่อให้ได้สารละลายรวม 400 มิลลิลิตร จะต้องใช้น้ำยาฆ่าเชื้อเข้มข้นกี่มิลลิลิตร?"],
+  [19, "B", "ป้ายเมนูอาหารประจำวันของสถานอาหารกลางวันนักเรียน มีรายการจานหลัก 4 อย่าง และของหวาน 3 อย่าง จำนวนวิธีเลือกสั่งอาหารจานหลัก 1 อย่างคู่กับของหวาน 1 อย่าง มีกี่วิธี?"],
+  [20, "B", "ทำเนียบภาพผู้ดำรงตำแหน่งบริหารสูงสุดของสถานศึกษาที่ติดเรียงรายหน้าห้องทำงาน หากนับได้ 9 ท่าน และสมมติว่าแต่ละท่านมีวาระบริหารท่านละ 4 ปีเท่ากันพอดี ระยะเวลาบริหารรวมทั้งหมดคิดเป็นกี่ปี?"],
+  [21, "C", "ลานคอนกรีตที่มีพาหนะสองล้อของนักเรียนจอดเรียงรายนับร้อยคัน หากสุ่มเลือกพาหนะ 1 คัน มาพิจารณาตัวแปร \"เฉดสีของตัวถังรถจักรยานยนต์\" ข้อมูลที่ได้จัดเป็นข้อมูลประเภทใด (เชิงคุณภาพ หรือ เชิงปริมาณ)?"],
+  [22, "C", "ถังพลาสติกใบใหญ่มุมอาคารสำหรับทิ้งขยะรวม หากภายในมีขวดแก้ว 6 ใบ กระป๋องอลูมิเนียม 9 ใบ และกล่องกระดาษ 4 กล่อง ค่าฐานนิยม (Mode) ของสิ่งของในถังนี้คืออะไร?"],
+  [23, "C", "พื้นที่จัดเก็บทรัพยากรสารสนเทศและสิ่งพิมพ์ ซึ่งเป็นเขตงดใช้เสียงดังของโรงเรียน มีโต๊ะอ่านหนังสือทรงสี่เหลี่ยมผืนผ้านั่งได้ฝั่งละ 5 คน (ไม่นับหัวท้ายโต๊ะ) ถ้านำโต๊ะแบบเดียวกัน 2 ตัวมาต่อความยาวกัน จะรองรับผู้นั่งได้รวมกี่คน?"],
+  [24, "C", "บอร์ดสถิติจำนวนนักเรียนของแผนกทะเบียนวัดผล ระบุว่า ม.1 มี 130 คน ม.2 มี 125 คน ม.3 มี 120 คน ค่าเฉลี่ยเลขคณิตของจำนวนนักเรียนต่อระดับชั้นในกลุ่มมัธยมต้นนี้เท่ากับเท่าใด?"],
+  [25, "C", "ก้อนหินกรวดที่จัดตกแต่งพื้นผิวสวนหย่อมประดับหน้าอาคารเรียน หากในถุงมีหินสีขาว 7 ก้อน หินสีดำ 3 ก้อน เมื่อสุ่มหยิบ 1 ก้อน ความน่าจะเป็นที่จะได้หินสีดำมีค่าเท่าใด? (ตอบเศษส่วนอย่างต่ำ)"],
+  [26, "C", "จุดล้างมือแห่งหนึ่งในโรงเรียน (จุดใดก็ได้) ที่มีนักเรียนสัญจรผ่านตลอดวัน จากการสุ่มสำรวจนักเรียนที่เดินผ่านจุดนี้ 20 คน พบว่ามีผู้หยุดล้างมือก่อนทานอาหาร 15 คน คิดเป็นร้อยละเท่าใดของผู้ถูกสำรวจ?"],
+  [27, "C", "ป้ายไวนิลต้อนรับที่ติดหน้าซุ้มงานค่ายคณิตศาสตร์ สลักคำว่า \"คณิตศาสตร์\" ไว้เด่นชัด หากนำตัวอักษร (พยัญชนะ+สระ ไม่รวมเครื่องหมายทัณฑฆาต) มาจำแนก จะได้อัตราส่วนของจำนวนพยัญชนะต่อจำนวนสระในรูปเศษส่วนอย่างต่ำเท่าใด?"],
+  [28, "C", "แนวเสาไฟฟ้าที่มีสายไฟพาดเรียงรายในบริเวณโรงเรียน หากเสาต้นแรกอยู่ที่พิกัด 0 เมตร และเสาถัดไปห่างกันทุก 12 เมตร เสาต้นที่ 7 จะอยู่ห่างจากเสาต้นแรกกี่เมตร?"],
+  [29, "C", "มุมที่นั่งรับประทานอาหารที่นักเรียนแวะนั่งดื่มเครื่องดื่มหลังซื้อของว่าง เมนูน้ำปั่นเย็นมีให้เลือก 4 รสชาติ นักเรียน 2 คนนั่งพร้อมน้ำปั่นคนละ 1 แก้วที่สุ่มสั่งมา ความน่าจะเป็นที่ทั้งสองคนได้รสชาติเดียวกันพอดีมีค่าเท่าใด?"],
+  [30, "C", "ลูกโป่งสามสี (เขียว ส้ม ม่วง) ที่ผูกประดับรอบป้ายอาคารซึ่งเป็นสถานที่จัดกิจกรรมค่ายคณิตศาสตร์ในครั้งนี้ หากผูกเรียงสลับตามรูปแบบ: เขียว, ส้ม, ม่วง, เขียว, ส้ม, ม่วง,... ไปเรื่อยๆ ลูกโป่งลูกที่ 100 จะเป็นสีอะไร?"],
+  [31, "S", "X = [10 × sin(70°)] + [4 × cos(75°)] + 5.175 , Y = [50 × cos(60°)] + [30 × sin(41°)] + 59.110 — ถอดรหัสพิกัด (X, Y) นี้แล้วปักหมุดใน Google Maps ดูว่าตรงกับจุดใดในโรงเรียน"],
+];
+
+const CAT_LABELS = { A: '📐 เรขาคณิต', B: '🔢 พีชคณิต', C: '🎲 สถิติ', S: '🎯 พิเศษ' };
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let myTeam = localStorage.getItem('swpStudentTeam') || null;
+let remoteState = { transactions: [], settings: { landPrice: 100000 } };
+let prices = { btc: null, gold: null };
+let currentPane = 'myteam';
+
+const fmt = n => n == null ? '–' : '฿' + Math.round(n).toLocaleString('th-TH');
+function teamById(id) { return TEAMS.find(t => t.id === id); }
+function assetLabel(type) { return type === 'btc' ? '₿ Bitcoin' : type === 'gold' ? '🥇 ทองคำ' : '🏗️ ที่ดิน'; }
+function assetIcon(type) { return type === 'btc' ? '₿' : type === 'gold' ? '🥇' : '🏗️'; }
+function fmtQty(type, qty) {
+  if (type === 'btc') return qty.toFixed(8) + ' BTC';
+  if (type === 'gold') return qty.toFixed(4) + ' บาท (ทอง)';
+  return qty.toFixed(0) + ' แปลง';
+}
+
+// ═══════════════════════════════════════════════════════
+//  TEAM SELECT
+// ═══════════════════════════════════════════════════════
+document.getElementById('teamGrid').innerHTML = TEAMS.map(t => `
+  <button class="ts-btn" style="border-color:${t.hex}" onclick="selectTeam('${t.id}')">
+    <span class="dot" style="background:${t.hex}"></span>
+    ${t.emoji} ${t.name.replace('ทีมสี','')}
+  </button>`).join('');
+
+function selectTeam(id) {
+  myTeam = id;
+  localStorage.setItem('swpStudentTeam', id);
+  boot();
+}
+function changeTeam() {
+  document.getElementById('teamSelectScreen').classList.remove('hidden');
+  document.getElementById('app').classList.remove('active');
+}
+
+function boot() {
+  if (!myTeam) {
+    document.getElementById('teamSelectScreen').classList.remove('hidden');
+    document.getElementById('app').classList.remove('active');
+    return;
+  }
+  const team = teamById(myTeam);
+  document.getElementById('teamSelectScreen').classList.add('hidden');
+  document.getElementById('app').classList.add('active');
+  document.documentElement.style.setProperty('--myhex', team.hex);
+  document.getElementById('tbDot').style.background = team.hex;
+  document.getElementById('tbName').textContent = team.emoji + ' ' + team.name;
+  initSelfiePane();
+  refresh();
+}
+
+// ═══════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════
+function updateClock() {
+  document.getElementById('tbClock').textContent = new Date().toLocaleTimeString('th-TH', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════
+//  FETCH DATA
+// ═══════════════════════════════════════════════════════
+async function fetchRemoteState() {
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getAll');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    remoteState = await res.json();
+  } catch (e) { console.warn('fetch state failed', e); }
+  return remoteState;
+}
+async function fetchPrices() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb', { cache: 'no-store' });
+    const data = await res.json();
+    prices.btc = data.bitcoin.thb;
+    prices.gold = data['tether-gold'].thb * GOLD_TROY_TO_BAHT;
+  } catch (e) { console.warn('fetch prices failed', e); }
+}
+
+function calcTeamValue(teamId, s) {
+  const landPrice = s.settings?.landPrice ?? 100000;
+  const rows = (s.transactions ?? []).filter(t => t.studentId === teamId);
+  let invested = 0, current = 0;
+  rows.forEach(t => {
+    invested += t.valueAtAward ?? 0;
+    if      (t.type === 'land') current += t.qty * landPrice;
+    else if (t.type === 'gold' && prices.gold) current += t.qty * prices.gold;
+    else if (t.type === 'btc'  && prices.btc ) current += t.qty * prices.btc;
+    else current += t.valueAtAward ?? 0;
+  });
+  return { invested, current, gain: current - invested, rows, landPrice };
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: MY TEAM
+// ═══════════════════════════════════════════════════════
+function renderMyTeam() {
+  const { invested, current, gain, rows, landPrice } = calcTeamValue(myTeam, remoteState);
+  document.getElementById('mtValue').textContent = fmt(current);
+  const gainPct = invested > 0 ? ((gain / invested) * 100).toFixed(1) : null;
+  const gainEl = document.getElementById('mtGain');
+  if (gainPct != null) {
+    gainEl.textContent = (gain >= 0 ? '+' : '') + fmt(gain) + ' (' + (gain >= 0 ? '+' : '') + gainPct + '%)';
+    gainEl.className = 'mt-gain ' + (gain >= 0 ? 'positive' : 'negative');
+  } else {
+    gainEl.textContent = 'ยังไม่มีรางวัล';
+    gainEl.className = 'mt-gain neutral';
+  }
+
+  const allScores = TEAMS.map(t => calcTeamValue(t.id, remoteState).current).sort((a, b) => b - a);
+  const rankIdx = allScores.indexOf(current);
+  document.getElementById('mtRankBadge').textContent = `อันดับ ${rankIdx + 1} จาก ${TEAMS.length} ทีม`;
+
+  const assetsEl = document.getElementById('mtAssets');
+  if (!rows.length) {
+    assetsEl.innerHTML = '<div class="hist-empty">ยังไม่มีสินทรัพย์</div>';
+  } else {
+    assetsEl.innerHTML = rows.map(t => {
+      let cv = null;
+      if      (t.type === 'land') cv = t.qty * landPrice;
+      else if (t.type === 'gold' && prices.gold) cv = t.qty * prices.gold;
+      else if (t.type === 'btc'  && prices.btc)  cv = t.qty * prices.btc;
+      return `
+        <div class="asset-row">
+          <div class="asset-left">
+            <span class="asset-icon">${assetIcon(t.type)}</span>
+            <div>
+              <div class="asset-name">${assetLabel(t.type)}</div>
+              <div class="asset-qty">${fmtQty(t.type, t.qty)}</div>
+            </div>
+          </div>
+          <div>
+            <div class="asset-val">${cv !== null ? fmt(cv) : '?'}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  const histEl = document.getElementById('mtHistory');
+  if (!rows.length) {
+    histEl.innerHTML = '<div class="hist-empty">ยังไม่มีประวัติ</div>';
+  } else {
+    const sorted = [...rows].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    histEl.innerHTML = sorted.map(t => {
+      const time = new Date(t.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="hist-item">
+          <span class="hist-time">${time}</span>
+          <span>${t.station ? `<span style="color:#475569">${t.station} · </span>` : ''}ได้รับ <b>${assetLabel(t.type)}</b> ${fmtQty(t.type, t.qty)} · มูลค่าตอนได้รับ ${fmt(t.valueAtAward)}</span>
+        </div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: RANKING
+// ═══════════════════════════════════════════════════════
+function renderRanking() {
+  const scores = TEAMS.map(t => ({ ...t, ...calcTeamValue(t.id, remoteState) }))
+    .sort((a, b) => b.current - a.current);
+  const icons = ['🥇','🥈','🥉'];
+  document.getElementById('rankingList').innerHTML = scores.map((t, i) => `
+    <div class="rank-row ${t.id === myTeam ? 'me' : ''}" style="${t.id === myTeam ? `--myhex:${t.hex}` : ''}">
+      <div class="rank-num">${icons[i] || '#' + (i + 1)}</div>
+      <div class="rank-info">
+        <div class="rank-name" style="color:${t.hex}">${t.emoji} ${t.name}${t.id === myTeam ? ' ★' : ''}</div>
+      </div>
+      <div class="rank-val" style="color:${t.hex}">${fmt(t.current)}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATION / SCHEDULE + NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+function timeStrToDate(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+function myScheduleRows() {
+  return SCHEDULE.map(r => {
+    const m = r.matches.find(x => x.teamA === myTeam || x.teamB === myTeam);
+    if (!m) return null;
+    const opp = m.teamA === myTeam ? m.teamB : m.teamA;
+    const [startStr, endStr] = r.time.split('–');
+    return { round: r.round, station: m.station, opp, time: r.time, start: timeStrToDate(startStr), end: timeStrToDate(endStr) };
+  }).filter(Boolean);
+}
+
+function renderStationStatus() {
+  const rows = myScheduleRows();
+  const now = new Date();
+  const banner = document.getElementById('statusBanner');
+  const current = rows.find(r => now >= r.start && now <= r.end);
+  const next = rows.find(r => now < r.start);
+
+  if (current) {
+    const minsLeft = Math.max(0, Math.round((current.end - now) / 60000));
+    banner.className = 'status-banner live';
+    banner.innerHTML = `
+      <div class="sb-label">🟢 ตอนนี้ · รอบ ${current.round}</div>
+      <div class="sb-main">${current.station}</div>
+      <div class="sb-sub">พบกับทีม ${teamById(current.opp).emoji} ${teamById(current.opp).name}</div>
+      <div class="sb-countdown">เหลือ ${minsLeft} นาที</div>`;
+  } else if (next) {
+    const minsTo = Math.max(0, Math.round((next.start - now) / 60000));
+    banner.className = 'status-banner wait';
+    banner.innerHTML = `
+      <div class="sb-label">⏳ รอบถัดไป · รอบ ${next.round}</div>
+      <div class="sb-main">${next.station}</div>
+      <div class="sb-sub">พบกับทีม ${teamById(next.opp).emoji} ${teamById(next.opp).name} · เวลา ${next.time}</div>
+      <div class="sb-countdown">อีก ${minsTo} นาที</div>`;
+  } else if (rows.length) {
+    banner.className = 'status-banner done';
+    banner.innerHTML = `<div class="sb-label">✅ กิจกรรมฐานเช้าจบแล้ว</div><div class="sb-main">ขอบคุณที่เข้าร่วมกิจกรรม!</div>`;
+  } else {
+    banner.className = 'status-banner wait';
+    banner.innerHTML = `<div class="sb-label">📍 ตารางฐาน</div><div class="sb-main">ไม่พบตารางของทีมนี้</div>`;
+  }
+
+  document.getElementById('myScheduleList').innerHTML = rows.map(r => `
+    <div class="rnd-row ${now >= r.start && now <= r.end ? 'current' : ''}">
+      <div class="rnd-num">รอบ ${r.round}</div>
+      <div class="rnd-info">
+        <div class="rnd-station">${r.station}</div>
+        <div class="rnd-vs">vs <span style="color:${teamById(r.opp).hex}">${teamById(r.opp).emoji} ${teamById(r.opp).name}</span></div>
+      </div>
+      <div class="rnd-time">${r.time}</div>
+    </div>`).join('');
+}
+
+// ── การแจ้งเตือน ──
+let notifPermissionOn = localStorage.getItem('swpNotifOn') === '1';
+function updateNotifBtn() {
+  const btn = document.getElementById('notifBtn');
+  btn.className = 'notif-btn' + (notifPermissionOn ? ' on' : '');
+  btn.textContent = notifPermissionOn ? '🔔 เปิดการแจ้งเตือนอยู่' : '🔔 เปิดการแจ้งเตือนเปลี่ยนฐาน';
+}
+async function requestNotifPermission() {
+  if ('Notification' in window) {
+    const perm = await Notification.requestPermission();
+    notifPermissionOn = perm === 'granted';
+  } else {
+    notifPermissionOn = true; // ไม่รองรับ Notification API แต่ยังใช้ป้ายเตือนในหน้าได้
+  }
+  localStorage.setItem('swpNotifOn', notifPermissionOn ? '1' : '0');
+  updateNotifBtn();
+}
+
+let notifiedRounds = new Set(JSON.parse(localStorage.getItem('swpNotifiedRounds') || '[]'));
+function checkStationAlert() {
+  if (!myTeam) return;
+  const rows = myScheduleRows();
+  const now = new Date();
+  rows.forEach(r => {
+    const key = myTeam + '-' + r.round;
+    const secsSinceStart = (now - r.start) / 1000;
+    if (!notifiedRounds.has(key) && secsSinceStart >= 0 && secsSinceStart < 90) {
+      fireStationAlert(r);
+      notifiedRounds.add(key);
+      localStorage.setItem('swpNotifiedRounds', JSON.stringify([...notifiedRounds]));
+    }
+  });
+}
+function fireStationAlert(r) {
+  document.getElementById('alertDetail').textContent = `รอบ ${r.round} · ${r.station}`;
+  document.getElementById('alertSub').textContent = `พบกับทีม ${teamById(r.opp).emoji} ${teamById(r.opp).name}`;
+  document.getElementById('stationAlert').classList.add('show');
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (notifPermissionOn && 'Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification('🔔 ถึงเวลาเปลี่ยนฐานแล้ว!', {
+        body: `รอบ ${r.round}: ไปที่ ${r.station} (พบทีม ${teamById(r.opp).name})`,
+      });
+    } catch (e) {}
+  }
+}
+function closeStationAlert() {
+  document.getElementById('stationAlert').classList.remove('show');
+}
+setInterval(checkStationAlert, 5000);
+setInterval(() => { if (currentPane === 'station') renderStationStatus(); }, 5000);
+
+// ═══════════════════════════════════════════════════════
+//  SELFIE PANE — ส่งคำตอบข้อความ + รูปภาพคู่กันต่อภารกิจ (รูปแบบเดียวกับเต่างอย)
+// ═══════════════════════════════════════════════════════
+let msInited = false;
+const msState = {};        // { [no]: { status, message } }
+const msPendingFile = {};  // { [no]: File }
+const msPendingB64 = {};   // { [no]: string }
+const msCompressing = {};  // { [no]: Promise }
+const msCompressGen = {};  // { [no]: number }
+const MS_MAX_FILE_MB = 20;
+
+function initSelfiePane() {
+  const navIcon = document.querySelector('#nav-selfie .icon');
+  if (SELFIE_UNLOCKED && MISSIONS.length) {
+    document.getElementById('selfieLocked').style.display = 'none';
+    document.getElementById('selfieUnlockedContent').style.display = 'block';
+    if (navIcon) navIcon.classList.remove('lockdot');
+    if (!msInited) {
+      msInited = true;
+      renderSelfieGrid();
+      const grid = document.getElementById('msGrid');
+      grid.addEventListener('change', (e) => {
+        const input = e.target.closest('.ms-file-input');
+        if (!input || !input.files || !input.files.length) return;
+        const no = parseInt(input.dataset.no, 10);
+        const file = input.files[0];
+        input.value = '';
+        msPendingFile[no] = file;
+        msStartCompressing(no, file);
+      });
+      grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.ms-submit-btn');
+        if (!btn) return;
+        submitMission(parseInt(btn.dataset.no, 10));
+      });
+      document.getElementById('msBtnRefresh').addEventListener('click', refreshMissionStatus);
+      if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) {
+        const w = document.getElementById('msConfigWarning');
+        w.style.display = 'block';
+        w.textContent = '⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL — แจ้งครู/สต๊าฟก่อนใช้งาน';
+      }
+    }
+    refreshMissionStatus();
+  } else {
+    document.getElementById('selfieLocked').style.display = 'block';
+    document.getElementById('selfieUnlockedContent').style.display = 'none';
+  }
+}
+
+function renderSelfieGrid() {
+  document.getElementById('msTotalCount').textContent = MISSIONS.length;
+  document.getElementById('msGrid').innerHTML = MISSIONS.map(([no, cat, text]) => `
+    <div class="ms-card" id="msCard-${no}">
+      <div class="ms-card-top">
+        <div class="ms-no">Selfie#${no}</div>
+        <span class="ms-cat-badge cat${cat}">${CAT_LABELS[cat] || cat}</span>
+      </div>
+      <div class="ms-text">🔍 ${text}</div>
+      <input type="text" class="ms-answer-input" id="msAnswer-${no}" placeholder="พิมพ์คำตอบที่นี่...">
+      <div class="ms-file-row">
+        <input type="file" accept="image/*" class="ms-file-input" id="msFile-${no}" data-no="${no}">
+        <label for="msFile-${no}" class="ms-upload-btn">📷 เลือกรูป</label>
+        <button class="ms-submit-btn" data-no="${no}">ส่งคำตอบ + รูป</button>
+      </div>
+      <div class="ms-status" id="msStatus-${no}" style="display:none;"></div>
+    </div>`).join('');
+}
+
+function msWithTimeout(promise, ms, message) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
+  });
+}
+
+function msCompressImage(file, maxDim, quality) {
+  const attempt = new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('เปิดรูปไม่สำเร็จ'));
+      img.onload = () => {
+        try {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+        } catch (err) { reject(err); }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  return msWithTimeout(attempt, 25000, 'เตรียมรูปนานเกิน 25 วิ — ลองถ่ายรูปใหม่หรือลองอีกครั้ง');
+}
+
+function msSetStatus(no, status, message) {
+  msState[no] = { status, message };
+  const el = document.getElementById('msStatus-' + no);
+  if (el) { el.style.display = 'block'; el.textContent = message; el.className = 'ms-status ' + status; }
+}
+
+function msStartCompressing(no, file) {
+  msCompressGen[no] = (msCompressGen[no] || 0) + 1;
+  const myGen = msCompressGen[no];
+  delete msPendingB64[no];
+  if (file.size > MS_MAX_FILE_MB * 1024 * 1024) {
+    msSetStatus(no, 'error', `❌ ไฟล์ใหญ่เกินไป (${(file.size / 1024 / 1024).toFixed(1)}MB, สูงสุด ${MS_MAX_FILE_MB}MB)`);
+    delete msPendingFile[no];
+    return;
+  }
+  msSetStatus(no, 'loading', '⏳ กำลังเตรียมรูป...');
+  msCompressing[no] = msCompressImage(file, 1280, 0.72).then((b64) => {
+    if (msCompressGen[no] !== myGen) return;
+    msPendingB64[no] = b64;
+    msSetStatus(no, 'ready', '✅ รูปพร้อมแล้ว — พิมพ์คำตอบแล้วกด "ส่งคำตอบ + รูป"');
+    const inputEl = document.getElementById('msAnswer-' + no);
+    if (inputEl) inputEl.focus();
+  }).catch((err) => {
+    if (msCompressGen[no] !== myGen) return;
+    msSetStatus(no, 'error', '❌ เตรียมรูปไม่สำเร็จ — ลองเลือกใหม่ (' + err.message + ')');
+    delete msPendingFile[no];
+  });
+}
+
+async function submitMission(no) {
+  if (!myTeam) { alert('กรุณาเลือกทีมก่อน'); return; }
+  if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) { alert('ยังไม่ได้ตั้งค่า SCRIPT_URL'); return; }
+  const answerInput = document.getElementById('msAnswer-' + no);
+  const answerText = (answerInput ? answerInput.value : '').trim();
+  const file = msPendingFile[no];
+  if (!answerText) { alert('กรุณาพิมพ์คำตอบก่อนส่ง'); return; }
+  if (!file) { alert('กรุณาเลือกรูปก่อนส่ง'); return; }
+  if (msState[no] && msState[no].status === 'loading') return;
+
+  const btn = document.querySelector(`.ms-submit-btn[data-no="${no}"]`);
+  const originalText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังส่ง...'; }
+  try {
+    let b64 = msPendingB64[no];
+    if (!b64) {
+      msSetStatus(no, 'loading', '⏳ กำลังบีบอัดรูป...');
+      b64 = await (msCompressing[no] || msCompressImage(file, 1280, 0.72));
+    }
+    msSetStatus(no, 'loading', '⏳ กำลังอัปโหลด...');
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        team: myTeam,
+        missionNo: no,
+        answerText: answerText,
+        filename: `MISSION${no}_${myTeam}_${Date.now()}.jpg`,
+        mimeType: 'image/jpeg',
+        imageBase64: b64,
+      }),
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      msSetStatus(no, 'success', '✅ ส่งสำเร็จ (อัปโหลดใหม่อีกครั้งได้หากต้องการเปลี่ยนคำตอบ)');
+      const card = document.getElementById('msCard-' + no);
+      if (card) card.classList.add('done');
+      delete msPendingB64[no]; delete msPendingFile[no]; delete msCompressing[no];
+      msUpdateDoneCount();
+    } else {
+      throw new Error(data.message || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
+    }
+  } catch (err) {
+    msSetStatus(no, 'error', '❌ ส่งไม่สำเร็จ — ลองอีกครั้ง (' + err.message + ')');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalText || 'ส่งคำตอบ + รูป'; }
+  }
+}
+
+function msUpdateDoneCount() {
+  const doneCount = document.querySelectorAll('#msGrid .ms-card.done').length;
+  document.getElementById('msDoneCount').textContent = doneCount;
+}
+
+let msRefreshInFlight = false;
+async function refreshMissionStatus() {
+  if (!myTeam || !SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) return;
+  if (msRefreshInFlight) return;
+  msRefreshInFlight = true;
+  const btn = document.getElementById('msBtnRefresh');
+  const originalLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '🔄 กำลังเช็ค...'; }
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getMissions');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const headers = data.headers || [];
+    const rows = data.rows || [];
+    const teamColIdx = headers.findIndex(h => h === 'ทีม');
+    const myRow = rows.find(r => (r[teamColIdx] || '').toString().trim() === myTeam);
+    if (myRow) {
+      for (const [no] of MISSIONS) {
+        if (msState[no] && msState[no].status === 'loading') continue;
+        const photoColIdx = headers.findIndex(h => h === 'M' + no + '_PHOTO');
+        const answerColIdx = headers.findIndex(h => h === 'M' + no + '_ANSWER');
+        if (photoColIdx < 0) continue;
+        const photoCell = (myRow[photoColIdx] || '').toString().trim();
+        const answerCell = answerColIdx >= 0 ? (myRow[answerColIdx] || '').toString().trim() : '';
+        if (photoCell) {
+          msSetStatus(no, 'success', '✅ ส่งแล้ว — คำตอบที่บันทึกไว้: ' + (answerCell || '(ไม่มี)'));
+          const card = document.getElementById('msCard-' + no);
+          if (card) card.classList.add('done');
+          const answerInput = document.getElementById('msAnswer-' + no);
+          if (answerInput && !answerInput.value) answerInput.value = answerCell;
+        }
+      }
+    }
+    msUpdateDoneCount();
+  } catch (err) {
+    console.error('refreshMissionStatus failed', err);
+  } finally {
+    msRefreshInFlight = false;
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel || '🔄 เช็คสถานะ'; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchPane(name) {
+  currentPane = name;
+  document.querySelectorAll('.pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'myteam')  renderMyTeam();
+  if (name === 'ranking') renderRanking();
+  if (name === 'station') renderStationStatus();
+  if (name === 'selfie' && SELFIE_UNLOCKED) refreshMissionStatus();
+}
+
+// ═══════════════════════════════════════════════════════
+//  REFRESH LOOP
+// ═══════════════════════════════════════════════════════
+async function refresh() {
+  await Promise.all([fetchPrices(), fetchRemoteState()]);
+  switchPane(currentPane);
+}
+setInterval(refresh, 60000);
+setInterval(checkStationAlert, 5000);
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+updateNotifBtn();
+boot();
+</script>
+</body>
+</html>
