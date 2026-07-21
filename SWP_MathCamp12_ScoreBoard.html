@@ -105,7 +105,8 @@ main { display: flex; flex: 1; overflow: hidden; }
 .land-badge .risk-label { font-size: 0.65rem; color: #4ade80; }
 .land-badge .risk-val   { font-size: 1rem; font-weight: 800; color: #22c55e; }
 
-#page-ticker { display: flex; align-items: center; gap: 0; background: #03110a; border-top: 1px solid #10241a; padding: 0 24px; height: 46px; flex-shrink: 0; overflow: hidden; }
+#page-ticker { display: none; align-items: center; gap: 0; background: #03110a; border-top: 1px solid #10241a; padding: 0 24px; height: 46px; flex-shrink: 0; overflow: hidden; }
+#page-ticker.show { display: flex; }
 .tick-block { display: flex; align-items: center; gap: 10px; padding: 0 20px; }
 .tick-icon  { font-size: 1.2rem; }
 .tick-name  { font-size: 0.65rem; color: #4b6b58; text-transform: uppercase; letter-spacing: 1px; }
