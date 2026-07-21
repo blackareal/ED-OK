@@ -3,14 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scoreboard · SWP Math Camp12</title>
+<meta name="robots" content="noindex, nofollow">
+<title>Screen หลัก · SWP Math Camp12</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
+:root {
+  --navy: #1B4D3E;
+  --gold: #22C55E;
+  --dark-bg: #0A2417;
+  --light-bg: #F3FAF5;
+  --ok: #16A34A;
+  --warn: #C0392B;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  font-family: 'Sarabun', 'Segoe UI', sans-serif;
-  background: #050a14;
+  font-family: 'Sarabun', 'Leelawadee UI', 'Segoe UI', sans-serif;
+  background: #04140b;
   color: #e2e8f0;
   display: flex;
   flex-direction: column;
@@ -18,59 +27,60 @@ body {
   overflow: hidden;
 }
 
-.tab-nav { display: flex; gap: 4px; padding: 8px 24px 0; background: #07111f; border-bottom: 1px solid #0f2040; flex-shrink: 0; }
+.tab-nav { display: flex; gap: 4px; padding: 8px 24px 0; background: #071a10; border-bottom: 1px solid #123a24; flex-shrink: 0; overflow-x: auto; }
 .tab-btn {
-  padding: 7px 22px; border: none; border-radius: 8px 8px 0 0; background: transparent;
-  color: #334155; font-size: 0.85rem; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
-  transition: color .2s, background .2s;
+  padding: 7px 18px; border: none; border-radius: 8px 8px 0 0; background: transparent;
+  color: #4b6b58; font-size: 0.82rem; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
+  transition: color .2s, background .2s; white-space: nowrap;
 }
-.tab-btn:hover { color: #94a3b8; background: #0f2040; }
-.tab-btn.active { color: #e2e8f0; background: #0f2547; border-bottom: 2px solid #3b82f6; }
+.tab-btn:hover { color: #9fc2ab; background: #123a24; }
+.tab-btn.active { color: #e2e8f0; background: #123a24; border-bottom: 2px solid #22c55e; }
 
 .view-pane { display: none; flex: 1; overflow: hidden; }
 .view-pane.active { display: flex; }
 #view-wallet.active { display: block; overflow-y: auto; padding: 20px 24px; }
+#view-dashboard.active, #view-answerkey.active { display: block; overflow-y: auto; }
 
 .wallet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .wallet-color-col { display: flex; flex-direction: column; gap: 10px; }
-.wallet-card { background: #07111f; border: 1px solid #0f2040; border-radius: 10px; padding: 12px; transition: border-color .2s; }
-.wallet-card:hover { border-color: #1d4ed8; }
+.wallet-card { background: #071a10; border: 1px solid #123a24; border-radius: 10px; padding: 12px; transition: border-color .2s; }
+.wallet-card:hover { border-color: #22c55e; }
 .wallet-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .wallet-team-name { font-size: 0.85rem; font-weight: 800; }
 .wallet-team-total { font-size: 0.9rem; font-weight: 900; text-align: right; }
 .wallet-team-gain { font-size: 0.65rem; text-align: right; margin-top: 1px; }
-.wallet-empty { font-size: 0.72rem; color: #1e293b; text-align: center; padding: 16px 0; }
-.wallet-asset-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-top: 1px solid #0a1628; font-size: 0.75rem; }
+.wallet-empty { font-size: 0.72rem; color: #1c3327; text-align: center; padding: 16px 0; }
+.wallet-asset-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-top: 1px solid #0a2417; font-size: 0.75rem; }
 .wallet-asset-left { display: flex; align-items: center; gap: 5px; }
 .wallet-asset-icon { font-size: 0.9rem; }
-.wallet-asset-name { color: #64748b; }
-.wallet-asset-qty  { font-size: 0.65rem; color: #1e3a5f; margin-top: 1px; }
+.wallet-asset-name { color: #6b8f7a; }
+.wallet-asset-qty  { font-size: 0.65rem; color: #1c4a35; margin-top: 1px; }
 .wallet-asset-right { text-align: right; }
 .wallet-asset-val  { font-weight: 700; }
 .wallet-asset-chg  { font-size: 0.63rem; margin-top: 1px; }
 
-header {
+#page-header {
   display: flex; align-items: center; justify-content: space-between; padding: 10px 28px;
-  background: linear-gradient(90deg, #0a1628 0%, #0f2547 50%, #0a1628 100%);
-  border-bottom: 2px solid #1d4ed8; flex-shrink: 0;
+  background: linear-gradient(90deg, #0a2417 0%, #123a24 50%, #0a2417 100%);
+  border-bottom: 2px solid #22c55e; flex-shrink: 0;
 }
-.camp-name { font-size: 1.05rem; font-weight: 800; color: #93c5fd; line-height: 1.3; }
-.camp-sub  { font-size: 0.72rem; color: #475569; margin-top: 3px; }
+.camp-name { font-size: 1.05rem; font-weight: 800; color: #86efac; line-height: 1.3; }
+.camp-sub  { font-size: 0.72rem; color: #6b8f7a; margin-top: 3px; }
 .clock-wrap { text-align: right; }
 .clock { font-size: 2rem; font-weight: 900; color: #e2e8f0; font-variant-numeric: tabular-nums; letter-spacing: 2px; }
-.refresh-label { font-size: 0.68rem; color: #334155; margin-top: 2px; }
+.refresh-label { font-size: 0.68rem; color: #4b6b58; margin-top: 2px; }
 
 main { display: flex; flex: 1; overflow: hidden; }
 
-.scoreboard-panel { flex: 0 0 60%; display: flex; flex-direction: column; padding: 18px 24px; border-right: 1px solid #0f172a; }
-.panel-title { font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; flex-shrink: 0; }
+.scoreboard-panel { flex: 0 0 60%; display: flex; flex-direction: column; padding: 18px 24px; border-right: 1px solid #10241a; }
+.panel-title { font-size: 0.75rem; font-weight: 700; color: #4b6b58; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; flex-shrink: 0; }
 .bars-container { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 5px; }
 .bar-row { display: flex; align-items: center; gap: 8px; }
 .bar-rank { width: 32px; font-size: 1.15rem; text-align: center; flex-shrink: 0; }
 .bar-label-wrap { width: 96px; flex-shrink: 0; }
 .bar-color-name { font-size: 0.9rem; font-weight: 800; line-height: 1.2; }
-.bar-sub-info { font-size: 0.62rem; color: #475569; margin-top: 1px; }
-.bar-track { flex: 1; height: 34px; background: #0c1420; border-radius: 8px; overflow: hidden; border: 1px solid #1a2744; position: relative; }
+.bar-sub-info { font-size: 0.62rem; color: #6b8f7a; margin-top: 1px; }
+.bar-track { flex: 1; height: 34px; background: #0c1f14; border-radius: 8px; overflow: hidden; border: 1px solid #1a2e20; position: relative; }
 .bar-fill { height: 100%; border-radius: 8px; transition: width 1.8s cubic-bezier(0.4, 0, 0.2, 1); position: relative; min-width: 6px; display: flex; align-items: center; padding-left: 10px; }
 .bar-fill.is-leader { animation: glow-pulse 2s ease-in-out infinite alternate; }
 @keyframes glow-pulse { from { filter: brightness(1) saturate(1); } to { filter: brightness(1.35) saturate(1.2); } }
@@ -79,34 +89,34 @@ main { display: flex; flex: 1; overflow: hidden; }
 .bar-value { font-size: 0.9rem; font-weight: 800; }
 .bar-change { font-size: 0.68rem; margin-top: 1px; }
 
-.charts-panel { flex: 0 0 40%; display: flex; flex-direction: column; padding: 14px 16px; gap: 10px; overflow: hidden; background: #060c18; }
-.chart-card { flex: 1; background: #0a1220; border: 1px solid #111e30; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.charts-panel { flex: 0 0 40%; display: flex; flex-direction: column; padding: 14px 16px; gap: 10px; overflow: hidden; background: #061a0f; }
+.chart-card { flex: 1; background: #0a1f16; border: 1px solid #10241a; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
 .chart-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; flex-shrink: 0; }
-.chart-title-text { font-size: 0.72rem; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 1.5px; }
+.chart-title-text { font-size: 0.72rem; font-weight: 700; color: #4b6b58; text-transform: uppercase; letter-spacing: 1.5px; }
 .chart-price-now { font-size: 1.15rem; font-weight: 800; }
 .chart-pct { font-size: 0.8rem; font-weight: 700; margin-top: 2px; text-align: right; }
 .chart-body { flex: 1; position: relative; min-height: 0; }
 
 .land-card { flex: 0 0 auto !important; height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; }
-.land-left .land-label { font-size: 0.72rem; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+.land-left .land-label { font-size: 0.72rem; color: #4b6b58; text-transform: uppercase; letter-spacing: 1px; }
 .land-left .land-val  { font-size: 1.5rem; font-weight: 900; color: #22c55e; }
-.land-left .land-note { font-size: 0.66rem; color: #334155; margin-top: 2px; }
+.land-left .land-note { font-size: 0.66rem; color: #4b6b58; margin-top: 2px; }
 .land-badge { border: 1px solid #166534; background: #052e14; border-radius: 8px; padding: 6px 14px; text-align: center; }
 .land-badge .risk-label { font-size: 0.65rem; color: #4ade80; }
 .land-badge .risk-val   { font-size: 1rem; font-weight: 800; color: #22c55e; }
 
-footer { display: flex; align-items: center; gap: 0; background: #030711; border-top: 1px solid #0f172a; padding: 0 24px; height: 46px; flex-shrink: 0; overflow: hidden; }
+#page-ticker { display: flex; align-items: center; gap: 0; background: #03110a; border-top: 1px solid #10241a; padding: 0 24px; height: 46px; flex-shrink: 0; overflow: hidden; }
 .tick-block { display: flex; align-items: center; gap: 10px; padding: 0 20px; }
 .tick-icon  { font-size: 1.2rem; }
-.tick-name  { font-size: 0.65rem; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+.tick-name  { font-size: 0.65rem; color: #4b6b58; text-transform: uppercase; letter-spacing: 1px; }
 .tick-val   { font-size: 0.95rem; font-weight: 800; }
 .tick-chg   { font-size: 0.72rem; margin-left: 6px; }
-.tick-sep   { width: 1px; height: 28px; background: #0f172a; flex-shrink: 0; }
-.tick-right { margin-left: auto; font-size: 0.65rem; color: #1e293b; padding-right: 4px; }
+.tick-sep   { width: 1px; height: 28px; background: #10241a; flex-shrink: 0; }
+.tick-right { margin-left: auto; font-size: 0.65rem; color: #1c3327; padding-right: 4px; }
 
 .positive { color: #22c55e; }
 .negative { color: #ef4444; }
-.neutral  { color: #334155; }
+.neutral  { color: #4b6b58; }
 
 @media (max-width: 1000px) {
   main { flex-direction: column; }
@@ -118,54 +128,164 @@ footer { display: flex; align-items: center; gap: 0; background: #030711; border
 #view-schedule.active { display: flex; flex-direction: column; padding: 16px 24px; overflow-y: auto; }
 .view-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
 .vtgl-btn {
-  padding: 6px 16px; border: 1px solid #0f2040; border-radius: 20px;
-  background: transparent; color: #334155; font-size: 0.78rem;
+  padding: 6px 16px; border: 1px solid #123a24; border-radius: 20px;
+  background: transparent; color: #4b6b58; font-size: 0.78rem;
   font-weight: 700; cursor: pointer; transition: all .2s;
 }
-.vtgl-btn.active { background: #0f2547; color: #93c5fd; border-color: #1d4ed8; }
+.vtgl-btn.active { background: #123a24; color: #86efac; border-color: #22c55e; }
 
 .sched-grid { display: grid; grid-template-columns: 70px repeat(4, 1fr); gap: 6px; }
 .sched-corner { }
 .sched-hdr {
-  background: #050a14; border: 1px solid #0a1628; border-radius: 6px; padding: 8px 4px;
-  font-size: 0.7rem; font-weight: 700; color: #1e3a5f; text-align: center; letter-spacing: 0.5px;
+  background: #04140b; border: 1px solid #0a2417; border-radius: 6px; padding: 8px 4px;
+  font-size: 0.7rem; font-weight: 700; color: #1c4a35; text-align: center; letter-spacing: 0.5px;
 }
 .sched-rnd-lbl {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-size: 0.78rem; font-weight: 700; color: #475569;
-  background: #050a14; border-radius: 6px; padding: 4px 0; text-align: center;
+  font-size: 0.78rem; font-weight: 700; color: #6b8f7a;
+  background: #04140b; border-radius: 6px; padding: 4px 0; text-align: center;
 }
 .sched-cell {
-  background: #07111f; border: 1px solid #0a1e38; border-radius: 8px; padding: 10px 6px;
+  background: #071a10; border: 1px solid #0a2e1f; border-radius: 8px; padding: 10px 6px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; text-align: center; transition: background .2s;
 }
-.sched-cell:hover { background: #0a1e38; }
+.sched-cell:hover { background: #0a2e1f; }
 .sched-team-name { font-size: 0.82rem; font-weight: 800; letter-spacing: 0.3px; }
-.sched-vs-dot { font-size: 0.6rem; color: #1e3a5f; }
+.sched-vs-dot { font-size: 0.6rem; color: #1c4a35; }
 
 .team-sched-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .team-col { display: flex; flex-direction: column; gap: 6px; }
-.team-card { background: #07111f; border: 1px solid #0a1e38; border-radius: 8px; padding: 8px 10px; }
-.team-card-hdr { font-size: 0.88rem; font-weight: 800; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #0a1628; }
-.team-card-row { display: flex; align-items: baseline; gap: 6px; padding: 4px 0; border-top: 1px solid #050a14; }
-.tcr-rnd  { font-size: 0.65rem; color: #1e3a5f; min-width: 42px; flex-shrink: 0; }
-.tcr-base { font-size: 0.7rem; font-weight: 700; color: #475569; flex-shrink: 0; }
-.tcr-vs   { font-size: 0.6rem; color: #1e293b; flex-shrink: 0; }
+.team-card { background: #071a10; border: 1px solid #0a2e1f; border-radius: 8px; padding: 8px 10px; }
+.team-card-hdr { font-size: 0.88rem; font-weight: 800; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #0a2417; }
+.team-card-row { display: flex; align-items: baseline; gap: 6px; padding: 4px 0; border-top: 1px solid #04140b; }
+.tcr-rnd  { font-size: 0.65rem; color: #1c4a35; min-width: 42px; flex-shrink: 0; }
+.tcr-base { font-size: 0.7rem; font-weight: 700; color: #6b8f7a; flex-shrink: 0; }
+.tcr-vs   { font-size: 0.6rem; color: #1c3327; flex-shrink: 0; }
 .tcr-opp  { font-size: 0.78rem; font-weight: 800; }
 
 @media (max-width: 900px) {
   .sched-grid { grid-template-columns: 50px repeat(4, 1fr); font-size: 0.85rem; }
   .team-sched-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ═════════════════ SELFIE MISSION PANES (intro/timer/dashboard/answerkey) ═════════════════ */
+#view-intro, #view-timer {
+  background: radial-gradient(circle at top, #1F5C3D, var(--dark-bg));
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5vh 2vw;
+  overflow: auto;
+  width: 100%;
+}
+.sf-inner { width: 100%; max-width: 1300px; text-align: center; margin: 0 auto; }
+
+.sf-title {
+  font-size: clamp(1.6rem, 2.6vw + 2vh, 2.8rem);
+  margin: 0 0 0.15em;
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.sf-subtitle { font-size: clamp(0.9rem, 1vw + 1vh, 1.15rem); color: #D6EED9; margin-bottom: 0.6em; }
+.sf-meta { font-size: clamp(0.72rem, 0.7vw + 0.7vh, 0.95rem); color: #9FC9A8; margin-bottom: 1em; }
+
+.sf-intro-columns { display: flex; gap: 2.5vw; align-items: center; justify-content: center; text-align: left; margin-bottom: 1em; flex-wrap: wrap; }
+.sf-rules-grid { display: flex; flex-direction: column; gap: 0.6em; flex: 1 1 420px; max-width: 480px; }
+.sf-qr-col { display: flex; flex-direction: column; align-items: center; gap: 0.8em; flex: 0 0 auto; }
+.sf-rule-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0.6em 1em; display: flex; align-items: center; gap: 0.8em; }
+.sf-rule-card .num { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--gold); color: #1a1a1a; font-weight: 700; font-size: 0.9rem; }
+.sf-rule-card p { flex: 1; margin: 0; font-size: clamp(0.76rem, 0.5vw + 0.9vh, 0.98rem); line-height: 1.4; }
+
+.sf-qr-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 0.5em; background: #fff; border-radius: 20px; padding: 0.9em 1.4em; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+.sf-qr-label { color: #1B4D3E; font-weight: 700; font-size: clamp(0.85rem, 0.8vw + 0.8vh, 1.05rem); }
+.sf-qr-url { color: #6b8f7a; font-size: 0.72rem; word-break: break-all; max-width: 320px; }
+.sf-qr-box { width: clamp(100px, 9vw + 9vh, 170px); height: clamp(100px, 9vw + 9vh, 170px); }
+.sf-qr-box img { display: block; width: 100%; height: 100%; }
+
+.sf-start-btn {
+  background: var(--gold); color: #1a1a1a; border: none;
+  font-size: clamp(0.9rem, 1vw + 1vh, 1.15rem); font-weight: 700;
+  padding: 0.6em 1.8em; border-radius: 100px; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(34,197,94,0.4);
+}
+
+.sf-timer-label { font-size: clamp(1rem, 1.4vw + 1.4vh, 1.7rem); color: #D6EED9; margin-bottom: 0.3em; letter-spacing: 0.05em; }
+.sf-timer-display {
+  font-size: clamp(3.5rem, 9vw + 9vh, 9rem); font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1; margin: 0.15em 0 0.3em; text-shadow: 0 6px 30px rgba(0,0,0,0.5);
+}
+.sf-timer-display.warning { color: #F2C744; }
+.sf-timer-display.danger { color: #E85C5C; animation: sf-pulse 1s infinite; }
+@keyframes sf-pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
+
+.sf-timer-controls { display: flex; gap: 1em; justify-content: center; flex-wrap: wrap; margin-top: 1em; }
+.sf-timer-controls button {
+  font-size: clamp(0.85rem, 1vw + 1vh, 1.1rem); padding: 0.55em 1.6em; border-radius: 100px;
+  border: none; cursor: pointer; font-weight: 700;
+}
+#sfBtnStartPause { background: var(--gold); color: #1a1a1a; }
+#sfBtnReset { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+.sf-hint { margin-top: 1em; font-size: 0.68rem; color: #7BA88F; }
+
+/* Dashboard / Answer key — light theme (readable printed/projected detail views) */
+#view-dashboard, #view-answerkey { background: var(--light-bg); color: #12261c; width: 100%; }
+.sf-panel-header { background: var(--navy); color: #fff; padding: 1em 1.4em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6em; }
+.sf-panel-header h2 { margin: 0; font-size: 1.15rem; }
+.sf-panel-header p { margin: 0.2em 0 0; font-size: 0.78rem; color: #D6EED9; }
+.sf-status { font-size: 0.78rem; color: #D6EED9; }
+.sf-controls { display: flex; gap: 0.6em; align-items: center; }
+.sf-controls button, .sf-controls label {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: #fff;
+  padding: 0.5em 1em; border-radius: 100px; font-size: 0.82rem; cursor: pointer;
+}
+.sf-wrap { max-width: 1200px; margin: 0 auto; padding: 1.2em; }
+.sf-config-warning { background: #FDECEC; border: 1px solid var(--warn); color: #8a1f1f; padding: 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.88rem; }
+.sf-leaderboard { background: #fff; border-radius: 14px; padding: 1.2em; margin-bottom: 1.5em; box-shadow: 0 2px 10px rgba(20,60,30,0.06); }
+.sf-leaderboard h3 { margin: 0 0 0.8em; font-size: 1.05rem; color: var(--navy); }
+.sf-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.sf-table th, .sf-table td { text-align: left; padding: 0.5em 0.6em; border-bottom: 1px solid #e5f2ea; }
+.sf-table th { color: #5b7d6a; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; }
+.sf-table tr:first-child td { font-weight: 800; color: var(--navy); }
+.sf-group-section { margin-bottom: 2em; }
+.sf-group-title { display: flex; align-items: baseline; gap: 0.6em; margin-bottom: 0.7em; flex-wrap: wrap; }
+.sf-group-title h4 { margin: 0; font-size: 1.1rem; }
+.sf-group-title .score { color: var(--gold); font-weight: 800; }
+.sf-group-title .count { color: #7d9c8c; font-size: 0.83rem; }
+.sf-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.8em; }
+.sf-photo-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(20,60,30,0.08); text-decoration: none; color: inherit; display: block; }
+.sf-photo-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #e5f2ea; display: block; }
+.sf-photo-card .meta { padding: 0.55em 0.7em; }
+.sf-photo-card .word { font-weight: 800; font-size: 0.83rem; color: var(--navy); }
+.sf-photo-card .sub { font-size: 0.7rem; color: #7d9c8c; display: flex; justify-content: space-between; margin-top: 0.2em; }
+.sf-empty { text-align: center; color: #7d9c8c; padding: 3em 1em; }
+
+.sf-lvl-badge { font-size: 0.68rem; font-weight: 700; padding: 0.15em 0.5em; border-radius: 100px; color: #062b1a; white-space: nowrap; display: inline-block; }
+.sf-lvl-badge.catA { background: #22c55e; }
+.sf-lvl-badge.catB { background: #4ade80; }
+.sf-lvl-badge.catC { background: #a3e635; }
+.sf-lvl-badge.catS { background: #facc15; }
+
+.sf-ak-list { display: flex; flex-direction: column; gap: 0.8em; }
+.sf-ak-row { display: grid; grid-template-columns: 260px 1fr; gap: 1em; background: #fff; border-radius: 14px; padding: 0.8em; box-shadow: 0 2px 10px rgba(20,60,30,0.06); }
+@media (max-width: 640px) { .sf-ak-row { grid-template-columns: 1fr; } }
+.sf-ak-no { font-size: 0.68rem; color: #7d9c8c; font-weight: 700; margin-bottom: 0.3em; }
+.sf-ak-mission { font-size: 0.83rem; line-height: 1.45; color: #1c2b22; margin-bottom: 0.5em; }
+.sf-ak-answer-box { background: var(--navy); color: #fff; border-radius: 10px; padding: 0.6em 0.9em; font-size: 0.83rem; }
+.sf-ak-answer-box b { color: #BEF264; }
+.sf-ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; margin-top: 0.6em; }
+.sf-ak-photo { width: 68px; text-align: center; text-decoration: none; color: inherit; }
+.sf-ak-photo img { width: 68px; height: 68px; object-fit: cover; border-radius: 8px; background: #e5f2ea; display: block; }
+.sf-ak-photo .grp { font-size: 0.63rem; color: #6b8f7a; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 </head>
 <body>
 
-<header>
+<header id="page-header">
   <div>
-    <div class="camp-name">🧮 SWP Math Camp12 — ระบบคะแนน</div>
-    <div class="camp-sub">โรงเรียนสุวรรณภูมิพิทยไพศาล · ค่ายคณิตศาสตร์</div>
+    <div class="camp-name">🧮 SWP Math Camp12 — Screen หลัก</div>
+    <div class="camp-sub">โรงเรียนสุวรรณภูมิพิทยไพศาล · ระบบคะแนน + ภารกิจเซลฟี่</div>
   </div>
   <div class="clock-wrap">
     <div class="clock" id="clock">--:--:--</div>
@@ -177,6 +297,10 @@ footer { display: flex; align-items: center; gap: 0; background: #030711; border
   <button class="tab-btn active" id="tab-btn-scoreboard" onclick="switchTab('scoreboard')">🏆 ภาพรวมคะแนน</button>
   <button class="tab-btn" id="tab-btn-wallet" onclick="switchTab('wallet')">👜 กระเป๋าตัง</button>
   <button class="tab-btn" id="tab-btn-schedule" onclick="switchTab('schedule')">📋 ตารางเข้าฐาน</button>
+  <button class="tab-btn" id="tab-btn-intro" onclick="switchTab('intro')">🎬 แนะนำเซลฟี่</button>
+  <button class="tab-btn" id="tab-btn-timer" onclick="switchTab('timer')">⏱️ จับเวลา</button>
+  <button class="tab-btn" id="tab-btn-dashboard" onclick="switchTab('dashboard')">🖼️ Dashboard เซลฟี่</button>
+  <button class="tab-btn" id="tab-btn-answerkey" onclick="switchTab('answerkey')">🔑 เฉลย</button>
 </div>
 
 <div class="view-pane active" id="view-scoreboard">
@@ -184,7 +308,7 @@ footer { display: flex; align-items: center; gap: 0; background: #030711; border
   <div class="scoreboard-panel">
     <div class="panel-title">🏆 คะแนนสะสม &mdash; มูลค่าพอร์ตโฟลิโอ (THB)</div>
     <div class="bars-container" id="bars-container">
-      <div style="color:#1e293b; font-size:.9rem; padding:20px;">กำลังโหลดข้อมูล...</div>
+      <div style="color:#1c3327; font-size:.9rem; padding:20px;">กำลังโหลดข้อมูล...</div>
     </div>
   </div>
 
@@ -229,7 +353,7 @@ footer { display: flex; align-items: center; gap: 0; background: #030711; border
 <div class="view-pane" id="view-wallet">
   <div class="panel-title">💼 กระเป๋าสินทรัพย์แต่ละทีม — มูลค่า ณ ปัจจุบัน</div>
   <div class="wallet-grid" id="wallet-grid">
-    <div style="color:#1e293b; font-size:.9rem; padding:20px; grid-column:1/-1">กำลังโหลดข้อมูล...</div>
+    <div style="color:#1c3327; font-size:.9rem; padding:20px; grid-column:1/-1">กำลังโหลดข้อมูล...</div>
   </div>
 </div>
 
@@ -244,7 +368,83 @@ footer { display: flex; align-items: center; gap: 0; background: #030711; border
   <div id="sched-grid"><!-- render by JS --></div>
 </div>
 
-<footer>
+<!-- ============ SELFIE: INTRO ============ -->
+<div class="view-pane" id="view-intro">
+  <div class="sf-inner">
+    <h1 class="sf-title">🧮📸 ภารกิจเซลฟี่คณิต</h1>
+    <div class="sf-subtitle">SWP Math Camp12 — แก้โจทย์คณิต ถอดรหัสเป็นคำตอบ แล้วไปถ่ายภาพให้ตรงภารกิจ</div>
+    <div class="sf-meta">โรงเรียนสุวรรณภูมิพิทยไพศาล · ค่ายคณิตศาสตร์ · 8 ทีมสี</div>
+
+    <div class="sf-intro-columns">
+      <div class="sf-rules-grid">
+        <div class="sf-rule-card"><div class="num">1</div><p>สแกน QR ด้านขวาเพื่อเปิดหน้าของนักเรียน (คะแนนทีม + ตารางฐาน + ภารกิจเซลฟี่)</p></div>
+        <div class="sf-rule-card"><div class="num">2</div><p>ไม่บังคับทำให้ครบ ทำให้ได้มากที่สุดภายในเวลาที่กำหนด</p></div>
+        <div class="sf-rule-card"><div class="num">3</div><p>ทุกภาพต้องมี <b>สมาชิกครบทุกคน</b> ในทีมอยู่ในภาพ (ยกเว้นภารกิจระบุไว้เป็นอย่างอื่น)</p></div>
+        <div class="sf-rule-card"><div class="num">4</div><p>สมาชิกคนไหนในทีมก็กดอัปโหลดภาพได้ ไม่ต้องเป็นตัวแทนคนเดียว</p></div>
+      </div>
+      <div class="sf-qr-col">
+        <div class="sf-qr-wrap">
+          <div class="sf-qr-box" id="sfQrBox"><img id="sfQrImg" alt="QR code"></div>
+          <div class="sf-qr-label">📱 สแกนเพื่อเปิดหน้านักเรียน</div>
+          <div class="sf-qr-url" id="sfQrUrlText"></div>
+        </div>
+        <button class="sf-start-btn" id="sfBtnGoTimer">⏱️ เริ่มจับเวลา 45 นาที</button>
+      </div>
+    </div>
+    <div class="sf-hint">ภารกิจเซลฟี่คณิต SWP Math Camp12 · หน้าจอสำหรับฉายในกิจกรรม</div>
+  </div>
+</div>
+
+<!-- ============ SELFIE: TIMER ============ -->
+<div class="view-pane" id="view-timer">
+  <div class="sf-inner">
+    <div class="sf-timer-label">⏳ เวลาที่เหลือในการถ่ายภาพ</div>
+    <div class="sf-timer-display" id="sfTimerDisplay">45:00</div>
+    <div class="sf-timer-controls">
+      <button id="sfBtnStartPause">▶️ เริ่ม</button>
+      <button id="sfBtnReset">🔄 รีเซ็ต</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SELFIE: DASHBOARD ============ -->
+<div class="view-pane" id="view-dashboard">
+  <div class="sf-panel-header">
+    <div>
+      <h2>🖼️ Dashboard — ภารกิจเซลฟี่คณิต</h2>
+      <div class="sf-status" id="sfStatusText">ยังไม่ได้โหลดข้อมูล</div>
+    </div>
+    <div class="sf-controls">
+      <label><input type="checkbox" id="sfAutoRefresh"> รีเฟรชอัตโนมัติ (30s)</label>
+      <button id="sfBtnRefresh">🔄 รีเฟรชตอนนี้</button>
+    </div>
+  </div>
+  <div class="sf-wrap">
+    <div class="sf-config-warning" id="sfConfigWarning" style="display:none;"></div>
+    <div class="sf-leaderboard">
+      <h3>🏆 คะแนนรวมแต่ละทีม</h3>
+      <table class="sf-table">
+        <thead><tr><th>อันดับ</th><th>ทีม</th><th>ภารกิจสำเร็จ</th><th>จำนวนไฟล์ภาพที่ส่ง</th></tr></thead>
+        <tbody id="sfLeaderboardBody"><tr><td colspan="4" style="color:#7d9c8c;">—</td></tr></tbody>
+      </table>
+    </div>
+    <div id="sfGroups"></div>
+    <div class="sf-empty" id="sfEmptyMsg" style="display:none;">ยังไม่มีภาพส่งเข้ามา</div>
+  </div>
+</div>
+
+<!-- ============ SELFIE: ANSWER KEY (ครูเท่านั้น) ============ -->
+<div class="view-pane" id="view-answerkey">
+  <div class="sf-panel-header">
+    <h2>🔑 เฉลยภารกิจเซลฟี่</h2>
+    <p>สำหรับครู/กรรมการเท่านั้น — อย่าฉายแท็บนี้ตอนบรีฟนักเรียน</p>
+  </div>
+  <div class="sf-wrap">
+    <div class="sf-ak-list" id="sfAkList"></div>
+  </div>
+</div>
+
+<footer id="page-ticker">
   <div class="tick-block">
     <span class="tick-icon">₿</span>
     <div class="tick-info">
@@ -273,7 +473,7 @@ footer { display: flex; align-items: center; gap: 0; background: #030711; border
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONFIG
+//  CONFIG (ใช้ร่วมกันทั้งระบบคะแนน + ภารกิจเซลฟี่ — Apps Script เดียวกัน)
 // ═══════════════════════════════════════════════════════
 const TEAMS = [
   { id: 'แดง',    name: 'ทีมสีแดง',    emoji: '🔴', hex: '#ef4444', grad: ['#5a0a0a44', '#ef444488'] },
@@ -288,7 +488,7 @@ const TEAMS = [
 const RANK_ICON = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
 const GOLD_TROY_TO_BAHT = 15.244 / 31.1035; // troy oz → Thai baht weight
 
-// ── ตารางหมุนเวียนฐาน: 4 รอบ x 4 ฐาน, คำนวณล่วงหน้าให้ไม่ซ้ำคู่แข่งขันและไม่ซ้ำฐานตลอด 4 รอบ ──
+// ── ตารางหมุนเวียนฐาน: 4 รอบ x 4 ฐาน, ไม่ซ้ำคู่แข่งขันและไม่ซ้ำฐานตลอด 4 รอบ ──
 const STATIONS_ORDER = ['ฐาน 1 · โดม', 'ฐาน 2 · โดม', 'ฐาน 3 · HCEC', 'ฐาน 4 · สนามแบดมินตัน'];
 const SCHEDULE = [
   { round: 1, time: '10:30–10:50', matches: [
@@ -317,7 +517,7 @@ const SCHEDULE = [
   ]},
 ];
 
-// ── วาง URL Apps Script เดียวกับใน score_input.html ──
+// ── URL Apps Script เดียวกับ ScoreInput / StudentView ──
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAS7E41O7b9xkyHOunboZJL_vRhytH15Ft8bz-mfHbMhcNxuglgOM8ShcSxrLzORpN/exec';
 
 let prices = { btc: null, gold: null };
@@ -352,6 +552,8 @@ function setTickChg(id, val) {
   el.textContent = (v >= 0 ? '+' : '') + val + '%';
   el.className = 'tick-chg ' + (v >= 0 ? 'positive' : 'negative');
 }
+function teamHex(id) { const t = TEAMS.find(x => x.id === id); return t ? t.hex : '#9fc2ab'; }
+function teamEmoji(id) { const t = TEAMS.find(x => x.id === id); return t ? t.emoji : ''; }
 
 // ═══════════════════════════════════════════════════════
 //  CLOCK
@@ -535,14 +737,14 @@ const CHART_OPTS = (color) => ({
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: '#0f172a', borderColor: '#1e293b', borderWidth: 1,
-      titleColor: '#64748b', bodyColor: '#e2e8f0',
+      backgroundColor: '#10241a', borderColor: '#1c3327', borderWidth: 1,
+      titleColor: '#6b8f7a', bodyColor: '#e2e8f0',
       callbacks: { label: ctx => '฿' + ctx.parsed.y.toLocaleString('th-TH') }
     }
   },
   scales: {
-    x: { grid: { color: '#0f172a' }, ticks: { color: '#1e3a5f', maxTicksLimit: 7, font: { size: 10 }, maxRotation: 0 } },
-    y: { grid: { color: '#0c1420' }, ticks: { color: '#1e3a5f', font: { size: 10 },
+    x: { grid: { color: '#10241a' }, ticks: { color: '#1c4a35', maxTicksLimit: 7, font: { size: 10 }, maxRotation: 0 } },
+    y: { grid: { color: '#0c1f14' }, ticks: { color: '#1c4a35', font: { size: 10 },
          callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v } }
   }
 });
@@ -573,7 +775,7 @@ function updateChart(chart, d) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  FETCH
+//  FETCH (คะแนน)
 // ═══════════════════════════════════════════════════════
 async function fetchPrices() {
   const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb', { cache: 'no-store' });
@@ -620,7 +822,7 @@ async function fetchHistorical() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  REFRESH LOOP
+//  REFRESH LOOP (คะแนน)
 // ═══════════════════════════════════════════════════════
 let countdown = 60;
 
@@ -645,15 +847,6 @@ setInterval(() => {
 // ═══════════════════════════════════════════════════════
 let schedView = 'station';
 
-function teamHex(id) {
-  const t = TEAMS.find(x => x.id === id);
-  return t ? t.hex : '#94a3b8';
-}
-function teamEmoji(id) {
-  const t = TEAMS.find(x => x.id === id);
-  return t ? t.emoji : '';
-}
-
 function setSchedView(view) {
   schedView = view;
   document.getElementById('vtgl-station').classList.toggle('active', view === 'station');
@@ -662,13 +855,12 @@ function setSchedView(view) {
 }
 
 function renderScheduleByStation() {
-  // grid: corner + 4 station headers, then 4 rows (rounds) x 4 cells
   let html = '<div class="sched-grid">';
   html += '<div class="sched-corner"></div>';
   STATIONS_ORDER.forEach(st => { html += `<div class="sched-hdr">${st}</div>`; });
 
   SCHEDULE.forEach(r => {
-    html += `<div class="sched-rnd-lbl">รอบ ${r.round}<br><span style="font-weight:400;color:#334155;font-size:0.65rem;">${r.time}</span></div>`;
+    html += `<div class="sched-rnd-lbl">รอบ ${r.round}<br><span style="font-weight:400;color:#4b6b58;font-size:0.65rem;">${r.time}</span></div>`;
     STATIONS_ORDER.forEach(st => {
       const m = r.matches.find(x => x.station === st);
       if (!m) { html += '<div class="sched-cell">-</div>'; return; }
@@ -713,7 +905,301 @@ function renderSchedule() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  TAB SWITCHING
+//  SELFIE: QR CODE — ชี้ไปหน้า Student View ใหม่ (รวมภารกิจเซลฟี่ไว้ในนั้นแล้ว)
+//  ไม่ใช่หน้า SelfieMission.html เดิมอีกต่อไป
+// ═══════════════════════════════════════════════════════
+const MISSION_PAGE_URL = "https://blackareal.github.io/ED-OK/SWP_MathCamp12_StudentView.html";
+document.getElementById('sfQrUrlText').textContent = MISSION_PAGE_URL;
+document.getElementById('sfQrImg').src =
+  "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(MISSION_PAGE_URL);
+
+// ═══════════════════════════════════════════════════════
+//  SELFIE: COUNTDOWN TIMER (45:00)
+// ═══════════════════════════════════════════════════════
+const SF_TOTAL_SECONDS = 45 * 60;
+let sfRemaining = SF_TOTAL_SECONDS;
+let sfIntervalId = null;
+const sfDisplay = document.getElementById('sfTimerDisplay');
+const sfBtnStartPause = document.getElementById('sfBtnStartPause');
+
+function sfFormatTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+function sfRenderTimer() {
+  sfDisplay.textContent = sfFormatTime(Math.max(sfRemaining, 0));
+  sfDisplay.classList.toggle('warning', sfRemaining <= 300 && sfRemaining > 60);
+  sfDisplay.classList.toggle('danger', sfRemaining <= 60);
+}
+function sfTick() {
+  sfRemaining -= 1;
+  sfRenderTimer();
+  if (sfRemaining <= 0) {
+    sfPauseTimer();
+    sfDisplay.textContent = "หมดเวลา!";
+    sfDisplay.classList.add('danger');
+  }
+}
+function sfStartTimer() {
+  if (sfIntervalId) return;
+  sfIntervalId = setInterval(sfTick, 1000);
+  sfBtnStartPause.textContent = '⏸️ หยุดชั่วคราว';
+}
+function sfPauseTimer() {
+  clearInterval(sfIntervalId);
+  sfIntervalId = null;
+  sfBtnStartPause.textContent = '▶️ เริ่ม';
+}
+sfBtnStartPause.addEventListener('click', () => sfIntervalId ? sfPauseTimer() : sfStartTimer());
+document.getElementById('sfBtnReset').addEventListener('click', () => {
+  sfPauseTimer();
+  sfRemaining = SF_TOTAL_SECONDS;
+  sfRenderTimer();
+});
+sfRenderTimer();
+document.getElementById('sfBtnGoTimer').addEventListener('click', () => { switchTab('timer'); sfStartTimer(); });
+
+// ═══════════════════════════════════════════════════════
+//  SELFIE: ANSWER KEY — ชุดใหม่ตามแนวทางค่ายเต่างอย "ถอดรหัส→ลงพื้นที่→แก้โจทย์"
+//  (20 ก.ค. 2569) รูปแบบ: [no, cat, loc, mission, answer]
+//  ⚠️ ข้อความ mission ต้องตรงกับ MISSIONS ใน SWP_MathCamp12_StudentView.html
+//  ทุกตัวอักษร (loc/answer มีเฉพาะที่นี่ ไม่ส่งให้นักเรียนเห็น)
+//  ⚠️ สถานที่เฉลย (loc) เป็นการตีความจากอาคาร/สถานที่ที่ยืนยันว่ามีอยู่จริงในโรงเรียน
+//  (ดู README หัวข้อ "บริบทโรงเรียน") แต่ยังไม่ได้เดินสำรวจเทียบพิกัดจริงทุกจุด —
+//  ข้อ 31 (พิกัด GPS) เป็นค่าประมาณเท่านั้น ต้องให้ครูยืนยันก่อนใช้งานจริง
+// ═══════════════════════════════════════════════════════
+const ANSWER_KEY = [
+  [0,  "S", "จุดรวมพลของทีม (ไม่มีสถานที่ลับ — ภารกิจนับสมาชิก)", "ถ่ายรูปรวมกับสมาชิกทุกคนในทีม (สถานที่ใดก็ได้) แล้วพิมพ์จำนวนสมาชิกในทีมเป็นคำตอบ", "🚩 ตรวจตามจำนวนสมาชิกจริงของแต่ละทีมสี (เทียบกับรายชื่อนักเรียนที่ลงทะเบียนไว้)"],
+  [1,  "A", "เสาธงกลางสนาม", "เงาของเสาสูงต้นหนึ่งกลางลานกว้างของโรงเรียน ซึ่งมีธงไตรรงค์โบกสะบัดอยู่บนยอดเสมอยามเช้า หากสมมติว่าเสาต้นนี้สูง 9 เมตร และทำมุมเงยกับดวงอาทิตย์ 45° ในเวลานั้น ความยาวของเงาที่ทอดลงบนพื้นจะมีค่ากี่เมตร?", "tan45° = 1 → เงายาวเท่ากับความสูง = <b>9 เมตร</b>"],
+  [2,  "A", "บันไดอาคารเรียนถาวร", "โครงสร้างคอนกรีตที่ทำหน้าที่เชื่อมพื้นที่ต่างระดับระหว่างชั้นของอาคารเรียนถาวรหลังหนึ่ง มีความสูงของขั้น (ลูกตั้ง) 16 เซนติเมตร และความลึกของขั้น (ลูกนอน) 28 เซนติเมตร อัตราส่วนความชัน (สูง/ลึก) ของโครงสร้างนี้ คิดเป็นเศษส่วนอย่างต่ำได้เท่าใด?", "16/28 = <b>4/7</b>"],
+  [3,  "A", "วงกลมกลางสนามบาสเกตบอล", "เส้นรอบวงกลมที่ถูกลากไว้กึ่งกลางลานกีฬาซึ่งใช้เล่นกีฬาประเภทใช้ห่วงประตูยิงลูกบอลได้ หากเส้นรอบวงนี้มีรัศมียาว r หน่วย เส้นผ่านศูนย์กลางของวงกลมนี้จะมีขนาดเป็นกี่เท่าของรัศมี?", "เส้นผ่านศูนย์กลาง = 2r → <b>2 เท่า</b>ของรัศมี"],
+  [4,  "A", "แท็งก์น้ำ/ถังเก็บน้ำของโรงเรียน", "ภาชนะทรงกระบอกขนาดใหญ่ที่ทำหน้าที่กักเก็บน้ำสะอาดไว้ให้ชาวโรงเรียนมีน้ำใช้ยามจำเป็น หากภาชนะนี้วัดรัศมีที่ฐานได้ 1 เมตร และมีความสูง 2 เมตร จะมีปริมาตรความจุภายในกี่ลูกบาศก์เมตร? (กำหนดให้ π ≈ 3.14)", "V=πr²h = 3.14×1×2 = <b>6.28 ลูกบาศก์เมตร</b>"],
+  [5,  "A", "ประตูห้องเรียน", "แผ่นไม้หรือแผ่นเหล็กหนาที่ยึดติดกับบานพับตรงทางเข้าห้องเรียน ทำหน้าที่เปิดต้อนรับนักเรียนยามเช้าและปิดลงเมื่อเริ่มการเรียน โครงสร้างแผ่นนี้โดยทั่วไปจัดเป็นรูปทรงเรขาคณิตสามมิติชนิดใด?", "<b>ปริซึมสี่เหลี่ยมมุมฉาก</b>"],
+  [6,  "A", "ป้ายจราจรวงกลมในโรงเรียน", "ป้ายอะลูมิเนียมทรงวงกลมสมบูรณ์ที่ติดอยู่ริมถนนภายในโรงเรียนเพื่อแจ้งเตือนกฎจราจร หากวัดความยาวเส้นรอบรูปของป้ายนี้ได้ 44 เซนติเมตร ป้ายนี้จะมีรัศมียาวกี่เซนติเมตร? (กำหนดให้ π ≈ 22/7)", "r = C/(2π) = 44÷(44/7) = <b>7 เซนติเมตร</b>"],
+  [7,  "A", "กระดานดำ/ไวท์บอร์ดหน้าห้องเรียน", "พื้นที่สี่เหลี่ยมผืนผ้าสีเขียวหรือสีขาวขนาดใหญ่ที่ติดอยู่ผนังด้านหน้าสุดของห้องเรียน รองรับหยาดชอล์กหรือปากกาเคมีของครูมานาน หากพื้นที่นี้กว้าง 1.5 เมตร และยาว 3 เมตร จะมีพื้นที่รวมกี่ตารางเมตร?", "1.5×3 = <b>4.5 ตารางเมตร</b>"],
+  [8,  "A", "หน้าต่างบานเลื่อนของห้องเรียน", "บานกระจกใสที่ติดตั้งรอบผนังห้องเรียนซึ่งเลื่อนเปิดออกไปทางขนานกับผนังเพื่อระบายอากาศได้ การเคลื่อนที่เชิงพิกัดของบานกระจกลักษณะนี้ จัดเป็นการแปลงทางเรขาคณิตรูปแบบใด?", "<b>การเลื่อนขนาน (Translation)</b>"],
+  [9,  "A", "กระจกเงาในห้องน้ำ", "แผ่นแก้วฉาบโลหะเงินที่ติดอยู่บนผนังเหนืออ่างล้างมือในห้องน้ำ ทำหน้าที่สะท้อนภาพเสมือนหัวตั้งขนาดเท่าของจริง ปรากฏการณ์นี้ตรงกับการแปลงทางเรขาคณิตรูปแบบใด?", "<b>การสะท้อน (Reflection)</b>"],
+  [10, "A", "กล้องวงจรปิดบริเวณอาคารโดม", "อุปกรณ์ทรงโดมที่ติดตั้งอยู่มุมเพดานหรือเสาเพื่อตรวจตราความปลอดภัย สามารถหมุนเบนมุมมองไปรอบทิศทางรอบแกนคงที่ได้ การเคลื่อนที่ของอุปกรณ์นี้จัดเป็นการแปลงทางเรขาคณิตรูปแบบใด?", "<b>การหมุน (Rotation)</b>"],
+  [11, "B", "ชุดโต๊ะม้าหินอ่อนใต้ร่มไม้", "ชุดที่นั่งปูนซีเมนต์ขัดหยาบตั้งเรียงรายใต้ร่มเงาไม้รอบโรงเรียน หากชุดที่นั่ง 1 ชุด ประกอบด้วยโต๊ะแกนกลาง 1 ตัว และม้านั่งยาวขนาบข้าง 4 ตัว ถ้ามีโต๊ะแกนกลางทั้งหมด 12 ตัว จะมีม้านั่งยาวรวมกันทั้งสิ้นกี่ตัว?", "12×4 = <b>48 ตัว</b>"],
+  [12, "B", "ร้านค้าสวัสดิการ/สหกรณ์โรงเรียน", "ร้านค้าที่จำหน่ายสินค้าอุปโภคบริโภคให้นักเรียนภายในโรงเรียน ระบุว่านมกล่องรสหวานราคากล่องละ 10 บาท แต่หากสั่งซื้อยกลัง (ลังละ 24 กล่อง) จะได้ราคารวม 216 บาท การซื้อแบบยกลังประหยัดกว่าซื้อแยกทีละกล่องรวมกันกี่บาท?", "10×24=240, 240−216 = ประหยัด <b>24 บาท</b>"],
+  [13, "B", "ก๊อกน้ำที่จุดล้างมือ", "วาล์วจ่ายน้ำบริเวณจุดล้างมือ เมื่อเปิดใช้งานพบว่าแรงดันสม่ำเสมอ ปล่อยน้ำทิ้งไว้ 3 นาที ได้ปริมาตรน้ำรวม 12 ลิตร อัตราส่วนของเวลา(นาที)ต่อปริมาณน้ำ(ลิตร) ในรูปอย่างต่ำคือเท่าใด?", "3:12 = <b>1 : 4</b>"],
+  [14, "B", "โรงจอดรถครู/บุคลากร", "ลานจอดพาหนะใต้หลังคาเหล็กที่สงวนไว้สำหรับคณะครูและบุคลากร หากมีรถยนต์จอดอยู่ x คัน และรถจักรยานยนต์จอดอยู่ y คัน จงเขียนนิพจน์พหุนามแสดงจำนวนล้อรวมทั้งหมดของพาหนะในลานนี้", "<b>4x + 2y</b>"],
+  [15, "B", "เครื่องกรองน้ำดื่มมุมอาคาร", "เครื่องกรองน้ำดื่มมุมอาคารที่ให้บริการนักเรียนตลอดวัน ใช้ไส้กรอง 2 ชนิดคือไส้กรองหยาบราคาชิ้นละ 100 บาท และไส้กรองละเอียดราคาชิ้นละ 180 บาท ปีนี้เปลี่ยนไส้กรองรวม 10 ชิ้น คิดเป็นเงิน 1,400 บาท จะมีไส้กรองละเอียดอยู่กี่ชิ้น?", "100(10−a)+180a=1400 → 1000+80a=1400 → a = <b>5 ชิ้น</b>"],
+  [16, "B", "แนวต้นไม้ประดับริมสนามหญ้า", "แนวต้นไม้ประดับปลูกเรียงรายเป็นแนวขอบสนามหญ้าอย่างเป็นระเบียบ แถวแรกมี 4 ต้น แถวที่สองมี 7 ต้น แถวที่สามมี 10 ต้น เพิ่มขึ้นตามลำดับเลขคณิต ในแถวที่ 10 จะมีต้นไม้ทั้งหมดกี่ต้น?", "aₙ=4+3(n−1) → a₁₀ = 4+27 = <b>31 ต้น</b>"],
+  [17, "B", "สนามฟุตบอล", "พื้นที่สนามกีฬาหญ้าขนาดใหญ่ที่มีตาข่ายประตูขนาบสองฝั่ง มีลักษณะเป็นรูปสี่เหลี่ยมผืนผ้า กว้าง w เมตร ยาวมากกว่าความกว้างอยู่ 20 เมตร จงเขียนนิพจน์พหุนามแสดงพื้นที่สนามนี้ในรูปของ w", "กว้าง=w, ยาว=(w+20) → พื้นที่ = <b>w² + 20w</b> ตารางเมตร"],
+  [18, "B", "ห้องพยาบาล", "ขวดน้ำยาฆ่าเชื้อที่วางบนชั้นอุปกรณ์ปฐมพยาบาล หากต้องผสมกับน้ำสะอาดตามอัตราส่วน 1:9 เพื่อให้ได้สารละลายรวม 400 มิลลิลิตร จะต้องใช้น้ำยาฆ่าเชื้อเข้มข้นกี่มิลลิลิตร?", "400×(1/10) = <b>40 มิลลิลิตร</b>"],
+  [19, "B", "โรงอาหารของโรงเรียน", "ป้ายเมนูอาหารประจำวันของสถานอาหารกลางวันนักเรียน มีรายการจานหลัก 4 อย่าง และของหวาน 3 อย่าง จำนวนวิธีเลือกสั่งอาหารจานหลัก 1 อย่างคู่กับของหวาน 1 อย่าง มีกี่วิธี?", "4×3 = <b>12 วิธี</b>"],
+  [20, "B", "ทำเนียบภาพหน้าห้องผู้อำนวยการ", "ทำเนียบภาพผู้ดำรงตำแหน่งบริหารสูงสุดของสถานศึกษาที่ติดเรียงรายหน้าห้องทำงาน หากนับได้ 9 ท่าน และสมมติว่าแต่ละท่านมีวาระบริหารท่านละ 4 ปีเท่ากันพอดี ระยะเวลาบริหารรวมทั้งหมดคิดเป็นกี่ปี?", "9×4 = <b>36 ปี</b>"],
+  [21, "C", "ลานจอดรถจักรยานยนต์นักเรียน", "ลานคอนกรีตที่มีพาหนะสองล้อของนักเรียนจอดเรียงรายนับร้อยคัน หากสุ่มเลือกพาหนะ 1 คัน มาพิจารณาตัวแปร \"เฉดสีของตัวถังรถจักรยานยนต์\" ข้อมูลที่ได้จัดเป็นข้อมูลประเภทใด (เชิงคุณภาพ หรือ เชิงปริมาณ)?", "<b>ข้อมูลเชิงคุณภาพ</b>"],
+  [22, "C", "ถังขยะรวมมุมอาคาร", "ถังพลาสติกใบใหญ่มุมอาคารสำหรับทิ้งขยะรวม หากภายในมีขวดแก้ว 6 ใบ กระป๋องอลูมิเนียม 9 ใบ และกล่องกระดาษ 4 กล่อง ค่าฐานนิยม (Mode) ของสิ่งของในถังนี้คืออะไร?", "ความถี่สูงสุด 9 → ฐานนิยมคือ <b>กระป๋องอลูมิเนียม</b>"],
+  [23, "C", "ห้องสมุดโรงเรียน", "พื้นที่จัดเก็บทรัพยากรสารสนเทศและสิ่งพิมพ์ ซึ่งเป็นเขตงดใช้เสียงดังของโรงเรียน มีโต๊ะอ่านหนังสือทรงสี่เหลี่ยมผืนผ้านั่งได้ฝั่งละ 5 คน (ไม่นับหัวท้ายโต๊ะ) ถ้านำโต๊ะแบบเดียวกัน 2 ตัวมาต่อความยาวกัน จะรองรับผู้นั่งได้รวมกี่คน?", "2 ฝั่ง × 5 คน × 2 โต๊ะ = <b>20 คน</b>"],
+  [24, "C", "บอร์ดสถิติหน้าห้องทะเบียน/วัดผล", "บอร์ดสถิติจำนวนนักเรียนของแผนกทะเบียนวัดผล ระบุว่า ม.1 มี 130 คน ม.2 มี 125 คน ม.3 มี 120 คน ค่าเฉลี่ยเลขคณิตของจำนวนนักเรียนต่อระดับชั้นในกลุ่มมัธยมต้นนี้เท่ากับเท่าใด?", "(130+125+120)/3 = <b>125 คน</b>"],
+  [25, "C", "สวนหย่อมประดับหน้าอาคารเรียน", "ก้อนหินกรวดที่จัดตกแต่งพื้นผิวสวนหย่อมประดับหน้าอาคารเรียน หากในถุงมีหินสีขาว 7 ก้อน หินสีดำ 3 ก้อน เมื่อสุ่มหยิบ 1 ก้อน ความน่าจะเป็นที่จะได้หินสีดำมีค่าเท่าใด? (ตอบเศษส่วนอย่างต่ำ)", "<b>3/10</b>"],
+  [26, "C", "จุดล้างมือจุดใดก็ได้ในโรงเรียน", "จุดล้างมือแห่งหนึ่งในโรงเรียน (จุดใดก็ได้) ที่มีนักเรียนสัญจรผ่านตลอดวัน จากการสุ่มสำรวจนักเรียนที่เดินผ่านจุดนี้ 20 คน พบว่ามีผู้หยุดล้างมือก่อนทานอาหาร 15 คน คิดเป็นร้อยละเท่าใดของผู้ถูกสำรวจ?", "15/20 = <b>ร้อยละ 75</b>"],
+  [27, "C", "ป้ายไวนิลต้อนรับค่ายคณิตศาสตร์", "ป้ายไวนิลต้อนรับที่ติดหน้าซุ้มงานค่ายคณิตศาสตร์ สลักคำว่า \"คณิตศาสตร์\" ไว้เด่นชัด หากนำตัวอักษร (พยัญชนะ+สระ ไม่รวมเครื่องหมายทัณฑฆาต) มาจำแนก จะได้อัตราส่วนของจำนวนพยัญชนะต่อจำนวนสระในรูปเศษส่วนอย่างต่ำเท่าใด?", "พยัญชนะ ค,ณ,ต,ศ,ส,ต,ร=7 : สระ ิ,า=2 → <b>7 : 2</b>"],
+  [28, "C", "แนวเสาไฟฟ้าในโรงเรียน", "แนวเสาไฟฟ้าที่มีสายไฟพาดเรียงรายในบริเวณโรงเรียน หากเสาต้นแรกอยู่ที่พิกัด 0 เมตร และเสาถัดไปห่างกันทุก 12 เมตร เสาต้นที่ 7 จะอยู่ห่างจากเสาต้นแรกกี่เมตร?", "6 ช่วง × 12 = <b>72 เมตร</b>"],
+  [29, "C", "มุมที่นั่งรับประทานอาหาร/เครื่องดื่ม", "มุมที่นั่งรับประทานอาหารที่นักเรียนแวะนั่งดื่มเครื่องดื่มหลังซื้อของว่าง เมนูน้ำปั่นเย็นมีให้เลือก 4 รสชาติ นักเรียน 2 คนนั่งพร้อมน้ำปั่นคนละ 1 แก้วที่สุ่มสั่งมา ความน่าจะเป็นที่ทั้งสองคนได้รสชาติเดียวกันพอดีมีค่าเท่าใด?", "4×(1/4×1/4) = <b>1/4</b>"],
+  [30, "C", "ป้ายหอประชุม (สถานที่จัดค่ายคณิตศาสตร์นี้)", "ลูกโป่งสามสี (เขียว ส้ม ม่วง) ที่ผูกประดับรอบป้ายอาคารซึ่งเป็นสถานที่จัดกิจกรรมค่ายคณิตศาสตร์ในครั้งนี้ หากผูกเรียงสลับตามรูปแบบ: เขียว, ส้ม, ม่วง, เขียว, ส้ม, ม่วง,... ไปเรื่อยๆ ลูกโป่งลูกที่ 100 จะเป็นสีอะไร?", "100 mod 3 = 1 → ตำแหน่งที่ 1 = <b>สีเขียว</b>"],
+  [31, "S", "🚩 พิกัดโดยประมาณเท่านั้น — ยังไม่ได้สำรวจยืนยันจริง (ดู README) คาดว่าใกล้เคียงตัวโรงเรียน/หอประชุม", "X = [10 × sin(70°)] + [4 × cos(75°)] + 5.175 , Y = [50 × cos(60°)] + [30 × sin(41°)] + 59.110 — ถอดรหัสพิกัด (X, Y) นี้แล้วปักหมุดใน Google Maps ดูว่าตรงกับจุดใดในโรงเรียน", "X ≈ <b>15.607</b> , Y ≈ <b>103.793</b> → ปักหมุด Google Maps ที่ประมาณ 15.607, 103.793 — 🚩 พิกัดนี้เป็นค่าประมาณ ยังไม่ได้สำรวจเทียบกับผังโรงเรียนจริง ต้องให้ครู/สต๊าฟยืนยันก่อนใช้งานจริง"],
+];
+
+const CAT_LABELS_AK = { A: '📐 เรขาคณิต', B: '🔢 พีชคณิต', C: '🎲 สถิติ', S: '🎯 พิเศษ' };
+
+function renderAnswerKey() {
+  const list = document.getElementById('sfAkList');
+  if (!ANSWER_KEY.length) {
+    list.innerHTML = '<div class="sf-empty">📝 ยังไม่มีภารกิจเซลฟี่ที่ยืนยันแล้ว<br>รอโจทย์ชุดใหม่ตามแนวทางค่ายเต่างอย (ดู README ของค่าย ส.ว.พ.)</div>';
+    return;
+  }
+  list.innerHTML = ANSWER_KEY.map(([no, cat, loc, mission, answer]) => `
+    <div class="sf-ak-row">
+      <div>
+        <div class="sf-ak-no">Selfie#${no} <span class="sf-lvl-badge cat${cat}">${CAT_LABELS_AK[cat] || cat}</span></div>
+        <div class="sf-ak-mission">🔍 ${mission}</div>
+      </div>
+      <div>
+        <div class="sf-ak-answer-box">📍 ${loc}<br>${answer}</div>
+        <div class="sf-ak-photos" id="sf-ak-photos-${no}"><span class="sf-empty">กำลังโหลดภาพ…</span></div>
+      </div>
+    </div>`).join('');
+  loadAnswerKeyPhotos();
+}
+
+async function fetchMissions() {
+  const url = new URL(SCRIPT_URL);
+  url.searchParams.set('action', 'getMissions');
+  const res = await fetch(url.toString(), { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+function extractDriveIds(cell) {
+  if (!cell) return [];
+  const ids = new Set();
+  const reId = /[?&]id=([-\w]{15,})|\/d\/([-\w]{15,})/g;
+  let m;
+  while ((m = reId.exec(cell)) !== null) ids.add(m[1] || m[2]);
+  if (!ids.size && /^[-\w]{15,}$/.test(cell.trim())) ids.add(cell.trim());
+  return [...ids];
+}
+function driveThumbUrl(id) { return `https://drive.google.com/thumbnail?id=${id}&sz=w400`; }
+function driveViewUrl(id) { return `https://drive.google.com/file/d/${id}/view`; }
+
+async function loadAnswerKeyPhotos() {
+  const panelsEl = document.querySelectorAll('.sf-ak-photos');
+  if (!ANSWER_KEY.length) return;
+  try {
+    const { headers, rows } = await fetchMissions();
+    if (!rows || !rows.length) { panelsEl.forEach(el => el.innerHTML = '<span class="sf-empty">ยังไม่มีภาพส่งเข้ามา</span>'); return; }
+    const teamColIdx = headers.findIndex(h => h === 'ทีม');
+
+    for (const [no] of ANSWER_KEY) {
+      const el = document.getElementById(`sf-ak-photos-${no}`);
+      if (!el) continue;
+      const photoCol = headers.findIndex(h => h === `M${no}_PHOTO`);
+      const answerCol = headers.findIndex(h => h === `M${no}_ANSWER`);
+      if (photoCol < 0) { el.innerHTML = `<span class="sf-empty">ไม่พบคอลัมน์ M${no}_PHOTO</span>`; continue; }
+      const entries = [];
+      for (const r of rows) {
+        const cell = (r[photoCol] || '').toString().trim();
+        if (!cell) continue;
+        const team = (r[teamColIdx] || '?').toString().trim();
+        const ansText = answerCol >= 0 ? (r[answerCol] || '').toString().trim() : '';
+        const ids = extractDriveIds(cell);
+        if (ids.length) ids.forEach(id => entries.push({ team, driveId: id, ansText }));
+        else entries.push({ team, driveId: null, cell, ansText });
+      }
+      if (!entries.length) { el.innerHTML = '<span class="sf-empty">ยังไม่มีภาพส่งเข้ามา</span>'; continue; }
+      el.innerHTML = entries.map(e => `
+        <a class="sf-ak-photo" href="${e.driveId ? driveViewUrl(e.driveId) : e.cell}" target="_blank" rel="noopener" style="border:2px solid ${teamHex(e.team)}; border-radius:8px;">
+          <img src="${e.driveId ? driveThumbUrl(e.driveId) : ''}" loading="lazy" onerror="this.style.opacity=0.15">
+          <div class="grp" style="color:${teamHex(e.team)}">${e.team}</div>
+          <div style="font-size:0.6rem;color:#1c2b22;">${e.ansText || '—'}</div>
+        </a>`).join('');
+    }
+  } catch (err) {
+    console.error(err);
+    panelsEl.forEach(el => el.innerHTML = '<span class="sf-empty">โหลดภาพไม่สำเร็จ</span>');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SELFIE: DASHBOARD
+// ═══════════════════════════════════════════════════════
+const sfStatusText = document.getElementById('sfStatusText');
+const sfConfigWarning = document.getElementById('sfConfigWarning');
+const sfGroupsEl = document.getElementById('sfGroups');
+const sfLeaderboardBody = document.getElementById('sfLeaderboardBody');
+const sfEmptyMsg = document.getElementById('sfEmptyMsg');
+
+async function loadDashboardData() {
+  if (!ANSWER_KEY.length) {
+    sfGroupsEl.innerHTML = '';
+    sfLeaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#7d9c8c;">—</td></tr>`;
+    sfEmptyMsg.style.display = 'block';
+    sfEmptyMsg.textContent = '📝 ยังไม่มีภารกิจเซลฟี่ที่ยืนยันแล้ว รอโจทย์ชุดใหม่ (ดู README)';
+    sfStatusText.textContent = 'ยังไม่มีภารกิจให้แสดงผล';
+    return;
+  }
+  sfStatusText.textContent = "กำลังโหลดข้อมูล...";
+  try {
+    const { headers, rows } = await fetchMissions();
+    if (!rows || !rows.length) { renderDashboard([], []); sfStatusText.textContent = "โหลดสำเร็จ แต่ยังไม่มีข้อมูล"; return; }
+    renderDashboard(headers, rows);
+    sfStatusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · ${rows.length} ทีม`;
+    sfConfigWarning.style.display = 'none';
+  } catch (err) {
+    console.error(err);
+    sfStatusText.textContent = "โหลดข้อมูลไม่สำเร็จ";
+    sfConfigWarning.style.display = 'block';
+    sfConfigWarning.textContent = "❌ โหลดข้อมูลจาก Apps Script ไม่สำเร็จ (" + err.message + ")";
+  }
+}
+
+function renderDashboard(headers, rows) {
+  if (!rows.length) {
+    sfGroupsEl.innerHTML = "";
+    sfLeaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#7d9c8c;">—</td></tr>`;
+    sfEmptyMsg.style.display = 'block';
+    sfEmptyMsg.textContent = 'ยังไม่มีภาพส่งเข้ามา';
+    return;
+  }
+  sfEmptyMsg.style.display = 'none';
+  const teamColIdx = headers.findIndex(h => h === 'ทีม');
+  const photoCols = {}, answerCols = {};
+  for (const [no] of ANSWER_KEY) {
+    photoCols[no] = headers.findIndex(h => h === `M${no}_PHOTO`);
+    answerCols[no] = headers.findIndex(h => h === `M${no}_ANSWER`);
+  }
+
+  const teamSummaries = [];
+  let html = "";
+  const sortedRows = [...rows].sort((a, b) =>
+    (a[teamColIdx] || "").localeCompare(b[teamColIdx] || "", 'th'));
+
+  for (const row of sortedRows) {
+    const team = (row[teamColIdx] || "ไม่ระบุทีม").toString().trim();
+    let score = 0, photoCount = 0;
+    let cardsHtml = "";
+    for (const [no, cat, loc] of ANSWER_KEY) {
+      const pIdx = photoCols[no];
+      const aIdx = answerCols[no];
+      const cell = pIdx >= 0 ? (row[pIdx] || "").toString().trim() : "";
+      if (!cell) continue;
+      const ansText = aIdx >= 0 ? (row[aIdx] || "").toString().trim() : "";
+      score += 1;
+      const ids = extractDriveIds(cell);
+      photoCount += ids.length || 1;
+      const driveId = ids[0] || null;
+
+      cardsHtml += `
+        <a class="sf-photo-card" href="${driveId ? driveViewUrl(driveId) : cell}" target="_blank" rel="noopener">
+          <img src="${driveId ? driveThumbUrl(driveId) : ''}" loading="lazy" alt="ภารกิจ ${no}"
+               onerror="this.style.opacity=0.15;">
+          <div class="meta">
+            <div class="word">#${no} · 📍${loc}</div>
+            <div style="font-size:0.7rem;color:#4b6b58;">${ansText || '—'}</div>
+            <div class="sub">
+              <span class="sf-lvl-badge cat${cat}">${cat}</span>
+              <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}</span>
+            </div>
+          </div>
+        </a>`;
+    }
+
+    teamSummaries.push({ team, score, photoCount });
+    html += `
+      <div class="sf-group-section">
+        <div class="sf-group-title">
+          <h4 style="color:${teamHex(team)}">👥 ${team}</h4>
+          <span class="score">${score} pts</span>
+          <span class="count">(${score} / ${ANSWER_KEY.length} ภารกิจ · ${photoCount} ไฟล์ภาพ)</span>
+        </div>
+        <div class="sf-photo-grid">${cardsHtml || '<span class="sf-empty">ยังไม่ส่งภาพ</span>'}</div>
+      </div>`;
+  }
+  sfGroupsEl.innerHTML = html;
+
+  teamSummaries.sort((a, b) => b.score - a.score);
+  sfLeaderboardBody.innerHTML = teamSummaries.map((g, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td style="color:${teamHex(g.team)}; font-weight:800;">${g.team}</td>
+      <td>${g.score}</td>
+      <td>${g.photoCount}</td>
+    </tr>`).join('');
+}
+
+document.getElementById('sfBtnRefresh').addEventListener('click', loadDashboardData);
+let sfAutoTimer = null;
+document.getElementById('sfAutoRefresh').addEventListener('change', (e) => {
+  if (e.target.checked) sfAutoTimer = setInterval(loadDashboardData, 30000);
+  else clearInterval(sfAutoTimer);
+});
+
+// ═══════════════════════════════════════════════════════
+//  TAB SWITCHING (รวมทุกแท็บ — คะแนน + เซลฟี่)
 // ═══════════════════════════════════════════════════════
 let currentTab = 'scoreboard';
 function switchTab(name) {
@@ -722,8 +1208,10 @@ function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   document.getElementById('tab-btn-' + name).classList.add('active');
-  if (name === 'wallet')   renderWallet(remoteState);
-  if (name === 'schedule') renderSchedule();
+  if (name === 'wallet')     renderWallet(remoteState);
+  if (name === 'schedule')   renderSchedule();
+  if (name === 'dashboard')  loadDashboardData();
+  if (name === 'answerkey')  renderAnswerKey();
 }
 
 // ═══════════════════════════════════════════════════════
