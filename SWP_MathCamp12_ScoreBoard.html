@@ -445,7 +445,7 @@ main { display: flex; flex: 1; overflow: hidden; }
   </div>
 </div>
 
-<footer id="page-ticker">
+<footer id="page-ticker" class="show">
   <div class="tick-block">
     <span class="tick-icon">₿</span>
     <div class="tick-info">
@@ -1209,6 +1209,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   document.getElementById('tab-btn-' + name).classList.add('active');
+  document.getElementById('page-ticker').classList.toggle('show', name === 'scoreboard');
   if (name === 'wallet')     renderWallet(remoteState);
   if (name === 'schedule')   renderSchedule();
   if (name === 'dashboard')  loadDashboardData();
