@@ -429,6 +429,7 @@ function boot() {
   document.getElementById('tbName').textContent = team.emoji + ' ' + team.name;
   initSelfiePane();
   refresh();
+  pollRoundControl();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -572,30 +573,32 @@ function myScheduleRows() {
   }).filter(Boolean);
 }
 
+// ── สถานะฐาน "ตอนนี้/ถัดไป/จบแล้ว" ควบคุมจากครูโดยตรง (ไม่อิงตารางเวลา/นาฬิกาเครื่อง
+//    อีกต่อไป) — ครูกดปุ่มใน ScoreInput เพื่อกำหนดว่าตอนนี้เป็น "รอบไหน" แบบ manual
+//    เพราะกำหนดการวันจริงอาจยืดหยุ่นไม่ตรงตามตารางเวลาที่ตั้งไว้ล่วงหน้า
+//    remoteState.settings.currentRound: 0=ยังไม่เริ่ม, 1-4=รอบที่กำลังทำอยู่, 5=จบแล้ว
 function renderStationStatus() {
   const rows = myScheduleRows();
-  const now = new Date();
+  const round = Number(remoteState.settings?.currentRound) || 0;
   const banner = document.getElementById('statusBanner');
-  const current = rows.find(r => now >= r.start && now <= r.end);
-  const next = rows.find(r => now < r.start);
+  const current = rows.find(r => r.round === round);
+  const next = rows.find(r => r.round === round + 1);
 
-  if (current) {
-    const minsLeft = Math.max(0, Math.round((current.end - now) / 60000));
+  if (round === 0) {
+    const first = rows.find(r => r.round === 1);
+    banner.className = 'status-banner wait';
+    banner.innerHTML = `
+      <div class="sb-label">⏳ ยังไม่เริ่มกิจกรรม</div>
+      <div class="sb-main">${first ? first.station : 'รอตารางฐาน'}</div>
+      <div class="sb-sub">${first ? `พบกับทีม ${teamById(first.opp).emoji} ${teamById(first.opp).name} · ` : ''}รอครูประกาศเริ่มรอบ 1</div>`;
+  } else if (round >= 1 && round <= 4 && current) {
     banner.className = 'status-banner live';
     banner.innerHTML = `
       <div class="sb-label">🟢 ตอนนี้ · รอบ ${current.round}</div>
       <div class="sb-main">${current.station}</div>
       <div class="sb-sub">พบกับทีม ${teamById(current.opp).emoji} ${teamById(current.opp).name}</div>
-      <div class="sb-countdown">เหลือ ${minsLeft} นาที</div>`;
-  } else if (next) {
-    const minsTo = Math.max(0, Math.round((next.start - now) / 60000));
-    banner.className = 'status-banner wait';
-    banner.innerHTML = `
-      <div class="sb-label">⏳ รอบถัดไป · รอบ ${next.round}</div>
-      <div class="sb-main">${next.station}</div>
-      <div class="sb-sub">พบกับทีม ${teamById(next.opp).emoji} ${teamById(next.opp).name} · เวลา ${next.time}</div>
-      <div class="sb-countdown">อีก ${minsTo} นาที</div>`;
-  } else if (rows.length) {
+      ${next ? `<div class="sb-sub" style="margin-top:6px;">🔜 รอบถัดไป: ${next.station} · vs ${teamById(next.opp).emoji}${teamById(next.opp).name}</div>` : `<div class="sb-sub" style="margin-top:6px;">รอบสุดท้ายแล้ว รอครูประกาศจบกิจกรรม</div>`}`;
+  } else if (round >= 5) {
     banner.className = 'status-banner done';
     banner.innerHTML = `<div class="sb-label">✅ กิจกรรมฐานเช้าจบแล้ว</div><div class="sb-main">ขอบคุณที่เข้าร่วมกิจกรรม!</div>`;
   } else {
@@ -604,7 +607,7 @@ function renderStationStatus() {
   }
 
   document.getElementById('myScheduleList').innerHTML = rows.map(r => `
-    <div class="rnd-row ${now >= r.start && now <= r.end ? 'current' : ''}">
+    <div class="rnd-row ${r.round === round ? 'current' : ''}">
       <div class="rnd-num">รอบ ${r.round}</div>
       <div class="rnd-info">
         <div class="rnd-station">${r.station}</div>
@@ -632,20 +635,36 @@ async function requestNotifPermission() {
   updateNotifBtn();
 }
 
-let notifiedRounds = new Set(JSON.parse(localStorage.getItem('swpNotifiedRounds') || '[]'));
-function checkStationAlert() {
-  if (!myTeam) return;
-  const rows = myScheduleRows();
-  const now = new Date();
-  rows.forEach(r => {
-    const key = myTeam + '-' + r.round;
-    const secsSinceStart = (now - r.start) / 1000;
-    if (!notifiedRounds.has(key) && secsSinceStart >= 0 && secsSinceStart < 90) {
-      fireStationAlert(r);
-      notifiedRounds.add(key);
-      localStorage.setItem('swpNotifiedRounds', JSON.stringify([...notifiedRounds]));
+// ── ตรวจจับการกดปุ่มควบคุมรอบของครู (ScoreInput) — ไม่ใช้นาฬิกาเครื่อง/ตารางเวลาอีกต่อไป
+//    poll แยกทุก 5 วิ ด้วย action=getSettings (เบากว่า getAll เพราะไม่ต้องอ่าน transactions)
+//    เทียบ roundTriggerAt ที่ครูกดล่าสุดกับค่าที่เคยเห็นแล้ว (เก็บใน localStorage) —
+//    เปลี่ยนทุกครั้งที่ครูกด แม้จะกด "รอบเดิมซ้ำ" ก็ยิงแจ้งเตือนใหม่ได้เสมอ
+let lastSeenRoundTrigger = Number(localStorage.getItem('swpLastRoundTrigger') || '0');
+
+async function pollRoundControl() {
+  if (!myTeam || !SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) return;
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getSettings');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    const s = await res.json();
+    if (!s || s.error) return;
+    remoteState.settings = { ...remoteState.settings, ...s };
+    if (currentPane === 'station') renderStationStatus();
+
+    const triggerAt = Number(s.roundTriggerAt) || 0;
+    const round = Number(s.currentRound) || 0;
+    if (triggerAt > lastSeenRoundTrigger) {
+      lastSeenRoundTrigger = triggerAt;
+      localStorage.setItem('swpLastRoundTrigger', String(triggerAt));
+      if (round >= 1 && round <= 4) {
+        const r = myScheduleRows().find(x => x.round === round);
+        if (r) fireStationAlert(r);
+      } else if (round === 5) {
+        fireWrapUpAlert();
+      }
     }
-  });
+  } catch (e) { console.warn('poll round control failed', e); }
 }
 function fireStationAlert(r) {
   document.getElementById('alertDetail').textContent = `รอบ ${r.round} · ${r.station}`;
@@ -660,11 +679,19 @@ function fireStationAlert(r) {
     } catch (e) {}
   }
 }
+function fireWrapUpAlert() {
+  document.getElementById('alertDetail').textContent = 'จบกิจกรรมฐานเช้าแล้ว';
+  document.getElementById('alertSub').textContent = 'ขอบคุณที่เข้าร่วมกิจกรรม!';
+  document.getElementById('stationAlert').classList.add('show');
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (notifPermissionOn && 'Notification' in window && Notification.permission === 'granted') {
+    try { new Notification('✅ จบกิจกรรมฐานเช้าแล้ว', { body: 'ขอบคุณที่เข้าร่วมกิจกรรม!' }); } catch (e) {}
+  }
+}
 function closeStationAlert() {
   document.getElementById('stationAlert').classList.remove('show');
 }
-setInterval(checkStationAlert, 5000);
-setInterval(() => { if (currentPane === 'station') renderStationStatus(); }, 5000);
+setInterval(pollRoundControl, 5000);
 
 // ═══════════════════════════════════════════════════════
 //  SELFIE PANE — ส่งคำตอบข้อความ + รูปภาพคู่กันต่อภารกิจ (รูปแบบเดียวกับเต่างอย)
@@ -917,7 +944,6 @@ async function refresh() {
   switchPane(currentPane);
 }
 setInterval(refresh, 60000);
-setInterval(checkStationAlert, 5000);
 
 // ═══════════════════════════════════════════════════════
 //  INIT
