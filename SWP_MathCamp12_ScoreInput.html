@@ -16,20 +16,9 @@
   }
   header h1 { font-size: 1.3rem; color: #93c5fd; font-weight: 700; }
 
-  .price-bar { display: flex; gap: 16px; flex-wrap: wrap; }
-  .price-card {
-    background: #1e293b; border: 1px solid #334155; border-radius: 10px;
-    padding: 8px 16px; display: flex; flex-direction: column; align-items: center; min-width: 130px;
-  }
-  .price-card .label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-  .price-card .value { font-size: 1.1rem; font-weight: 700; }
-  .price-card .sub { font-size: 0.7rem; color: #64748b; }
   .btc-color { color: #f97316; }
   .gold-color { color: #eab308; }
   .land-color { color: #22c55e; }
-  .refresh-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
-  .refresh-dot.loading { background: #f97316; animation: none; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
   nav { display: flex; background: #1e293b; border-bottom: 1px solid #334155; overflow-x: auto; }
   nav button {
@@ -138,6 +127,22 @@
   .rc-btn.active.end { background: #7c3aed; border-color: #7c3aed; }
   .rc-btn.active.locked { background: #dc2626; border-color: #dc2626; }
   .rc-status { font-size: 0.78rem; color: #64748b; margin-top: 10px; }
+
+  /* ── คะแนนเริ่มต้น (Start Mission) — แจก ฿100,000 ให้ทุกทีม ทีมละเลือกสินทรัพย์เอง ── */
+  .start-mission-grid { display: flex; flex-direction: column; gap: 8px; }
+  .sm-team-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px;
+  }
+  .sm-team-name { font-weight: 700; min-width: 110px; flex-shrink: 0; font-size: 0.9rem; }
+  .sm-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sm-opt-btn {
+    padding: 6px 12px; border-radius: 100px; border: 1px solid #334155; background: #1e293b;
+    color: #94a3b8; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all .15s;
+  }
+  .sm-opt-btn:hover { border-color: #475569; color: #e2e8f0; }
+  .sm-opt-btn.selected { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .sm-given-badge { font-size: 0.72rem; color: #22c55e; font-weight: 700; margin-left: auto; }
 </style>
 </head>
 <body>
@@ -146,23 +151,6 @@
   <div>
     <h1>🧮 ระบบคะแนน SWP Math Camp12</h1>
     <div style="font-size:0.7rem; color:#64748b; margin-top:2px;">โรงเรียนสุวรรณภูมิพิทยไพศาล · ค่ายคณิตศาสตร์</div>
-  </div>
-  <div class="price-bar">
-    <div class="price-card">
-      <span class="label">Bitcoin <span class="refresh-dot" id="dot"></span></span>
-      <span class="value btc-color" id="price-btc">กำลังโหลด...</span>
-      <span class="sub" id="price-btc-updated">-</span>
-    </div>
-    <div class="price-card">
-      <span class="label">ทองคำ (ต่อบาท)</span>
-      <span class="value gold-color" id="price-gold">กำลังโหลด...</span>
-      <span class="sub" id="price-gold-updated">-</span>
-    </div>
-    <div class="price-card">
-      <span class="label">ที่ดิน (ต่อแปลง)</span>
-      <span class="value land-color" id="price-land-header">-</span>
-      <span class="sub">กำหนดโดยครู</span>
-    </div>
   </div>
 </header>
 
@@ -186,6 +174,15 @@
     <p style="font-weight:600; margin-bottom:12px;">📸 ควบคุมภารกิจเซลฟี่ (เปิด/ปิดให้นักเรียนเห็น)</p>
     <div class="rc-buttons" id="rc-selfie-buttons"></div>
     <div class="rc-status" id="rc-selfie-status">กำลังโหลด...</div>
+  </div>
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:6px;">🎁 คะแนนเริ่มต้น (Start Mission)</p>
+    <div class="notice" style="margin-bottom:12px;">แจกรางวัลเริ่มต้น ฿100,000 ให้ทุกทีมพร้อมกัน — แต่ละทีมเลือกได้เองว่าจะรับเป็นที่ดิน/ทองคำ/Bitcoin เพื่อให้นักเรียนเข้าใจระบบรางวัลตั้งแต่ต้น</div>
+    <div id="start-mission-grid" class="start-mission-grid"></div>
+    <div style="margin-top:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <button class="btn btn-success" id="btn-start-mission" onclick="confirmStartMission()" disabled>🎁 แจกคะแนนเริ่มต้นให้ทุกทีม</button>
+      <span class="rc-status" id="start-mission-status" style="margin-left:0;">เลือกรางวัลให้ครบทุกทีมก่อน (0/8)</span>
+    </div>
   </div>
 </div>
 
@@ -410,12 +407,10 @@ function loadState() {
 }
 
 // ======================== PRICE API ========================
-function setDot(loading) {
-  document.getElementById('dot').className = 'refresh-dot' + (loading ? ' loading' : '');
-}
-
+// 21 ก.ค. 2569: ตัดการแสดงราคา BTC/ทองคำ/ที่ดินที่แถบหัวข้อ (subtitle) ออกตามที่ครูขอ —
+// ยังคงดึงราคาจริง (prices.btc/prices.gold) ไว้ใช้คำนวณมูลค่ารางวัลในแท็บบันทึกรางวัล/
+// คะแนนพิเศษ/คะแนนเริ่มต้นตามปกติ แค่ไม่โชว์ตัวเลขราคาที่หัวหน้าจอแล้ว
 async function fetchPrices() {
-  setDot(true);
   try {
     const res = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb',
@@ -424,21 +419,11 @@ async function fetchPrices() {
     const data = await res.json();
 
     prices.btc = data.bitcoin.thb;
-    document.getElementById('price-btc').textContent = fmtCurrency(prices.btc);
-
     const xautThb = data['tether-gold'].thb;
     prices.gold = xautThb * (15.244 / 31.1035);
-    document.getElementById('price-gold').textContent = fmtCurrency(prices.gold);
-
-    const now = 'อัปเดต ' + new Date().toLocaleTimeString('th-TH');
-    document.getElementById('price-btc-updated').textContent = now;
-    document.getElementById('price-gold-updated').textContent = now;
   } catch(e) {
-    document.getElementById('price-btc').textContent = 'โหลดไม่ได้';
-    document.getElementById('price-gold').textContent = 'โหลดไม่ได้';
     console.warn('Price fetch error', e);
   }
-  setDot(false);
   updatePriceDisplays();
   refreshWallets();
 }
@@ -447,7 +432,6 @@ function updatePriceDisplays() {
   const lp = state.settings.landPrice;
   const wv = state.settings.winnerValue;
   const lv = state.settings.loserValue;
-  document.getElementById('price-land-header').textContent = fmtCurrency(lp);
   document.querySelectorAll('#opt-land-price').forEach(el => el.textContent = fmtCurrency(lp));
   document.querySelectorAll('#opt-gold-price').forEach(el => el.textContent = prices.gold ? fmtCurrency(prices.gold) : 'กำลังโหลด...');
   document.querySelectorAll('#opt-btc-price').forEach(el => el.textContent = prices.btc ? fmtCurrency(prices.btc) : 'กำลังโหลด...');
@@ -894,6 +878,84 @@ function confirmBonus() {
   renderHistory();
 }
 
+// ======================== คะแนนเริ่มต้น (Start Mission) ========================
+// แจกรางวัลเริ่มต้น ฿100,000 ให้ทุกทีมพร้อมกัน แต่ทีมเลือกเองว่าจะรับเป็นที่ดิน/ทองคำ/
+// Bitcoin (ช่วยให้นักเรียนเข้าใจระบบรางวัลของค่ายตั้งแต่ต้น ก่อนเริ่มกิจกรรมฐานจริง)
+const START_MISSION_VALUE = 100000;
+const START_MISSION_STATION = 'เริ่มต้น (Start Mission)';
+const startMissionSelection = {}; // { [teamId]: 'land' | 'gold' | 'btc' }
+
+function renderStartMissionGrid() {
+  const el = document.getElementById('start-mission-grid');
+  if (!el) return;
+  el.innerHTML = TEAMS.map(t => {
+    const alreadyGiven = state.transactions.some(tx => tx.studentId === t.id && tx.station === START_MISSION_STATION);
+    const sel = startMissionSelection[t.id];
+    const opts = ALL_TYPES.map(type => `
+      <button class="sm-opt-btn ${sel === type ? 'selected' : ''}" onclick="selectStartMissionAsset('${t.id}','${type}')">${assetLabel(type)}</button>
+    `).join('');
+    return `
+      <div class="sm-team-row">
+        <span class="sm-team-name" style="color:${t.hex}">${t.name}</span>
+        <div class="sm-opts">${opts}</div>
+        ${alreadyGiven ? `<span class="sm-given-badge">✅ แจกแล้ว</span>` : ''}
+      </div>`;
+  }).join('');
+  updateStartMissionStatus();
+}
+
+function selectStartMissionAsset(teamId, type) {
+  const price = priceForType(type);
+  if (!price) { alert('รอราคา ' + assetLabel(type) + ' โหลดก่อนนะครับ'); return; }
+  startMissionSelection[teamId] = type;
+  renderStartMissionGrid();
+}
+
+function updateStartMissionStatus() {
+  const count = Object.keys(startMissionSelection).length;
+  const statusEl = document.getElementById('start-mission-status');
+  const btn = document.getElementById('btn-start-mission');
+  if (statusEl) {
+    statusEl.textContent = count >= TEAMS.length
+      ? '✅ เลือกครบทุกทีมแล้ว พร้อมแจก'
+      : `เลือกรางวัลให้ครบทุกทีมก่อน (${count}/${TEAMS.length})`;
+  }
+  if (btn) btn.disabled = count < TEAMS.length;
+}
+
+function confirmStartMission() {
+  if (Object.keys(startMissionSelection).length < TEAMS.length) return;
+  if (!confirm(`ยืนยันแจกคะแนนเริ่มต้น ฿${START_MISSION_VALUE.toLocaleString('th-TH')} ให้ทุกทีม (${TEAMS.length} ทีม) ตามรางวัลที่แต่ละทีมเลือกไว้?`)) return;
+
+  const now = new Date().toISOString();
+  let okCount = 0;
+  TEAMS.forEach((t, i) => {
+    const type = startMissionSelection[t.id];
+    const price = priceForType(type);
+    if (!type || !price) return; // ไม่ควรเกิดขึ้น เพราะเช็คราคาไว้ตอนเลือกแล้ว
+    const qty = START_MISSION_VALUE / price;
+    const tx = {
+      id: Date.now() + '-sm' + i,
+      studentId: t.id,
+      type,
+      qty,
+      priceAtAward: price,
+      valueAtAward: START_MISSION_VALUE,
+      timestamp: now,
+      station: START_MISSION_STATION,
+    };
+    state.transactions.push(tx);
+    apiCall('addTransaction', { data: tx });
+    okCount++;
+  });
+  saveState();
+  showToast(`🎁 แจกคะแนนเริ่มต้น ฿${START_MISSION_VALUE.toLocaleString('th-TH')} ให้ ${okCount} ทีมเรียบร้อย!`);
+
+  refreshWallets();
+  renderHistory();
+  renderStartMissionGrid();
+}
+
 // ======================== TABS ========================
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -905,6 +967,7 @@ function showTab(name) {
   if (name === 'history')     renderHistory();
   if (name === 'award')       updatePriceDisplays();
   if (name === 'bonus')       updateBonusPrices();
+  if (name === 'setup')       renderStartMissionGrid();
 }
 
 // ======================== INIT ========================
@@ -923,6 +986,7 @@ async function init() {
   renderHistory();
   renderRoundControl();
   renderSelfieControl();
+  renderStartMissionGrid();
 
   fetchPrices();
   setInterval(fetchPrices, 60000);
