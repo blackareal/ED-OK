@@ -139,14 +139,7 @@
   .sched-table th { background: #0f172a; color: #94a3b8; font-size: 0.72rem; }
   .sched-table td.rnd-lbl { background: #0f172a; color: #93c5fd; font-weight: 700; }
 
-  /* ── ควบคุมรอบกิจกรรม + ภารกิจเซลฟี่ (แจ้ง/เปิดให้นักเรียนเห็น) — แถบคงที่ ใช้ได้ทุกแท็บ ── */
-  #round-control-bar {
-    background: #1e3a5f; border-bottom: 1px solid #3b82f6; padding: 10px 24px;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .rc-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .rc-row + .rc-row { padding-top: 8px; border-top: 1px solid #33415555; }
-  .rc-label { font-size: 0.78rem; font-weight: 700; color: #93c5fd; white-space: nowrap; }
+  /* ── ควบคุมรอบกิจกรรม + ภารกิจเซลฟี่ (แจ้ง/เปิดให้นักเรียนเห็น) — ย้ายไปอยู่ในแท็บ "ตั้งค่า" แล้ว ── */
   .rc-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
   .rc-btn {
     padding: 7px 14px; border-radius: 100px; border: 1px solid #334155; background: #0f172a;
@@ -156,7 +149,7 @@
   .rc-btn.active { background: #16a34a; border-color: #16a34a; color: #fff; }
   .rc-btn.active.end { background: #7c3aed; border-color: #7c3aed; }
   .rc-btn.active.locked { background: #dc2626; border-color: #dc2626; }
-  .rc-status { font-size: 0.72rem; color: #64748b; margin-left: auto; }
+  .rc-status { font-size: 0.78rem; color: #64748b; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -185,19 +178,6 @@
   </div>
 </header>
 
-<div id="round-control-bar">
-  <div class="rc-row">
-    <span class="rc-label">🔔 ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐานของนักเรียน)</span>
-    <div class="rc-buttons" id="rc-buttons"></div>
-    <span class="rc-status" id="rc-status">กำลังโหลด...</span>
-  </div>
-  <div class="rc-row">
-    <span class="rc-label">📸 ควบคุมภารกิจเซลฟี่ (เปิด/ปิดให้นักเรียนเห็น)</span>
-    <div class="rc-buttons" id="rc-selfie-buttons"></div>
-    <span class="rc-status" id="rc-selfie-status">กำลังโหลด...</span>
-  </div>
-</div>
-
 <nav>
   <button onclick="showTab('setup')">⚙️ ตั้งค่า</button>
   <button class="active" onclick="showTab('award')">🎖️ บันทึกรางวัล</button>
@@ -209,33 +189,16 @@
 
 <!-- TAB: ตั้งค่า -->
 <div class="tab" id="tab-setup">
-  <p class="section-title">⚙️ ตั้งค่าค่าย</p>
+  <p class="section-title">⚙️ ตั้งค่า</p>
   <div class="card">
-    <p style="font-weight:600; margin-bottom:12px;">กำหนดราคา</p>
-    <label>ราคาที่ดิน ต่อ 1 แปลง (บาท)</label>
-    <input type="number" id="input-land-price" placeholder="เช่น 100000" value="100000" />
-    <div class="row" style="margin-top:4px;">
-      <div>
-        <label>มูลค่ารางวัลทีมชนะ (บาท)</label>
-        <input type="number" id="input-winner-value" placeholder="เช่น 100000" value="100000" />
-      </div>
-      <div>
-        <label>มูลค่ารางวัลทีมแพ้ (บาท)</label>
-        <input type="number" id="input-loser-value" placeholder="เช่น 80000" value="80000" />
-      </div>
-    </div>
-    <div style="margin-top:14px;">
-      <button class="btn btn-success" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
-    </div>
-    <div id="settings-msg" style="margin-top:8px; font-size:0.85rem; color:#22c55e; display:none;">✅ บันทึกแล้ว</div>
+    <p style="font-weight:600; margin-bottom:12px;">🔔 ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐานของนักเรียน)</p>
+    <div class="rc-buttons" id="rc-buttons"></div>
+    <div class="rc-status" id="rc-status">กำลังโหลด...</div>
   </div>
   <div class="card">
-    <p style="font-weight:600; margin-bottom:12px;">ทีมทั้งหมด (8 กลุ่มสี)</p>
-    <div id="team-list" class="wallet-grid" style="gap:8px;"></div>
-  </div>
-  <div class="card">
-    <p style="font-weight:600; margin-bottom:12px;">📋 ตารางหมุนเวียนฐาน (4 รอบ · ไม่ซ้ำคู่ ไม่ซ้ำฐาน)</p>
-    <div id="sched-ref-table"></div>
+    <p style="font-weight:600; margin-bottom:12px;">📸 ควบคุมภารกิจเซลฟี่ (เปิด/ปิดให้นักเรียนเห็น)</p>
+    <div class="rc-buttons" id="rc-selfie-buttons"></div>
+    <div class="rc-status" id="rc-selfie-status">กำลังโหลด...</div>
   </div>
 </div>
 
@@ -542,23 +505,6 @@ function assetColor(type) {
 }
 function teamById(id) { return TEAMS.find(t => t.id === id); }
 
-// ======================== SETTINGS ========================
-function saveSettings() {
-  const lp = parseFloat(document.getElementById('input-land-price').value);
-  const wv = parseFloat(document.getElementById('input-winner-value').value);
-  const lv = parseFloat(document.getElementById('input-loser-value').value);
-  if (!lp || !wv || !lv) { alert('กรุณากรอกตัวเลขให้ครบ'); return; }
-  state.settings.landPrice   = lp;
-  state.settings.winnerValue = wv;
-  state.settings.loserValue  = lv;
-  saveState();
-  apiCall('saveSettings', { data: state.settings });
-  updatePriceDisplays();
-  const msg = document.getElementById('settings-msg');
-  msg.style.display = 'block';
-  setTimeout(() => msg.style.display = 'none', 2000);
-}
-
 // ======================== ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐาน) ========================
 // ครูกดปุ่มตรงนี้เพื่อบอก Student view ว่า "ตอนนี้ทีมควรอยู่รอบไหน" แบบ manual —
 // ไม่อิงตารางเวลาที่ตั้งไว้ล่วงหน้าเลย เผื่อวันจริงกำหนดการเลื่อน/ยืดหยุ่นไม่ตรงตาราง
@@ -640,35 +586,6 @@ function setSelfieUnlocked(val) {
   apiCall('saveSettings', { data: { selfieUnlocked: val } });
   renderSelfieControl();
   showToast(val === 1 ? '📸 เปิดภารกิจเซลฟี่แล้ว' : '🔒 ปิดภารกิจเซลฟี่แล้ว');
-}
-
-function renderTeamList() {
-  const container = document.getElementById('team-list');
-  if (!container) return;
-  container.innerHTML = TEAMS.map(t => `
-    <div class="wallet-card" style="border-color:${t.hex}55;">
-      <div class="wallet-header"><div class="wallet-name" style="color:${t.hex}">${t.name}</div></div>
-    </div>
-  `).join('');
-  renderScheduleRef();
-}
-
-function renderScheduleRef() {
-  const el = document.getElementById('sched-ref-table');
-  if (!el) return;
-  let html = '<table class="sched-table"><thead><tr><th>รอบ / เวลา</th>';
-  STATIONS_ORDER.forEach(st => { html += `<th>${st}</th>`; });
-  html += '</tr></thead><tbody>';
-  SCHEDULE.forEach(r => {
-    html += `<tr><td class="rnd-lbl">รอบ ${r.round}<br>${r.time}</td>`;
-    STATIONS_ORDER.forEach(st => {
-      const m = r.matches.find(x => x.station === st);
-      html += m ? `<td>${m.teamA}<br><span style="color:#475569">vs</span><br>${m.teamB}</td>` : '<td>-</td>';
-    });
-    html += '</tr>';
-  });
-  html += '</tbody></table>';
-  el.innerHTML = html;
 }
 
 function populateTeamSelects() {
@@ -1054,7 +971,6 @@ function showTab(name) {
   if (name === 'history')     renderHistory();
   if (name === 'award')       updatePriceDisplays();
   if (name === 'bonus')       updateBonusPrices();
-  if (name === 'setup')       renderTeamList();
 }
 
 // ======================== INIT ========================
@@ -1068,11 +984,6 @@ async function init() {
     saveState();
   }
 
-  document.getElementById('input-land-price').value   = state.settings.landPrice;
-  document.getElementById('input-winner-value').value = state.settings.winnerValue ?? 100000;
-  document.getElementById('input-loser-value').value  = state.settings.loserValue  ?? 80000;
-
-  renderTeamList();
   populateTeamSelects();
   updatePriceDisplays();
   renderHistory();
