@@ -66,9 +66,29 @@ body {
 }
 .camp-name { font-size: 1.05rem; font-weight: 800; color: #86efac; line-height: 1.3; }
 .camp-sub  { font-size: 0.72rem; color: #6b8f7a; margin-top: 3px; }
+.header-right { display: flex; align-items: center; gap: 18px; }
 .clock-wrap { text-align: right; }
 .clock { font-size: 2rem; font-weight: 900; color: #e2e8f0; font-variant-numeric: tabular-nums; letter-spacing: 2px; }
 .refresh-label { font-size: 0.68rem; color: #4b6b58; margin-top: 2px; }
+
+.header-qr-btn {
+  display: flex; align-items: center; gap: 6px; background: #123a24; color: #86efac;
+  border: 1px solid #22c55e; border-radius: 100px; padding: 8px 16px; font-size: 0.82rem;
+  font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.header-qr-btn:hover { background: #1a4d30; }
+
+.qr-modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(4,10,7,0.82);
+  z-index: 999; align-items: center; justify-content: center;
+}
+.qr-modal-overlay.show { display: flex; }
+.qr-modal-box { position: relative; }
+.qr-modal-close {
+  position: absolute; top: -18px; right: -18px; width: 36px; height: 36px; border-radius: 50%;
+  background: #1B4D3E; color: #fff; border: 2px solid #fff; font-size: 1rem; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
 
 main { display: flex; flex: 1; overflow: hidden; }
 
@@ -293,20 +313,34 @@ main { display: flex; flex: 1; overflow: hidden; }
 
 <header id="page-header">
   <div>
-    <div class="camp-name">🧮 SWP Math Camp12 — Screen หลัก</div>
-    <div class="camp-sub">โรงเรียนสุวรรณภูมิพิทยไพศาล · ระบบคะแนน + ภารกิจเซลฟี่</div>
+    <div class="camp-name">🧮 SWP Math Camp12</div>
+    <div class="camp-sub">ค่ายคณิตศาสตร์ ครั้งที่ 12 โรงเรียนสุวรรณภูมิพิทยไพศาล</div>
   </div>
-  <div class="clock-wrap">
-    <div class="clock" id="clock">--:--:--</div>
-    <div class="refresh-label" id="refresh-label">อัปเดตอัตโนมัติทุก 60 วินาที</div>
+  <div class="header-right">
+    <button class="header-qr-btn" onclick="openQrModal()">📱 QR นักเรียน</button>
+    <div class="clock-wrap">
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="refresh-label" id="refresh-label">อัปเดตอัตโนมัติทุก 60 วินาที</div>
+    </div>
   </div>
 </header>
+
+<div class="qr-modal-overlay" id="qrModalOverlay" onclick="if(event.target===this) closeQrModal()">
+  <div class="qr-modal-box">
+    <button class="qr-modal-close" onclick="closeQrModal()">✕</button>
+    <div class="sf-qr-wrap">
+      <div class="sf-qr-box" id="sfQrBox"><img id="sfQrImg" alt="QR code"></div>
+      <div class="sf-qr-label">📱 สแกนเพื่อเปิดหน้านักเรียน</div>
+      <div class="sf-qr-url" id="sfQrUrlText"></div>
+    </div>
+  </div>
+</div>
 
 <div class="tab-nav">
   <button class="tab-btn active" id="tab-btn-scoreboard" onclick="switchTab('scoreboard')">🏆 ภาพรวมคะแนน</button>
   <button class="tab-btn" id="tab-btn-wallet" onclick="switchTab('wallet')">👜 กระเป๋าตัง</button>
   <button class="tab-btn" id="tab-btn-schedule" onclick="switchTab('schedule')">📋 ตารางเข้าฐาน</button>
-  <button class="tab-btn" id="tab-btn-intro" onclick="switchTab('intro')">🎬 แนะนำเซลฟี่</button>
+  <button class="tab-btn" id="tab-btn-intro" onclick="switchTab('intro')">🎬 ภารกิจเซลฟี่</button>
   <button class="tab-btn" id="tab-btn-timer" onclick="switchTab('timer')">⏱️ จับเวลา</button>
   <button class="tab-btn" id="tab-btn-answerkey" onclick="switchTab('answerkey')">🔑 เฉลย</button>
 </div>
@@ -383,22 +417,13 @@ main { display: flex; flex: 1; overflow: hidden; }
     <div class="sf-subtitle">SWP Math Camp12 — แก้โจทย์คณิต ถอดรหัสเป็นคำตอบ แล้วไปถ่ายภาพให้ตรงภารกิจ</div>
     <div class="sf-meta">โรงเรียนสุวรรณภูมิพิทยไพศาล · ค่ายคณิตศาสตร์ · 8 ทีมสี</div>
 
-    <div class="sf-intro-columns">
-      <div class="sf-rules-grid">
-        <div class="sf-rule-card"><div class="num">1</div><p>สแกน QR ด้านขวาเพื่อเปิดหน้าของนักเรียน (คะแนนทีม + ตารางฐาน + ภารกิจเซลฟี่)</p></div>
-        <div class="sf-rule-card"><div class="num">2</div><p>ไม่บังคับทำให้ครบ ทำให้ได้มากที่สุดภายในเวลาที่กำหนด</p></div>
-        <div class="sf-rule-card"><div class="num">3</div><p>ทุกภาพต้องมี <b>สมาชิกครบทุกคน</b> ในทีมอยู่ในภาพ (ยกเว้นภารกิจระบุไว้เป็นอย่างอื่น)</p></div>
-        <div class="sf-rule-card"><div class="num">4</div><p>สมาชิกคนไหนในทีมก็กดอัปโหลดภาพได้ ไม่ต้องเป็นตัวแทนคนเดียว</p></div>
-      </div>
-      <div class="sf-qr-col">
-        <div class="sf-qr-wrap">
-          <div class="sf-qr-box" id="sfQrBox"><img id="sfQrImg" alt="QR code"></div>
-          <div class="sf-qr-label">📱 สแกนเพื่อเปิดหน้านักเรียน</div>
-          <div class="sf-qr-url" id="sfQrUrlText"></div>
-        </div>
-        <button class="sf-start-btn" id="sfBtnGoTimer">⏱️ เริ่มจับเวลา 45 นาที</button>
-      </div>
+    <div class="sf-rules-grid" style="margin: 0 auto 1.4em;">
+      <div class="sf-rule-card"><div class="num">1</div><p>สแกน QR จากปุ่ม 📱 QR นักเรียน มุมขวาบนของจอ เพื่อเปิดหน้าของนักเรียน (คะแนนทีม + ตารางฐาน + ภารกิจเซลฟี่) — เข้าได้ตั้งแต่เช้า ไม่ต้องรอถึงช่วงภารกิจเซลฟี่</p></div>
+      <div class="sf-rule-card"><div class="num">2</div><p>ไม่บังคับทำให้ครบ ทำให้ได้มากที่สุดภายในเวลาที่กำหนด</p></div>
+      <div class="sf-rule-card"><div class="num">3</div><p>ทุกภาพต้องมี <b>สมาชิกครบทุกคน</b> ในทีมอยู่ในภาพ (ยกเว้นภารกิจระบุไว้เป็นอย่างอื่น)</p></div>
+      <div class="sf-rule-card"><div class="num">4</div><p>สมาชิกคนไหนในทีมก็กดอัปโหลดภาพได้ ไม่ต้องเป็นตัวแทนคนเดียว</p></div>
     </div>
+    <button class="sf-start-btn" id="sfBtnGoTimer">⏱️ เริ่มจับเวลา 45 นาที</button>
     <div class="sf-hint">ภารกิจเซลฟี่คณิต SWP Math Camp12 · หน้าจอสำหรับฉายในกิจกรรม</div>
   </div>
 </div>
@@ -580,6 +605,24 @@ async function fetchRemoteState() {
   } catch(e) {
     console.warn('[Sheets] fetch failed, using last known state');
     return remoteState;
+  }
+}
+
+// ใช้เขียนค่ากลับขึ้น config sheet (saveSettings) — เดิม ScoreBoard อ่านอย่างเดียว
+// เพิ่มตัวนี้เพื่อให้เขียนสถานะนาฬิกาจับเวลาเซลฟี่กลับไปให้ StudentView อ่านได้
+async function apiCall(action, params = {}) {
+  if (!SCRIPT_URL) return null;
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', action);
+    for (const [k, v] of Object.entries(params)) {
+      url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    }
+    const res = await fetch(url.toString());
+    return await res.json();
+  } catch(e) {
+    console.warn('[Sheets] API error:', action, e);
+    return null;
   }
 }
 
@@ -830,6 +873,7 @@ async function refresh() {
   const s = await fetchRemoteState();
   renderScoreboard(s);
   if (currentTab === 'wallet') renderWallet(s);
+  if (s && s.settings) sfSyncFromRemote(s.settings);
   document.getElementById('t-updated').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour12:false });
 }
 
@@ -911,12 +955,28 @@ document.getElementById('sfQrUrlText').textContent = MISSION_PAGE_URL;
 document.getElementById('sfQrImg').src =
   "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(MISSION_PAGE_URL);
 
+// QR อยู่ในแถบบนสุด (ปุ่ม 📱 QR นักเรียน) แล้ว ให้นักเรียนสแกนเข้าได้ตั้งแต่เช้า
+// ไม่ต้องรอถึงแท็บภารกิจเซลฟี่ — กดปุ่มแล้วเปิด modal แสดง QR เดิมตัวเดียวกัน
+function openQrModal() {
+  document.getElementById('qrModalOverlay').classList.add('show');
+}
+function closeQrModal() {
+  document.getElementById('qrModalOverlay').classList.remove('show');
+}
+
 // ═══════════════════════════════════════════════════════
-//  SELFIE: COUNTDOWN TIMER (45:00)
+//  SELFIE: COUNTDOWN TIMER (45:00) — 21 ก.ค. 2569: ซิงก์ให้ StudentView
+//  เห็นเวลานับถอยหลังตัวเดียวกัน ผ่าน config key selfieTimerStatus/
+//  selfieTimerEndAt/selfieTimerRemaining (ScoreBoard เป็นตัวเขียนหลักเพียงที่เดียว
+//  StudentView แค่ poll อ่านทุก 5 วิ) endAt ใช้อิงนาฬิกาจริงกันเวลาเพี้ยนจาก
+//  setInterval ถูก browser throttle
 // ═══════════════════════════════════════════════════════
 const SF_TOTAL_SECONDS = 45 * 60;
-let sfRemaining = SF_TOTAL_SECONDS;
+let sfRemaining = SF_TOTAL_SECONDS; // ใช้ตอน status = 0 (ยังไม่เริ่ม/รีเซ็ต) หรือ 2 (หยุดชั่วคราว)
+let sfStatus = 0;                   // 0=ยังไม่เริ่ม/รีเซ็ตแล้ว, 1=กำลังนับถอยหลัง, 2=หยุดชั่วคราว
+let sfEndAt = 0;                    // ms epoch ที่จะครบกำหนด (มีค่าตอน status=1 เท่านั้น)
 let sfIntervalId = null;
+let sfSyncedFromRemote = false;     // sync ค่าที่ค้างจาก server แค่ครั้งเดียวตอนโหลดหน้า
 const sfDisplay = document.getElementById('sfTimerDisplay');
 const sfBtnStartPause = document.getElementById('sfBtnStartPause');
 
@@ -925,38 +985,78 @@ function sfFormatTime(s) {
   const sec = Math.floor(s % 60).toString().padStart(2, '0');
   return `${m}:${sec}`;
 }
+function sfCurrentRemaining() {
+  if (sfStatus === 1) return Math.max(0, Math.round((sfEndAt - Date.now()) / 1000));
+  return sfRemaining;
+}
 function sfRenderTimer() {
-  sfDisplay.textContent = sfFormatTime(Math.max(sfRemaining, 0));
-  sfDisplay.classList.toggle('warning', sfRemaining <= 300 && sfRemaining > 60);
-  sfDisplay.classList.toggle('danger', sfRemaining <= 60);
+  const remaining = sfCurrentRemaining();
+  sfDisplay.textContent = sfFormatTime(remaining);
+  sfDisplay.classList.toggle('warning', remaining <= 300 && remaining > 60);
+  sfDisplay.classList.toggle('danger', remaining <= 60);
+  sfBtnStartPause.textContent = sfStatus === 1 ? '⏸️ หยุดชั่วคราว' : '▶️ เริ่ม';
+  if (sfStatus === 1 && remaining <= 0) sfFinishAtZero();
 }
-function sfTick() {
-  sfRemaining -= 1;
-  sfRenderTimer();
-  if (sfRemaining <= 0) {
-    sfPauseTimer();
-    sfDisplay.textContent = "หมดเวลา!";
-    sfDisplay.classList.add('danger');
-  }
-}
-function sfStartTimer() {
-  if (sfIntervalId) return;
-  sfIntervalId = setInterval(sfTick, 1000);
-  sfBtnStartPause.textContent = '⏸️ หยุดชั่วคราว';
-}
-function sfPauseTimer() {
+function sfFinishAtZero() {
   clearInterval(sfIntervalId);
   sfIntervalId = null;
+  sfStatus = 0;
+  sfRemaining = 0;
+  sfDisplay.textContent = 'หมดเวลา!';
+  sfDisplay.classList.add('danger');
   sfBtnStartPause.textContent = '▶️ เริ่ม';
+  apiCall('saveSettings', { data: { selfieTimerStatus: 0, selfieTimerEndAt: 0, selfieTimerRemaining: 0 } });
 }
-sfBtnStartPause.addEventListener('click', () => sfIntervalId ? sfPauseTimer() : sfStartTimer());
-document.getElementById('sfBtnReset').addEventListener('click', () => {
-  sfPauseTimer();
-  sfRemaining = SF_TOTAL_SECONDS;
+function sfStartTimer() {
+  if (sfStatus === 1) return;
+  const remaining = sfRemaining > 0 ? sfRemaining : SF_TOTAL_SECONDS;
+  sfEndAt = Date.now() + remaining * 1000;
+  sfStatus = 1;
+  if (!sfIntervalId) sfIntervalId = setInterval(sfRenderTimer, 1000);
   sfRenderTimer();
-});
+  apiCall('saveSettings', { data: { selfieTimerStatus: 1, selfieTimerEndAt: sfEndAt, selfieTimerRemaining: remaining } });
+}
+function sfPauseTimer() {
+  if (sfStatus !== 1) return;
+  sfRemaining = sfCurrentRemaining();
+  sfStatus = 2;
+  clearInterval(sfIntervalId);
+  sfIntervalId = null;
+  sfRenderTimer();
+  apiCall('saveSettings', { data: { selfieTimerStatus: 2, selfieTimerRemaining: sfRemaining } });
+}
+function sfResetTimer() {
+  clearInterval(sfIntervalId);
+  sfIntervalId = null;
+  sfStatus = 0;
+  sfRemaining = SF_TOTAL_SECONDS;
+  sfEndAt = 0;
+  sfRenderTimer();
+  apiCall('saveSettings', { data: { selfieTimerStatus: 0, selfieTimerEndAt: 0, selfieTimerRemaining: SF_TOTAL_SECONDS } });
+}
+sfBtnStartPause.addEventListener('click', () => sfStatus === 1 ? sfPauseTimer() : sfStartTimer());
+document.getElementById('sfBtnReset').addEventListener('click', sfResetTimer);
 sfRenderTimer();
 document.getElementById('sfBtnGoTimer').addEventListener('click', () => { switchTab('timer'); sfStartTimer(); });
+
+// โหลดสถานะนาฬิกาที่ค้างไว้จาก server ตอนเปิดหน้าครั้งแรก (เผื่อรีเฟรชจอระหว่างจับเวลาอยู่
+// จะได้ไม่กระโดดกลับไป 45:00) — sync แค่ครั้งแรกที่ได้ข้อมูลจาก server เท่านั้น
+function sfSyncFromRemote(s) {
+  if (sfSyncedFromRemote || !s) return;
+  sfSyncedFromRemote = true;
+  const status = Number(s.selfieTimerStatus) || 0;
+  const endAt = Number(s.selfieTimerEndAt) || 0;
+  const remaining = s.selfieTimerRemaining !== undefined ? Number(s.selfieTimerRemaining) : SF_TOTAL_SECONDS;
+  if (status === 1 && endAt > Date.now()) {
+    sfStatus = 1;
+    sfEndAt = endAt;
+    if (!sfIntervalId) sfIntervalId = setInterval(sfRenderTimer, 1000);
+  } else {
+    sfStatus = status === 2 ? 2 : 0;
+    sfRemaining = remaining;
+  }
+  sfRenderTimer();
+}
 
 // ═══════════════════════════════════════════════════════
 //  SELFIE: ANSWER KEY — ชุดใหม่ตามแนวทางค่ายเต่างอย "ถอดรหัส→ลงพื้นที่→แก้โจทย์"
