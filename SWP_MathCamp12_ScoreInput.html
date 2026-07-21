@@ -923,16 +923,39 @@ function updateStartMissionStatus() {
   if (btn) btn.disabled = count < TEAMS.length;
 }
 
-function confirmStartMission() {
+// 21 ก.ค. 2569: แก้บั๊กสำคัญ — เดิมยิง apiCall('addTransaction', ...) ทั้ง 8 ทีม
+// พร้อมกันโดยไม่ await (fire-and-forget) ทำให้ Apps Script backend ได้รับ request
+// พร้อมกันเกือบ 8 ตัว แล้ว appendRow() (ไม่มีการล็อก) คำนวณ "แถวถัดไป" ชนกัน
+// เขียนทับกันเอง ทำให้บางทีมไม่ถูกบันทึกแบบเงียบๆ (ไม่มี error ให้เห็นเลย)
+// แก้โดย (1) ส่งทีละคำขอด้วย await ให้เสร็จก่อนค่อยส่งทีมถัดไป กันชนกันตั้งแต่ต้น
+// (2) เพิ่ม LockService ฝั่ง backend เป็นเกราะป้องกันอีกชั้น (ดู AppsScript.js)
+// (3) เช็คผลลัพธ์จริงจาก server ก่อนนับว่าสำเร็จ ไม่ใช่นับทันทีที่ยิง request ออกไป
+// (4) ข้ามทีมที่เคยได้รับไปแล้ว กันแจกซ้ำถ้าครูต้องกดแจกใหม่เพราะบางทีมพลาดตอนแรก
+async function confirmStartMission() {
   if (Object.keys(startMissionSelection).length < TEAMS.length) return;
   if (!confirm(`ยืนยันแจกคะแนนเริ่มต้น ฿${START_MISSION_VALUE.toLocaleString('th-TH')} ให้ทุกทีม (${TEAMS.length} ทีม) ตามรางวัลที่แต่ละทีมเลือกไว้?`)) return;
 
+  const btn = document.getElementById('btn-start-mission');
+  if (btn) { btn.disabled = true; btn.textContent = `⏳ กำลังแจก... (0/${TEAMS.length})`; }
+
   const now = new Date().toISOString();
   let okCount = 0;
-  TEAMS.forEach((t, i) => {
+  let skipCount = 0;
+  const failedTeams = [];
+
+  for (let i = 0; i < TEAMS.length; i++) {
+    const t = TEAMS[i];
+
+    const alreadyGiven = state.transactions.some(tx => tx.studentId === t.id && tx.station === START_MISSION_STATION);
+    if (alreadyGiven) {
+      skipCount++;
+      if (btn) btn.textContent = `⏳ กำลังแจก... (${i + 1}/${TEAMS.length})`;
+      continue;
+    }
+
     const type = startMissionSelection[t.id];
     const price = priceForType(type);
-    if (!type || !price) return; // ไม่ควรเกิดขึ้น เพราะเช็คราคาไว้ตอนเลือกแล้ว
+    if (!type || !price) { failedTeams.push(t.name); continue; } // ไม่ควรเกิดขึ้น เพราะเช็คราคาไว้ตอนเลือกแล้ว
     const qty = START_MISSION_VALUE / price;
     const tx = {
       id: Date.now() + '-sm' + i,
@@ -944,12 +967,29 @@ function confirmStartMission() {
       timestamp: now,
       station: START_MISSION_STATION,
     };
-    state.transactions.push(tx);
-    apiCall('addTransaction', { data: tx });
-    okCount++;
-  });
+
+    const res = await apiCall('addTransaction', { data: tx });
+    if (res && res.success) {
+      state.transactions.push(tx);
+      okCount++;
+    } else {
+      failedTeams.push(t.name);
+    }
+    if (btn) btn.textContent = `⏳ กำลังแจก... (${i + 1}/${TEAMS.length})`;
+  }
+
   saveState();
-  showToast(`🎁 แจกคะแนนเริ่มต้น ฿${START_MISSION_VALUE.toLocaleString('th-TH')} ให้ ${okCount} ทีมเรียบร้อย!`);
+
+  if (failedTeams.length) {
+    showToast(`⚠️ แจกสำเร็จ ${okCount} ทีม${skipCount ? ` (ข้ามทีมที่ได้แล้ว ${skipCount} ทีม)` : ''} — พลาด: ${failedTeams.join(', ')} ลองกดแจกซ้ำได้ ระบบจะข้ามทีมที่ได้แล้วให้อัตโนมัติ`);
+  } else if (skipCount === TEAMS.length) {
+    showToast('ทุกทีมได้รับคะแนนเริ่มต้นไปแล้ว ไม่มีทีมไหนต้องแจกเพิ่ม');
+  } else {
+    showToast(`🎁 แจกคะแนนเริ่มต้น ฿${START_MISSION_VALUE.toLocaleString('th-TH')} ให้ ${okCount} ทีมเรียบร้อย!${skipCount ? ` (ข้ามทีมที่ได้แล้ว ${skipCount} ทีม)` : ''}`);
+  }
+
+  if (btn) btn.textContent = '🎁 แจกคะแนนเริ่มต้นให้ทุกทีม';
+  updateStartMissionStatus();
 
   refreshWallets();
   renderHistory();
