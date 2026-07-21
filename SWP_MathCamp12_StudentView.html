@@ -584,20 +584,22 @@ function renderStationStatus() {
   const current = rows.find(r => r.round === round);
   const next = rows.find(r => r.round === round + 1);
 
+  // เปิดเผยข้อมูลทีละรอบตามจังหวะที่ครูกด — ก่อนครูเริ่มเลย (round 0) ไม่บอกฐาน/คู่แข่ง
+  // ของรอบใดเลย แม้แต่รอบ 1 (กันดักดูล่วงหน้า) ต่อเมื่อครูกด "เริ่ม" แล้วเท่านั้นถึงจะ
+  // เห็นของรอบนั้น ๆ ครบ — เมื่อจบกิจกรรม (round 5) ถึงจะเห็นครบทุกรอบย้อนหลังทั้งหมด
   if (round === 0) {
-    const first = rows.find(r => r.round === 1);
     banner.className = 'status-banner wait';
     banner.innerHTML = `
       <div class="sb-label">⏳ ยังไม่เริ่มกิจกรรม</div>
-      <div class="sb-main">${first ? first.station : 'รอตารางฐาน'}</div>
-      <div class="sb-sub">${first ? `พบกับทีม ${teamById(first.opp).emoji} ${teamById(first.opp).name} · ` : ''}รอครูประกาศเริ่มรอบ 1</div>`;
+      <div class="sb-main">รอครูประกาศเริ่มรอบ 1</div>
+      <div class="sb-sub">ตารางฐาน/คู่แข่งจะเปิดให้เห็นทีละรอบเมื่อครูเริ่มแต่ละรอบ</div>`;
   } else if (round >= 1 && round <= 4 && current) {
     banner.className = 'status-banner live';
     banner.innerHTML = `
       <div class="sb-label">🟢 ตอนนี้ · รอบ ${current.round}</div>
       <div class="sb-main">${current.station}</div>
       <div class="sb-sub">พบกับทีม ${teamById(current.opp).emoji} ${teamById(current.opp).name}</div>
-      ${next ? `<div class="sb-sub" style="margin-top:6px;">🔜 รอบถัดไป: ${next.station} · vs ${teamById(next.opp).emoji}${teamById(next.opp).name}</div>` : `<div class="sb-sub" style="margin-top:6px;">รอบสุดท้ายแล้ว รอครูประกาศจบกิจกรรม</div>`}`;
+      <div class="sb-sub" style="margin-top:6px;">${round < 4 ? 'รอบถัดไปจะเปิดให้เห็นเมื่อครูเริ่มรอบต่อไป' : 'รอบสุดท้ายแล้ว รอครูประกาศจบกิจกรรม'}</div>`;
   } else if (round >= 5) {
     banner.className = 'status-banner done';
     banner.innerHTML = `<div class="sb-label">✅ กิจกรรมฐานเช้าจบแล้ว</div><div class="sb-main">ขอบคุณที่เข้าร่วมกิจกรรม!</div>`;
@@ -606,15 +608,23 @@ function renderStationStatus() {
     banner.innerHTML = `<div class="sb-label">📍 ตารางฐาน</div><div class="sb-main">ไม่พบตารางของทีมนี้</div>`;
   }
 
-  document.getElementById('myScheduleList').innerHTML = rows.map(r => `
-    <div class="rnd-row ${r.round === round ? 'current' : ''}">
-      <div class="rnd-num">รอบ ${r.round}</div>
-      <div class="rnd-info">
-        <div class="rnd-station">${r.station}</div>
-        <div class="rnd-vs">vs <span style="color:${teamById(r.opp).hex}">${teamById(r.opp).emoji} ${teamById(r.opp).name}</span></div>
-      </div>
-      <div class="rnd-time">${r.time}</div>
-    </div>`).join('');
+  // รายการด้านล่าง: โชว์เฉพาะรอบที่ครูเริ่มไปแล้ว (r.round <= round) — ถ้าจบกิจกรรม
+  // (round >= 5) ให้เห็นครบทุกรอบย้อนหลังทั้งหมด, ถ้ายังไม่เริ่มเลย (round 0) ไม่โชว์เลย
+  const visibleRows = round >= 5 ? rows : rows.filter(r => r.round <= round);
+  const listEl = document.getElementById('myScheduleList');
+  if (!visibleRows.length) {
+    listEl.innerHTML = '<div class="hist-empty">🔒 ยังไม่เปิดตารางฐาน รอครูเริ่มกิจกรรม</div>';
+  } else {
+    listEl.innerHTML = visibleRows.map(r => `
+      <div class="rnd-row ${r.round === round ? 'current' : ''}">
+        <div class="rnd-num">รอบ ${r.round}</div>
+        <div class="rnd-info">
+          <div class="rnd-station">${r.station}</div>
+          <div class="rnd-vs">vs <span style="color:${teamById(r.opp).hex}">${teamById(r.opp).emoji} ${teamById(r.opp).name}</span></div>
+        </div>
+        <div class="rnd-time">${r.time}</div>
+      </div>`).join('');
+  }
 }
 
 // ── การแจ้งเตือน ──
