@@ -138,6 +138,22 @@
   }
   .sched-table th { background: #0f172a; color: #94a3b8; font-size: 0.72rem; }
   .sched-table td.rnd-lbl { background: #0f172a; color: #93c5fd; font-weight: 700; }
+
+  /* ── ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐาน) — แถบคงที่ ใช้ได้ทุกแท็บ ── */
+  #round-control-bar {
+    background: #1e3a5f; border-bottom: 1px solid #3b82f6; padding: 10px 24px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .rc-label { font-size: 0.78rem; font-weight: 700; color: #93c5fd; white-space: nowrap; }
+  .rc-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rc-btn {
+    padding: 7px 14px; border-radius: 100px; border: 1px solid #334155; background: #0f172a;
+    color: #94a3b8; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all .15s;
+  }
+  .rc-btn:hover { border-color: #475569; color: #e2e8f0; }
+  .rc-btn.active { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .rc-btn.active.end { background: #7c3aed; border-color: #7c3aed; }
+  .rc-status { font-size: 0.72rem; color: #64748b; margin-left: auto; }
 </style>
 </head>
 <body>
@@ -165,6 +181,12 @@
     </div>
   </div>
 </header>
+
+<div id="round-control-bar">
+  <span class="rc-label">🔔 ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐานของนักเรียน)</span>
+  <div class="rc-buttons" id="rc-buttons"></div>
+  <span class="rc-status" id="rc-status">กำลังโหลด...</span>
+</div>
 
 <nav>
   <button onclick="showTab('setup')">⚙️ ตั้งค่า</button>
@@ -392,7 +414,7 @@ const SCHEDULE = [
 ];
 
 let state = {
-  settings: { landPrice: 100000, winnerValue: 100000, loserValue: 80000 },
+  settings: { landPrice: 100000, winnerValue: 100000, loserValue: 80000, currentRound: 0, roundTriggerAt: 0 },
   transactions: [],
 };
 let prices = { btc: null, gold: null };
@@ -525,6 +547,53 @@ function saveSettings() {
   const msg = document.getElementById('settings-msg');
   msg.style.display = 'block';
   setTimeout(() => msg.style.display = 'none', 2000);
+}
+
+// ======================== ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐาน) ========================
+// ครูกดปุ่มตรงนี้เพื่อบอก Student view ว่า "ตอนนี้ทีมควรอยู่รอบไหน" แบบ manual —
+// ไม่อิงตารางเวลาที่ตั้งไว้ล่วงหน้าเลย เผื่อวันจริงกำหนดการเลื่อน/ยืดหยุ่นไม่ตรงตาราง
+// currentRound: 0=ยังไม่เริ่ม, 1-4=รอบที่กำลังทำอยู่, 5=จบกิจกรรมฐานเช้าแล้ว
+// roundTriggerAt: เวลา (ms) ที่กดล่าสุด — เปลี่ยนทุกครั้งที่กด แม้กดรอบเดิมซ้ำ
+// เพื่อให้ Student view ตรวจจับได้ว่ามีการกดใหม่แล้วยิงแจ้งเตือนอีกรอบ
+const ROUND_OPTIONS = [
+  { val: 0, label: 'ยังไม่เริ่ม' },
+  { val: 1, label: 'รอบ 1' },
+  { val: 2, label: 'รอบ 2' },
+  { val: 3, label: 'รอบ 3' },
+  { val: 4, label: 'รอบ 4' },
+  { val: 5, label: '✅ จบกิจกรรม' },
+];
+
+function renderRoundControl() {
+  const el = document.getElementById('rc-buttons');
+  if (!el) return;
+  const current = state.settings.currentRound ?? 0;
+  el.innerHTML = ROUND_OPTIONS.map(o => `
+    <button class="rc-btn ${o.val === current ? 'active' : ''} ${o.val === 5 ? 'end' : ''}" onclick="setCurrentRound(${o.val})">${o.label}</button>
+  `).join('');
+  updateRoundStatusLabel();
+}
+
+function updateRoundStatusLabel() {
+  const statusEl = document.getElementById('rc-status');
+  if (!statusEl) return;
+  const current = state.settings.currentRound ?? 0;
+  const triggeredAt = state.settings.roundTriggerAt;
+  const opt = ROUND_OPTIONS.find(o => o.val === current);
+  const timeText = triggeredAt ? new Date(triggeredAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+  statusEl.textContent = `สถานะปัจจุบัน: ${opt ? opt.label : '-'} · กดล่าสุด ${timeText}`;
+}
+
+function setCurrentRound(val) {
+  const opt = ROUND_OPTIONS.find(o => o.val === val);
+  if (!confirm(`ยืนยันตั้งสถานะเป็น "${opt.label}"?\nนักเรียนทุกทีมจะได้รับการแจ้งเตือนทันที`)) return;
+  const triggerAt = Date.now();
+  state.settings.currentRound = val;
+  state.settings.roundTriggerAt = triggerAt;
+  saveState();
+  apiCall('saveSettings', { data: { currentRound: val, roundTriggerAt: triggerAt } });
+  renderRoundControl();
+  showToast(`🔔 แจ้งเตือนนักเรียนแล้ว: ${opt.label}`);
 }
 
 function renderTeamList() {
@@ -961,6 +1030,7 @@ async function init() {
   populateTeamSelects();
   updatePriceDisplays();
   renderHistory();
+  renderRoundControl();
 
   fetchPrices();
   setInterval(fetchPrices, 60000);
