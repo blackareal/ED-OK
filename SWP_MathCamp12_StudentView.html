@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>นักเรียน · SWP Math Camp12</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
@@ -65,9 +66,30 @@ button { font-family: inherit; }
 .card-title { font-size: 0.72rem; font-weight: 700; color: #6b8f7a; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
 
 /* my team card */
+.mt-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.mt-chart-btn {
+  background: #123a24; border: 1px solid #22c55e; color: #86efac; border-radius: 100px;
+  width: 34px; height: 34px; font-size: 1rem; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
 .mt-value { font-size: 2.1rem; font-weight: 900; color: var(--myhex, #86efac); line-height: 1.1; }
 .mt-gain { font-size: 0.9rem; font-weight: 700; margin-top: 4px; }
 .mt-rank-badge { display: inline-block; margin-top: 8px; background: #123a24; border: 1px solid #22c55e; border-radius: 100px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; color: #86efac; }
+
+/* price chart modal — กราฟราคาย้อนหลัง 6 ชม. */
+#priceChartOverlay {
+  display: none; position: fixed; inset: 0; background: rgba(4,10,7,0.85);
+  z-index: 999; align-items: center; justify-content: center; padding: 16px;
+}
+#priceChartOverlay.show { display: flex; }
+.pc-box { background: #0a1f16; border: 1px solid #10241a; border-radius: 16px; padding: 16px; max-width: 460px; width: 100%; max-height: 88vh; overflow-y: auto; }
+.pc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.pc-title { font-size: 0.92rem; font-weight: 800; color: #e2e8f0; }
+.pc-close { background: #123a24; border: 1px solid #22c55e; color: #86efac; border-radius: 50%; width: 30px; height: 30px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.pc-chart-card { background: #071a10; border: 1px solid #0a2417; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.pc-chart-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: #9fc2ab; margin-bottom: 8px; }
+.pc-chart-body { height: 140px; position: relative; }
+.pc-hint { font-size: 0.68rem; color: #4b6b58; text-align: center; margin-top: 4px; }
 
 .asset-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #10241a; }
 .asset-left { display: flex; align-items: center; gap: 8px; }
@@ -213,6 +235,31 @@ button { font-family: inherit; }
   </div>
 </div>
 
+<!-- ═══════ PRICE CHART MODAL — กราฟราคาย้อนหลัง 6 ชม. (ช่วยตัดสินใจเลือกรับรางวัล) ═══════ -->
+<div id="priceChartOverlay" onclick="if(event.target===this) closePriceChartModal()">
+  <div class="pc-box">
+    <div class="pc-head">
+      <div class="pc-title">📈 กราฟราคาย้อนหลัง 6 ชั่วโมง</div>
+      <button class="pc-close" onclick="closePriceChartModal()">✕</button>
+    </div>
+    <div class="pc-chart-card">
+      <div class="pc-chart-top">
+        <span>₿ Bitcoin</span>
+        <span id="pcBtcPrice">กำลังโหลด...</span>
+      </div>
+      <div class="pc-chart-body"><canvas id="pcChartBtc"></canvas></div>
+    </div>
+    <div class="pc-chart-card">
+      <div class="pc-chart-top">
+        <span>🥇 ทองคำ</span>
+        <span id="pcGoldPrice">กำลังโหลด...</span>
+      </div>
+      <div class="pc-chart-body"><canvas id="pcChartGold"></canvas></div>
+    </div>
+    <div class="pc-hint">🏗️ ที่ดินราคาคงที่ กำหนดโดยครู ไม่มีกราฟย้อนหลัง</div>
+  </div>
+</div>
+
 <!-- ═══════ APP SHELL ═══════ -->
 <div id="app">
   <div id="top-bar">
@@ -234,7 +281,10 @@ button { font-family: inherit; }
     <!-- PANE: My Team -->
     <div class="pane active" id="pane-myteam">
       <div class="card">
-        <div class="card-title">💼 มูลค่าพอร์ตทีมของฉัน</div>
+        <div class="mt-card-head">
+          <div class="card-title" style="margin-bottom:0;">💼 มูลค่าพอร์ตทีมของฉัน</div>
+          <button class="mt-chart-btn" onclick="openPriceChartModal()" aria-label="ดูกราฟราคาย้อนหลัง 6 ชั่วโมง">📈</button>
+        </div>
         <div class="mt-value" id="mtValue">฿–</div>
         <div class="mt-gain" id="mtGain"></div>
         <div class="mt-rank-badge" id="mtRankBadge">อันดับ –</div>
@@ -475,6 +525,105 @@ async function fetchPrices() {
     prices.btc = data.bitcoin.thb;
     prices.gold = data['tether-gold'].thb * GOLD_TROY_TO_BAHT;
   } catch (e) { console.warn('fetch prices failed', e); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PRICE CHART MODAL — กราฟราคา BTC/ทองคำ ย้อนหลัง 6 ชม. (เหมือนจอหลัก ScoreBoard)
+//  เพื่อช่วยนักเรียนตัดสินใจว่าจะรับรางวัลเป็นสินทรัพย์ไหน — ดึงข้อมูลสดทุกครั้งที่กดเปิด
+// ═══════════════════════════════════════════════════════
+let pcChartBtc = null;
+let pcChartGold = null;
+
+function pcTimeFmt(ts) {
+  return new Date(ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+function pcSampleData(arr, maxPts = 24) {
+  if (arr.length <= maxPts) return arr;
+  const step = Math.ceil(arr.length / maxPts);
+  return arr.filter((_, i) => i % step === 0 || i === arr.length - 1);
+}
+function pcMakeChartData(rawPrices) {
+  const sampled = pcSampleData(rawPrices);
+  return { labels: sampled.map(p => pcTimeFmt(p[0])), values: sampled.map(p => Math.round(p[1])) };
+}
+const PC_CHART_OPTS = (color) => ({
+  responsive: true, maintainAspectRatio: false,
+  animation: { duration: 500 },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#10241a', borderColor: '#1c3327', borderWidth: 1,
+      titleColor: '#6b8f7a', bodyColor: '#e2e8f0',
+      callbacks: { label: ctx => '฿' + ctx.parsed.y.toLocaleString('th-TH') }
+    }
+  },
+  scales: {
+    x: { grid: { color: '#10241a' }, ticks: { color: '#4b6b58', maxTicksLimit: 5, font: { size: 9 }, maxRotation: 0 } },
+    y: { grid: { color: '#0c1f14' }, ticks: { color: '#4b6b58', font: { size: 9 },
+         callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v } }
+  }
+});
+function pcMakeGradient(ctx, chart, hex) {
+  const { chartArea } = chart;
+  if (!chartArea) return hex + '33';
+  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, hex + '55');
+  g.addColorStop(1, hex + '00');
+  return g;
+}
+function pcInitChart(canvasId, d, color) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels: d.labels, datasets: [{
+      data: d.values, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.35, fill: true,
+      backgroundColor: (context) => pcMakeGradient(context.chart.ctx, context.chart, color)
+    }] },
+    options: PC_CHART_OPTS(color),
+  });
+}
+function pcUpdateChart(chart, d) {
+  chart.data.labels = d.labels;
+  chart.data.datasets[0].data = d.values;
+  chart.update('none');
+}
+
+async function loadPriceChartData() {
+  const cutoff = Date.now() - 6 * 60 * 60 * 1000;
+  try {
+    const btcRes  = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+    const btcJson = await btcRes.json();
+    const btcPts  = btcJson.prices.filter(p => p[0] >= cutoff);
+
+    const gRes  = await fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+    const gJson = await gRes.json();
+    const gPts  = gJson.prices.filter(p => p[0] >= cutoff).map(p => [p[0], p[1] * GOLD_TROY_TO_BAHT]);
+
+    if (btcPts.length) document.getElementById('pcBtcPrice').textContent = fmt(btcPts.at(-1)[1]);
+    if (gPts.length)   document.getElementById('pcGoldPrice').textContent = fmt(gPts.at(-1)[1]);
+
+    const bd = pcMakeChartData(btcPts);
+    const gd = pcMakeChartData(gPts);
+
+    if (!pcChartBtc)  pcChartBtc  = pcInitChart('pcChartBtc',  bd, '#f97316');
+    else              pcUpdateChart(pcChartBtc, bd);
+
+    if (!pcChartGold) pcChartGold = pcInitChart('pcChartGold', gd, '#eab308');
+    else              pcUpdateChart(pcChartGold, gd);
+  } catch (e) {
+    console.warn('load price chart failed', e);
+    document.getElementById('pcBtcPrice').textContent = 'โหลดไม่ได้';
+    document.getElementById('pcGoldPrice').textContent = 'โหลดไม่ได้';
+  }
+}
+
+function openPriceChartModal() {
+  document.getElementById('priceChartOverlay').classList.add('show');
+  loadPriceChartData();
+}
+function closePriceChartModal() {
+  document.getElementById('priceChartOverlay').classList.remove('show');
 }
 
 function calcTeamValue(teamId, s) {
