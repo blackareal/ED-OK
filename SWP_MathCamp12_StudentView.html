@@ -340,7 +340,11 @@ const GOLD_TROY_TO_BAHT = 15.244 / 31.1035;
 //  ห้ามแก้ข้อความภารกิจที่นี่โดยไม่แก้ ANSWER_KEY ใน SWP_MathCamp12_ScoreBoard.html
 //  ให้ตรงกันด้วย (ข้อความต้องเหมือนกันทุกตัวอักษร)
 // ═══════════════════════════════════════════════════════
-const SELFIE_UNLOCKED = true; // ครูปรับเป็น false ได้ถ้าต้องการซ่อนไว้ก่อนช่วงเช้า
+// 21 ก.ค. 2569: เปลี่ยนจาก const คงที่ในไฟล์ → ควบคุมสดจากครูผ่านแถบเดียวกับ
+// currentRound ใน ScoreInput (config key 'selfieUnlocked' อ่านผ่าน action=getSettings
+// ทุก 5 วิ เหมือนกับ currentRound) ค่าเริ่มต้นก่อน poll ครั้งแรกคือ false (ล็อกไว้ก่อน
+// เพื่อความปลอดภัย เผื่อโหลดข้อมูลจาก server ไม่ทันหรือ error)
+let selfieUnlocked = false;
 const MISSIONS = [
   [0,  "S", "ถ่ายรูปรวมกับสมาชิกทุกคนในทีม (สถานที่ใดก็ได้) แล้วพิมพ์จำนวนสมาชิกในทีมเป็นคำตอบ"],
   [1,  "A", "เงาของเสาสูงต้นหนึ่งกลางลานกว้างของโรงเรียน ซึ่งมีธงไตรรงค์โบกสะบัดอยู่บนยอดเสมอยามเช้า หากสมมติว่าเสาต้นนี้สูง 9 เมตร และทำมุมเงยกับดวงอาทิตย์ 45° ในเวลานั้น ความยาวของเงาที่ทอดลงบนพื้นจะมีค่ากี่เมตร?"],
@@ -662,6 +666,10 @@ async function pollRoundControl() {
     remoteState.settings = { ...remoteState.settings, ...s };
     if (currentPane === 'station') renderStationStatus();
 
+    const wasUnlocked = selfieUnlocked;
+    selfieUnlocked = Number(s.selfieUnlocked) === 1;
+    if (selfieUnlocked !== wasUnlocked) initSelfiePane();
+
     const triggerAt = Number(s.roundTriggerAt) || 0;
     const round = Number(s.currentRound) || 0;
     if (triggerAt > lastSeenRoundTrigger) {
@@ -716,7 +724,7 @@ const MS_MAX_FILE_MB = 20;
 
 function initSelfiePane() {
   const navIcon = document.querySelector('#nav-selfie .icon');
-  if (SELFIE_UNLOCKED && MISSIONS.length) {
+  if (selfieUnlocked && MISSIONS.length) {
     document.getElementById('selfieLocked').style.display = 'none';
     document.getElementById('selfieUnlockedContent').style.display = 'block';
     if (navIcon) navIcon.classList.remove('lockdot');
@@ -749,6 +757,7 @@ function initSelfiePane() {
   } else {
     document.getElementById('selfieLocked').style.display = 'block';
     document.getElementById('selfieUnlockedContent').style.display = 'none';
+    if (navIcon) navIcon.classList.add('lockdot');
   }
 }
 
@@ -943,7 +952,7 @@ function switchPane(name) {
   if (name === 'myteam')  renderMyTeam();
   if (name === 'ranking') renderRanking();
   if (name === 'station') renderStationStatus();
-  if (name === 'selfie' && SELFIE_UNLOCKED) refreshMissionStatus();
+  if (name === 'selfie' && selfieUnlocked) refreshMissionStatus();
 }
 
 // ═══════════════════════════════════════════════════════
