@@ -96,18 +96,6 @@
   .neutral { color: #94a3b8; }
   .wallet-empty { color: #64748b; font-size: 0.85rem; padding: 8px 0; }
 
-  .leaderboard { display: flex; flex-direction: column; gap: 10px; }
-  .lb-item { display: flex; align-items: center; gap: 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px; }
-  .lb-rank { font-size: 1.5rem; font-weight: 900; width: 36px; text-align: center; }
-  .lb-rank.r1 { color: #fbbf24; }
-  .lb-rank.r2 { color: #94a3b8; }
-  .lb-rank.r3 { color: #c2a16e; }
-  .lb-info { flex: 1; }
-  .lb-name { font-weight: 700; font-size: 1rem; }
-  .lb-holdings { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
-  .lb-value { text-align: right; }
-  .lb-total { font-size: 1.1rem; font-weight: 700; color: #93c5fd; }
-  .lb-gain { font-size: 0.8rem; margin-top: 2px; }
 
   .history-list { display: flex; flex-direction: column; gap: 6px; }
   .history-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0f172a; border-radius: 8px; font-size: 0.85rem; }
@@ -183,7 +171,6 @@
   <button class="active" onclick="showTab('award')">🎖️ บันทึกรางวัล</button>
   <button onclick="showTab('bonus')">⭐ คะแนนพิเศษ</button>
   <button onclick="showTab('wallets')">👜 กระเป๋าเงิน</button>
-  <button onclick="showTab('leaderboard')">🏆 ผลสรุป</button>
   <button onclick="showTab('history')">📋 ประวัติ</button>
 </nav>
 
@@ -331,13 +318,6 @@
   <div class="wallet-grid" id="wallet-grid"></div>
 </div>
 
-<!-- TAB: ผลสรุป -->
-<div class="tab" id="tab-leaderboard">
-  <p class="section-title">🏆 ผลสรุปมูลค่าพอร์ตโฟลิโอ</p>
-  <div class="notice" id="lb-notice">กำลังคำนวณ...</div>
-  <div class="leaderboard" id="leaderboard"></div>
-</div>
-
 <!-- TAB: ประวัติ -->
 <div class="tab" id="tab-history">
   <p class="section-title">📋 ประวัติการรับรางวัล</p>
@@ -461,7 +441,6 @@ async function fetchPrices() {
   setDot(false);
   updatePriceDisplays();
   refreshWallets();
-  refreshLeaderboard();
 }
 
 function updatePriceDisplays() {
@@ -744,7 +723,6 @@ function confirmAward() {
   document.getElementById('select-winner').value = '';
   document.getElementById('select-loser').value  = '';
   refreshWallets();
-  refreshLeaderboard();
   renderHistory();
 }
 
@@ -826,47 +804,6 @@ function refreshWallets() {
   }).join('');
 }
 
-// ======================== LEADERBOARD ========================
-function refreshLeaderboard() {
-  const container = document.getElementById('leaderboard');
-  const notice = document.getElementById('lb-notice');
-  if (!container) return;
-
-  const data = TEAMS.map(team => {
-    const txs = state.transactions.filter(t => t.studentId === team.id);
-    const totalInvested = txs.reduce((s, t) => s + t.valueAtAward, 0);
-    const totalCurrent = txs.reduce((s, t) => {
-      const cv = currentValue(t);
-      return cv !== null ? s + cv : s;
-    }, 0);
-    const holdings = [...new Set(txs.map(t => t.type))].map(assetLabel).join(', ');
-    return { team, totalCurrent, totalInvested, holdings };
-  }).sort((a, b) => b.totalCurrent - a.totalCurrent);
-
-  const totalAll = data.reduce((s, d) => s + d.totalCurrent, 0);
-  notice.textContent = `💰 มูลค่าพอร์ตรวมทุกทีม: ${fmtCurrency(totalAll)} · อัปเดตทุก 60 วินาที`;
-
-  const rankIcons = ['🥇', '🥈', '🥉'];
-  container.innerHTML = data.map((d, i) => {
-    const gain = d.totalCurrent - d.totalInvested;
-    const gainPct = d.totalInvested > 0 ? (gain / d.totalInvested * 100) : 0;
-    const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
-    return `
-      <div class="lb-item">
-        <div class="lb-rank ${i < 3 ? 'r' + (i+1) : ''}">${i < 3 ? rankIcons[i] : '#' + (i+1)}</div>
-        <div class="lb-info">
-          <div class="lb-name" style="color:${d.team.hex}">${d.team.name}</div>
-          <div class="lb-holdings">${d.holdings || 'ยังไม่มีรางวัล'}</div>
-        </div>
-        <div class="lb-value">
-          <div class="lb-total">${fmtCurrency(d.totalCurrent)}</div>
-          <div class="lb-gain ${gainClass}">${gain >= 0 ? '+' : ''}${fmtCurrency(gain)} (${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
 // ======================== HISTORY ========================
 function renderHistory() {
   const container = document.getElementById('history-list');
@@ -901,7 +838,6 @@ function deleteTx(id) {
   apiCall('deleteTransaction', { id });
   renderHistory();
   refreshWallets();
-  refreshLeaderboard();
 }
 
 // ======================== BONUS ========================
@@ -955,7 +891,6 @@ function confirmBonus() {
   document.querySelectorAll('#bonus-options .reward-option').forEach(el => el.classList.remove('selected'));
 
   refreshWallets();
-  refreshLeaderboard();
   renderHistory();
 }
 
@@ -967,7 +902,6 @@ function showTab(name) {
   event.target.classList.add('active');
 
   if (name === 'wallets')     refreshWallets();
-  if (name === 'leaderboard') refreshLeaderboard();
   if (name === 'history')     renderHistory();
   if (name === 'award')       updatePriceDisplays();
   if (name === 'bonus')       updateBonusPrices();
