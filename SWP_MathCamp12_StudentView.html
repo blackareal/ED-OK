@@ -117,8 +117,16 @@ button { font-family: inherit; }
 .lock-sub { font-size: 0.85rem; color: #6b8f7a; line-height: 1.6; }
 
 /* selfie mission cards (ms- = mission selfie) */
-.ms-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
+.ms-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
+.ms-toolbar-right { display: flex; align-items: center; gap: 8px; }
 .ms-refresh-btn { padding: 8px 14px; border-radius: 100px; border: 1px solid #2a4a3a; background: #0f2b1f; color: #9fc2ab; font-weight: 700; font-size: 0.75rem; cursor: pointer; }
+.ms-timer-inline {
+  padding: 8px 14px; border-radius: 100px; border: 1px solid #16a34a; background: #0f2b1f;
+  color: #4ade80; font-weight: 800; font-size: 0.8rem; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ms-timer-inline.warning { color: #eab308; border-color: #eab308; }
+.ms-timer-inline.danger { color: #ef4444; border-color: #ef4444; }
 .ms-card { background: #0a1f16; border: 1px solid #10241a; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
 .ms-card.done { border-color: #16a34a; }
 .ms-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -269,7 +277,10 @@ button { font-family: inherit; }
         <div class="ms-config-warning" id="msConfigWarning"></div>
         <div class="ms-toolbar">
           <div class="card-title" style="margin-bottom:0;">📸 ภารกิจเซลฟี่คณิต (<span id="msDoneCount">0</span>/<span id="msTotalCount">0</span>)</div>
-          <button class="ms-refresh-btn" id="msBtnRefresh">🔄 เช็คสถานะ</button>
+          <div class="ms-toolbar-right">
+            <div class="ms-timer-inline" id="msTimerInline">⏳ 45:00</div>
+            <button class="ms-refresh-btn" id="msBtnRefresh">🔄 เช็คสถานะ</button>
+          </div>
         </div>
         <div id="msGrid"></div>
       </div>
@@ -606,7 +617,7 @@ function renderStationStatus() {
       <div class="sb-sub" style="margin-top:6px;">${round < 4 ? 'รอบถัดไปจะเปิดให้เห็นเมื่อครูเริ่มรอบต่อไป' : 'รอบสุดท้ายแล้ว รอครูประกาศจบกิจกรรม'}</div>`;
   } else if (round >= 5) {
     banner.className = 'status-banner done';
-    banner.innerHTML = `<div class="sb-label">✅ กิจกรรมฐานเช้าจบแล้ว</div><div class="sb-main">ขอบคุณที่เข้าร่วมกิจกรรม!</div>`;
+    banner.innerHTML = `<div class="sb-label">✅ หมดเวลาทำกิจกรรมฐานแล้ว</div><div class="sb-main">ให้สมาชิกทุกกลุ่มไปรวมกันที่หอประชุม</div>`;
   } else {
     banner.className = 'status-banner wait';
     banner.innerHTML = `<div class="sb-label">📍 ตารางฐาน</div><div class="sb-main">ไม่พบตารางของทีมนี้</div>`;
@@ -670,6 +681,13 @@ async function pollRoundControl() {
     selfieUnlocked = Number(s.selfieUnlocked) === 1;
     if (selfieUnlocked !== wasUnlocked) initSelfiePane();
 
+    // ── นาฬิกาจับเวลาภารกิจเซลฟี่ — ซิงก์จากที่ครู/สต๊าฟกดบน ScoreBoard แท็บ "จับเวลา"
+    // (ScoreBoard เป็นตัวเขียนค่าเดียว ที่นี่แค่อ่านมาโชว์ทุก 5 วิ)
+    msTimerStatus = Number(s.selfieTimerStatus) || 0;
+    msTimerEndAt = Number(s.selfieTimerEndAt) || 0;
+    if (s.selfieTimerRemaining !== undefined) msTimerRemaining = Number(s.selfieTimerRemaining);
+    renderMsTimer();
+
     const triggerAt = Number(s.roundTriggerAt) || 0;
     const round = Number(s.currentRound) || 0;
     if (triggerAt > lastSeenRoundTrigger) {
@@ -698,12 +716,12 @@ function fireStationAlert(r) {
   }
 }
 function fireWrapUpAlert() {
-  document.getElementById('alertDetail').textContent = 'จบกิจกรรมฐานเช้าแล้ว';
-  document.getElementById('alertSub').textContent = 'ขอบคุณที่เข้าร่วมกิจกรรม!';
+  document.getElementById('alertDetail').textContent = 'หมดเวลาทำกิจกรรมฐานแล้ว';
+  document.getElementById('alertSub').textContent = 'ให้สมาชิกทุกกลุ่มไปรวมกันที่หอประชุม';
   document.getElementById('stationAlert').classList.add('show');
-  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
   if (notifPermissionOn && 'Notification' in window && Notification.permission === 'granted') {
-    try { new Notification('✅ จบกิจกรรมฐานเช้าแล้ว', { body: 'ขอบคุณที่เข้าร่วมกิจกรรม!' }); } catch (e) {}
+    try { new Notification('✅ หมดเวลาทำกิจกรรมฐานแล้ว', { body: 'ให้สมาชิกทุกกลุ่มไปรวมกันที่หอประชุม' }); } catch (e) {}
   }
 }
 function closeStationAlert() {
@@ -715,6 +733,32 @@ setInterval(pollRoundControl, 5000);
 //  SELFIE PANE — ส่งคำตอบข้อความ + รูปภาพคู่กันต่อภารกิจ (รูปแบบเดียวกับเต่างอย)
 // ═══════════════════════════════════════════════════════
 let msInited = false;
+
+// ── นาฬิกาจับเวลาภารกิจเซลฟี่ (45 นาที) — ซิงก์มาจาก ScoreBoard แท็บ "⏱️ จับเวลา"
+// ผ่าน config key เดียวกับที่ ScoreBoard เขียน (selfieTimerStatus/EndAt/Remaining)
+// อัปเดตค่าจาก pollRoundControl() ทุก 5 วิ แล้ว tick ทุก 1 วิ ในเครื่องเพื่อความลื่นไหล
+// โดยอิง msTimerEndAt (นาฬิกาจริง) ไม่ใช่แค่นับถอยหลังในเครื่องเฉยๆ กันเวลาเพี้ยน
+let msTimerStatus = 0;      // 0=ยังไม่เริ่ม/รีเซ็ตแล้ว, 1=กำลังนับถอยหลัง, 2=หยุดชั่วคราว
+let msTimerEndAt = 0;
+let msTimerRemaining = 45 * 60;
+
+function msFormatTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+function renderMsTimer() {
+  const el = document.getElementById('msTimerInline');
+  if (!el) return;
+  const remaining = msTimerStatus === 1
+    ? Math.max(0, Math.round((msTimerEndAt - Date.now()) / 1000))
+    : msTimerRemaining;
+  el.textContent = '⏳ ' + msFormatTime(remaining);
+  el.classList.toggle('warning', remaining <= 300 && remaining > 60);
+  el.classList.toggle('danger', remaining <= 60);
+}
+setInterval(renderMsTimer, 1000);
+
 const msState = {};        // { [no]: { status, message } }
 const msPendingFile = {};  // { [no]: File }
 const msPendingB64 = {};   // { [no]: string }
