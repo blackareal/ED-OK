@@ -39,7 +39,7 @@ body {
 .view-pane { display: none; flex: 1; overflow: hidden; }
 .view-pane.active { display: flex; }
 #view-wallet.active { display: block; overflow-y: auto; padding: 20px 24px; }
-#view-dashboard.active, #view-answerkey.active { display: block; overflow-y: auto; }
+#view-answerkey.active { display: block; overflow-y: auto; }
 
 .wallet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .wallet-color-col { display: flex; flex-direction: column; gap: 10px; }
@@ -170,7 +170,7 @@ main { display: flex; flex: 1; overflow: hidden; }
   .team-sched-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ═════════════════ SELFIE MISSION PANES (intro/timer/dashboard/answerkey) ═════════════════ */
+/* ═════════════════ SELFIE MISSION PANES (intro/timer/answerkey) ═════════════════ */
 #view-intro, #view-timer {
   background: radial-gradient(circle at top, #1F5C3D, var(--dark-bg));
   color: #fff;
@@ -231,7 +231,7 @@ main { display: flex; flex: 1; overflow: hidden; }
 .sf-hint { margin-top: 1em; font-size: 0.68rem; color: #7BA88F; }
 
 /* Dashboard / Answer key — light theme (readable printed/projected detail views) */
-#view-dashboard, #view-answerkey { background: var(--light-bg); color: #12261c; width: 100%; }
+#view-answerkey { background: var(--light-bg); color: #12261c; width: 100%; }
 .sf-panel-header { background: var(--navy); color: #fff; padding: 1em 1.4em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6em; }
 .sf-panel-header h2 { margin: 0; font-size: 1.15rem; }
 .sf-panel-header p { margin: 0.2em 0 0; font-size: 0.78rem; color: #D6EED9; }
@@ -273,6 +273,14 @@ main { display: flex; flex: 1; overflow: hidden; }
 @media (max-width: 640px) { .sf-ak-row { grid-template-columns: 1fr; } }
 .sf-ak-no { font-size: 0.68rem; color: #7d9c8c; font-weight: 700; margin-bottom: 0.3em; }
 .sf-ak-mission { font-size: 0.83rem; line-height: 1.45; color: #1c2b22; margin-bottom: 0.5em; }
+.sf-ak-reveal-buttons { display: flex; gap: 0.5em; margin-top: 0.4em; flex-wrap: wrap; }
+.sf-ak-reveal-btn {
+  background: #fff; border: 1px solid var(--navy); color: var(--navy);
+  font-weight: 700; font-size: 0.78rem; padding: 0.45em 0.9em; border-radius: 100px; cursor: pointer;
+}
+.sf-ak-reveal-btn.revealed { background: var(--navy); color: #fff; }
+.sf-ak-hidden-content { margin-top: 0.6em; }
+.sf-ak-loc { font-size: 0.8rem; color: var(--navy); font-weight: 700; margin-bottom: 0.3em; }
 .sf-ak-answer-box { background: var(--navy); color: #fff; border-radius: 10px; padding: 0.6em 0.9em; font-size: 0.83rem; }
 .sf-ak-answer-box b { color: #BEF264; }
 .sf-ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; margin-top: 0.6em; }
@@ -300,7 +308,6 @@ main { display: flex; flex: 1; overflow: hidden; }
   <button class="tab-btn" id="tab-btn-schedule" onclick="switchTab('schedule')">📋 ตารางเข้าฐาน</button>
   <button class="tab-btn" id="tab-btn-intro" onclick="switchTab('intro')">🎬 แนะนำเซลฟี่</button>
   <button class="tab-btn" id="tab-btn-timer" onclick="switchTab('timer')">⏱️ จับเวลา</button>
-  <button class="tab-btn" id="tab-btn-dashboard" onclick="switchTab('dashboard')">🖼️ Dashboard เซลฟี่</button>
   <button class="tab-btn" id="tab-btn-answerkey" onclick="switchTab('answerkey')">🔑 เฉลย</button>
 </div>
 
@@ -408,11 +415,12 @@ main { display: flex; flex: 1; overflow: hidden; }
   </div>
 </div>
 
-<!-- ============ SELFIE: DASHBOARD ============ -->
-<div class="view-pane" id="view-dashboard">
+<!-- ============ SELFIE: ANSWER KEY + คะแนนรวม (ครูเท่านั้น) ============ -->
+<div class="view-pane" id="view-answerkey">
   <div class="sf-panel-header">
     <div>
-      <h2>🖼️ Dashboard — ภารกิจเซลฟี่คณิต</h2>
+      <h2>🔑 เฉลยภารกิจเซลฟี่ + คะแนนรวม</h2>
+      <p>สำหรับครู/กรรมการเท่านั้น — อย่าฉายแท็บนี้ตอนบรีฟนักเรียน</p>
       <div class="sf-status" id="sfStatusText">ยังไม่ได้โหลดข้อมูล</div>
     </div>
     <div class="sf-controls">
@@ -429,18 +437,7 @@ main { display: flex; flex: 1; overflow: hidden; }
         <tbody id="sfLeaderboardBody"><tr><td colspan="4" style="color:#7d9c8c;">—</td></tr></tbody>
       </table>
     </div>
-    <div id="sfGroups"></div>
     <div class="sf-empty" id="sfEmptyMsg" style="display:none;">ยังไม่มีภาพส่งเข้ามา</div>
-  </div>
-</div>
-
-<!-- ============ SELFIE: ANSWER KEY (ครูเท่านั้น) ============ -->
-<div class="view-pane" id="view-answerkey">
-  <div class="sf-panel-header">
-    <h2>🔑 เฉลยภารกิจเซลฟี่</h2>
-    <p>สำหรับครู/กรรมการเท่านั้น — อย่าฉายแท็บนี้ตอนบรีฟนักเรียน</p>
-  </div>
-  <div class="sf-wrap">
     <div class="sf-ak-list" id="sfAkList"></div>
   </div>
 </div>
@@ -1013,19 +1010,40 @@ function renderAnswerKey() {
     list.innerHTML = '<div class="sf-empty">📝 ยังไม่มีภารกิจเซลฟี่ที่ยืนยันแล้ว<br>รอโจทย์ชุดใหม่ตามแนวทางค่ายเต่างอย (ดู README ของค่าย ส.ว.พ.)</div>';
     return;
   }
+  // เฉลย (สถานที่+คำตอบ) ซ่อนไว้เป็นค่าเริ่มต้นเสมอ — ต้องกดปุ่ม "🔑 เฉลย" ทีละข้อ
+  // ถึงจะเห็น (แบบเดียวกับค่ายเต่างอย) กันเผลอฉายให้นักเรียนเห็นตอนเปิดแท็บนี้
   list.innerHTML = ANSWER_KEY.map(([no, cat, loc, mission, answer]) => `
     <div class="sf-ak-row">
       <div>
         <div class="sf-ak-no">Selfie#${no} <span class="sf-lvl-badge cat${cat}">${CAT_LABELS_AK[cat] || cat}</span></div>
         <div class="sf-ak-mission">🔍 ${mission}</div>
+        <div class="sf-ak-reveal-buttons">
+          <button class="sf-ak-reveal-btn" data-target="sf-ak-reveal-${no}">🔑 เฉลย</button>
+        </div>
+        <div class="sf-ak-hidden-content" id="sf-ak-reveal-${no}" style="display:none;">
+          <div class="sf-ak-loc">📍 ${loc}</div>
+          <div class="sf-ak-answer-box">${answer}</div>
+        </div>
       </div>
       <div>
-        <div class="sf-ak-answer-box">📍 ${loc}<br>${answer}</div>
         <div class="sf-ak-photos" id="sf-ak-photos-${no}"><span class="sf-empty">กำลังโหลดภาพ…</span></div>
       </div>
     </div>`).join('');
   loadAnswerKeyPhotos();
 }
+
+// ปุ่มเฉลย toggle แสดง/ซ่อน — ผูก listener ไว้ที่ #sfAkList ครั้งเดียว (ไม่ต้องผูกใหม่
+// ทุกครั้งที่ renderAnswerKey เขียน innerHTML ใหม่ เพราะตัว #sfAkList เองไม่ได้ถูกแทนที่)
+document.getElementById('sfAkList').addEventListener('click', (e) => {
+  const btn = e.target.closest('.sf-ak-reveal-btn');
+  if (!btn) return;
+  const target = document.getElementById(btn.dataset.target);
+  if (!target) return;
+  const isHidden = target.style.display === 'none';
+  target.style.display = isHidden ? 'block' : 'none';
+  btn.classList.toggle('revealed', isHidden);
+  btn.textContent = isHidden ? '🙈 ซ่อนเฉลย' : '🔑 เฉลย';
+});
 
 async function fetchMissions() {
   const url = new URL(SCRIPT_URL);
@@ -1086,17 +1104,16 @@ async function loadAnswerKeyPhotos() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  SELFIE: DASHBOARD
+//  SELFIE: คะแนนรวมแต่ละทีม (ย้ายมาจากแท็บ Dashboard เดิมที่ตัดออกแล้ว —
+//  รวมอยู่ในแท็บ "เฉลย" เดียวกัน คู่กับปุ่มรีเฟรช/รีเฟรชอัตโนมัติ)
 // ═══════════════════════════════════════════════════════
 const sfStatusText = document.getElementById('sfStatusText');
 const sfConfigWarning = document.getElementById('sfConfigWarning');
-const sfGroupsEl = document.getElementById('sfGroups');
 const sfLeaderboardBody = document.getElementById('sfLeaderboardBody');
 const sfEmptyMsg = document.getElementById('sfEmptyMsg');
 
 async function loadDashboardData() {
   if (!ANSWER_KEY.length) {
-    sfGroupsEl.innerHTML = '';
     sfLeaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#7d9c8c;">—</td></tr>`;
     sfEmptyMsg.style.display = 'block';
     sfEmptyMsg.textContent = '📝 ยังไม่มีภารกิจเซลฟี่ที่ยืนยันแล้ว รอโจทย์ชุดใหม่ (ดู README)';
@@ -1106,8 +1123,8 @@ async function loadDashboardData() {
   sfStatusText.textContent = "กำลังโหลดข้อมูล...";
   try {
     const { headers, rows } = await fetchMissions();
-    if (!rows || !rows.length) { renderDashboard([], []); sfStatusText.textContent = "โหลดสำเร็จ แต่ยังไม่มีข้อมูล"; return; }
-    renderDashboard(headers, rows);
+    if (!rows || !rows.length) { renderLeaderboard([], []); sfStatusText.textContent = "โหลดสำเร็จ แต่ยังไม่มีข้อมูล"; return; }
+    renderLeaderboard(headers, rows);
     sfStatusText.textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · ${rows.length} ทีม`;
     sfConfigWarning.style.display = 'none';
   } catch (err) {
@@ -1118,9 +1135,8 @@ async function loadDashboardData() {
   }
 }
 
-function renderDashboard(headers, rows) {
+function renderLeaderboard(headers, rows) {
   if (!rows.length) {
-    sfGroupsEl.innerHTML = "";
     sfLeaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#7d9c8c;">—</td></tr>`;
     sfEmptyMsg.style.display = 'block';
     sfEmptyMsg.textContent = 'ยังไม่มีภาพส่งเข้ามา';
@@ -1128,59 +1144,25 @@ function renderDashboard(headers, rows) {
   }
   sfEmptyMsg.style.display = 'none';
   const teamColIdx = headers.findIndex(h => h === 'ทีม');
-  const photoCols = {}, answerCols = {};
-  for (const [no] of ANSWER_KEY) {
-    photoCols[no] = headers.findIndex(h => h === `M${no}_PHOTO`);
-    answerCols[no] = headers.findIndex(h => h === `M${no}_ANSWER`);
-  }
+  const photoCols = {};
+  for (const [no] of ANSWER_KEY) photoCols[no] = headers.findIndex(h => h === `M${no}_PHOTO`);
 
   const teamSummaries = [];
-  let html = "";
   const sortedRows = [...rows].sort((a, b) =>
     (a[teamColIdx] || "").localeCompare(b[teamColIdx] || "", 'th'));
 
   for (const row of sortedRows) {
     const team = (row[teamColIdx] || "ไม่ระบุทีม").toString().trim();
     let score = 0, photoCount = 0;
-    let cardsHtml = "";
-    for (const [no, cat, loc] of ANSWER_KEY) {
+    for (const [no] of ANSWER_KEY) {
       const pIdx = photoCols[no];
-      const aIdx = answerCols[no];
       const cell = pIdx >= 0 ? (row[pIdx] || "").toString().trim() : "";
       if (!cell) continue;
-      const ansText = aIdx >= 0 ? (row[aIdx] || "").toString().trim() : "";
       score += 1;
-      const ids = extractDriveIds(cell);
-      photoCount += ids.length || 1;
-      const driveId = ids[0] || null;
-
-      cardsHtml += `
-        <a class="sf-photo-card" href="${driveId ? driveViewUrl(driveId) : cell}" target="_blank" rel="noopener">
-          <img src="${driveId ? driveThumbUrl(driveId) : ''}" loading="lazy" alt="ภารกิจ ${no}"
-               onerror="this.style.opacity=0.15;">
-          <div class="meta">
-            <div class="word">#${no} · 📍${loc}</div>
-            <div style="font-size:0.7rem;color:#4b6b58;">${ansText || '—'}</div>
-            <div class="sub">
-              <span class="sf-lvl-badge cat${cat}">${cat}</span>
-              <span>${ids.length > 1 ? `📎 ${ids.length} ไฟล์` : '✅ +1'}</span>
-            </div>
-          </div>
-        </a>`;
+      photoCount += extractDriveIds(cell).length || 1;
     }
-
     teamSummaries.push({ team, score, photoCount });
-    html += `
-      <div class="sf-group-section">
-        <div class="sf-group-title">
-          <h4 style="color:${teamHex(team)}">👥 ${team}</h4>
-          <span class="score">${score} pts</span>
-          <span class="count">(${score} / ${ANSWER_KEY.length} ภารกิจ · ${photoCount} ไฟล์ภาพ)</span>
-        </div>
-        <div class="sf-photo-grid">${cardsHtml || '<span class="sf-empty">ยังไม่ส่งภาพ</span>'}</div>
-      </div>`;
   }
-  sfGroupsEl.innerHTML = html;
 
   teamSummaries.sort((a, b) => b.score - a.score);
   sfLeaderboardBody.innerHTML = teamSummaries.map((g, i) => `
@@ -1212,8 +1194,7 @@ function switchTab(name) {
   document.getElementById('page-ticker').classList.toggle('show', name === 'scoreboard');
   if (name === 'wallet')     renderWallet(remoteState);
   if (name === 'schedule')   renderSchedule();
-  if (name === 'dashboard')  loadDashboardData();
-  if (name === 'answerkey')  renderAnswerKey();
+  if (name === 'answerkey') { renderAnswerKey(); loadDashboardData(); }
 }
 
 // ═══════════════════════════════════════════════════════
