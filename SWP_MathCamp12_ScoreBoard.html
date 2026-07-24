@@ -310,9 +310,17 @@ main { display: flex; flex: 1; overflow: hidden; }
 .sf-ak-answer-box { background: var(--navy); color: #fff; border-radius: 10px; padding: 0.6em 0.9em; font-size: 0.83rem; }
 .sf-ak-answer-box b { color: #BEF264; }
 .sf-ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; margin-top: 0.6em; }
-.sf-ak-photo { width: 68px; text-align: center; text-decoration: none; color: inherit; }
+.sf-ak-photo { width: 68px; text-align: center; }
+.sf-ak-photo-link { display: block; text-decoration: none; color: inherit; }
 .sf-ak-photo img { width: 68px; height: 68px; object-fit: cover; border-radius: 8px; background: #e5f2ea; display: block; }
 .sf-ak-photo .grp { font-size: 0.63rem; color: #6b8f7a; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sf-ak-photo.excluded img { opacity: 0.35; filter: grayscale(70%); }
+.sf-ak-photo.excluded .grp { text-decoration: line-through; }
+.sf-ak-exclude-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 3px; margin-top: 3px;
+  font-size: 0.6rem; color: #ef4444; cursor: pointer; user-select: none;
+}
+.sf-ak-exclude-toggle input { accent-color: #ef4444; width: 11px; height: 11px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -1185,43 +1193,90 @@ function extractDriveIds(cell) {
 function driveThumbUrl(id) { return `https://drive.google.com/thumbnail?id=${id}&sz=w400`; }
 function driveViewUrl(id) { return `https://drive.google.com/file/d/${id}/view`; }
 
+// ตรวจภารกิจ — ติ๊ก "ไม่ผ่าน" ใต้ภาพเพื่อตัดภาพนั้นออกจากคะแนน "ภารกิจสำเร็จ" ของทีม
+// (พอร์ตมาจากแนวทางค่ายเต่างอย TPS_MathCamp_SelfieBoard.html) จำไว้เฉพาะเครื่อง/
+// เบราว์เซอร์นี้ผ่าน localStorage เท่านั้น (ไม่ sync ข้ามเครื่อง/กรรมการคนอื่น)
+// ใช้กรณีภาพ/คำตอบไม่เข้าเกณฑ์ ไม่ต้องการให้นับเป็นภารกิจสำเร็จของทีมนั้น
+const SF_EXCLUDE_KEY = 'swpMathCamp12_excludedPhotos';
+function excludeKey(team, no) { return team + '__' + no; }
+function getExcludedSet() {
+  try { return new Set(JSON.parse(localStorage.getItem(SF_EXCLUDE_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function saveExcludedSet(set) {
+  try { localStorage.setItem(SF_EXCLUDE_KEY, JSON.stringify([...set])); } catch {}
+}
+
+let lastAkHeaders = [], lastAkRows = [];
+
 async function loadAnswerKeyPhotos() {
   const panelsEl = document.querySelectorAll('.sf-ak-photos');
   if (!ANSWER_KEY.length) return;
   try {
     const { headers, rows } = await fetchMissions();
     if (!rows || !rows.length) { panelsEl.forEach(el => el.innerHTML = '<span class="sf-empty">ยังไม่มีภาพส่งเข้ามา</span>'); return; }
-    const teamColIdx = headers.findIndex(h => h === 'ทีม');
-
-    for (const [no] of ANSWER_KEY) {
-      const el = document.getElementById(`sf-ak-photos-${no}`);
-      if (!el) continue;
-      const photoCol = headers.findIndex(h => h === `M${no}_PHOTO`);
-      const answerCol = headers.findIndex(h => h === `M${no}_ANSWER`);
-      if (photoCol < 0) { el.innerHTML = `<span class="sf-empty">ไม่พบคอลัมน์ M${no}_PHOTO</span>`; continue; }
-      const entries = [];
-      for (const r of rows) {
-        const cell = (r[photoCol] || '').toString().trim();
-        if (!cell) continue;
-        const team = (r[teamColIdx] || '?').toString().trim();
-        const ansText = answerCol >= 0 ? (r[answerCol] || '').toString().trim() : '';
-        const ids = extractDriveIds(cell);
-        if (ids.length) ids.forEach(id => entries.push({ team, driveId: id, ansText }));
-        else entries.push({ team, driveId: null, cell, ansText });
-      }
-      if (!entries.length) { el.innerHTML = '<span class="sf-empty">ยังไม่มีภาพส่งเข้ามา</span>'; continue; }
-      el.innerHTML = entries.map(e => `
-        <a class="sf-ak-photo" href="${e.driveId ? driveViewUrl(e.driveId) : e.cell}" target="_blank" rel="noopener" style="border:2px solid ${teamHex(e.team)}; border-radius:8px;">
-          <img src="${e.driveId ? driveThumbUrl(e.driveId) : ''}" loading="lazy" onerror="this.style.opacity=0.15">
-          <div class="grp" style="color:${teamHex(e.team)}">${e.team}</div>
-          <div style="font-size:0.6rem;color:#1c2b22;">${e.ansText || '—'}</div>
-        </a>`).join('');
-    }
+    lastAkHeaders = headers; lastAkRows = rows;
+    renderAnswerKeyPhotos(headers, rows);
   } catch (err) {
     console.error(err);
     panelsEl.forEach(el => el.innerHTML = '<span class="sf-empty">โหลดภาพไม่สำเร็จ</span>');
   }
 }
+
+function renderAnswerKeyPhotos(headers, rows) {
+  const teamColIdx = headers.findIndex(h => h === 'ทีม');
+  const excludedSet = getExcludedSet();
+
+  for (const [no] of ANSWER_KEY) {
+    const el = document.getElementById(`sf-ak-photos-${no}`);
+    if (!el) continue;
+    const photoCol = headers.findIndex(h => h === `M${no}_PHOTO`);
+    const answerCol = headers.findIndex(h => h === `M${no}_ANSWER`);
+    if (photoCol < 0) { el.innerHTML = `<span class="sf-empty">ไม่พบคอลัมน์ M${no}_PHOTO</span>`; continue; }
+    const entries = [];
+    for (const r of rows) {
+      const cell = (r[photoCol] || '').toString().trim();
+      if (!cell) continue;
+      const team = (r[teamColIdx] || '?').toString().trim();
+      const ansText = answerCol >= 0 ? (r[answerCol] || '').toString().trim() : '';
+      const ids = extractDriveIds(cell);
+      if (ids.length) ids.forEach(id => entries.push({ team, driveId: id, ansText }));
+      else entries.push({ team, driveId: null, cell, ansText });
+    }
+    if (!entries.length) { el.innerHTML = '<span class="sf-empty">ยังไม่มีภาพส่งเข้ามา</span>'; continue; }
+    el.innerHTML = entries.map(e => {
+      const isExcluded = excludedSet.has(excludeKey(e.team, no));
+      return `
+      <div class="sf-ak-photo${isExcluded ? ' excluded' : ''}">
+        <a class="sf-ak-photo-link" href="${e.driveId ? driveViewUrl(e.driveId) : e.cell}" target="_blank" rel="noopener" style="border:2px solid ${teamHex(e.team)}; border-radius:8px;">
+          <img src="${e.driveId ? driveThumbUrl(e.driveId) : ''}" loading="lazy" onerror="this.style.opacity=0.15">
+          <div class="grp" style="color:${teamHex(e.team)}">${e.team}</div>
+          <div style="font-size:0.6rem;color:#1c2b22;">${e.ansText || '—'}</div>
+        </a>
+        <label class="sf-ak-exclude-toggle">
+          <input type="checkbox" class="sf-ak-exclude-checkbox" data-team="${encodeURIComponent(e.team)}" data-no="${no}" ${isExcluded ? 'checked' : ''}>
+          ไม่ผ่าน
+        </label>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ติ๊ก/ปลดติ๊ก "ไม่ผ่าน" — ผูก listener ไว้ที่ #sfAkList ครั้งเดียว (เหมือนปุ่มเฉลย)
+// เพราะ innerHTML ถูกแทนที่ใหม่ทุกครั้งที่โหลด/เรนเดอร์ภาพ ไม่ต้อง fetch ใหม่จาก server
+// ใช้ข้อมูลที่ cache ไว้ (lastAkHeaders/Rows, lastLbHeaders/Rows) เรนเดอร์ซ้ำเฉยๆ
+document.getElementById('sfAkList').addEventListener('change', (e) => {
+  const cb = e.target.closest('.sf-ak-exclude-checkbox');
+  if (!cb) return;
+  const team = decodeURIComponent(cb.dataset.team);
+  const no = cb.dataset.no;
+  const set = getExcludedSet();
+  if (cb.checked) set.add(excludeKey(team, no));
+  else set.delete(excludeKey(team, no));
+  saveExcludedSet(set);
+  if (lastAkRows.length) renderAnswerKeyPhotos(lastAkHeaders, lastAkRows);
+  if (lastLbRows.length) renderLeaderboard(lastLbHeaders, lastLbRows);
+});
 
 // ═══════════════════════════════════════════════════════
 //  SELFIE: คะแนนรวมแต่ละทีม (ย้ายมาจากแท็บ Dashboard เดิมที่ตัดออกแล้ว —
@@ -1255,7 +1310,10 @@ async function loadDashboardData() {
   }
 }
 
+let lastLbHeaders = [], lastLbRows = [];
+
 function renderLeaderboard(headers, rows) {
+  lastLbHeaders = headers; lastLbRows = rows; // cache ไว้ให้ checkbox "ไม่ผ่าน" เรียกเรนเดอร์ซ้ำได้โดยไม่ต้อง fetch ใหม่
   if (!rows.length) {
     sfLeaderboardBody.innerHTML = `<tr><td colspan="4" style="color:#7d9c8c;">—</td></tr>`;
     sfEmptyMsg.style.display = 'block';
@@ -1266,6 +1324,7 @@ function renderLeaderboard(headers, rows) {
   const teamColIdx = headers.findIndex(h => h === 'ทีม');
   const photoCols = {};
   for (const [no] of ANSWER_KEY) photoCols[no] = headers.findIndex(h => h === `M${no}_PHOTO`);
+  const excludedSet = getExcludedSet();
 
   const teamSummaries = [];
   const sortedRows = [...rows].sort((a, b) =>
@@ -1278,7 +1337,8 @@ function renderLeaderboard(headers, rows) {
       const pIdx = photoCols[no];
       const cell = pIdx >= 0 ? (row[pIdx] || "").toString().trim() : "";
       if (!cell) continue;
-      score += 1;
+      // ภารกิจที่ครูติ๊ก "ไม่ผ่าน" ไว้ ไม่นับเป็นภารกิจสำเร็จ (แต่ยังนับจำนวนไฟล์ภาพที่ส่งอยู่)
+      if (!excludedSet.has(excludeKey(team, no))) score += 1;
       photoCount += extractDriveIds(cell).length || 1;
     }
     teamSummaries.push({ team, score, photoCount });
