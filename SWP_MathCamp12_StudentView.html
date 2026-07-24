@@ -119,6 +119,7 @@ button { font-family: inherit; }
 .sb-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #9fc2ab; margin-bottom: 6px; }
 .sb-main { font-size: 1.15rem; font-weight: 900; }
 .sb-sub { font-size: 0.8rem; color: #9fc2ab; margin-top: 4px; }
+.sb-activity { display: block; font-size: 0.75rem; font-weight: 700; color: #86efac; margin-top: 3px; }
 .sb-countdown { font-size: 1.6rem; font-weight: 900; font-variant-numeric: tabular-nums; margin-top: 6px; }
 
 .notif-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #2a4a3a; background: #0f2b1f; color: #9fc2ab; font-weight: 700; font-size: 0.85rem; margin-bottom: 14px; cursor: pointer; }
@@ -129,6 +130,7 @@ button { font-family: inherit; }
 .rnd-num { font-size: 0.75rem; color: #6b8f7a; min-width: 54px; }
 .rnd-info { flex: 1; }
 .rnd-station { font-weight: 700; font-size: 0.88rem; }
+.rnd-activity { font-size: 0.72rem; color: #86efac; margin-top: 1px; }
 .rnd-vs { font-size: 0.78rem; color: #9fc2ab; margin-top: 2px; }
 .rnd-time { font-size: 0.75rem; color: #6b8f7a; text-align: right; }
 
@@ -360,31 +362,39 @@ const TEAMS = [
   { id: 'ชมพู',   name: 'ทีมสีชมพู',   emoji: '🩷', hex: '#ec4899' },
   { id: 'น้ำเงิน', name: 'ทีมสีน้ำเงิน', emoji: '🔷', hex: '#1d4ed8' },
 ];
-const STATIONS_ORDER = ['ฐาน 1 · โดม', 'ฐาน 2 · โดม', 'ฐาน 3 · HCEC', 'ฐาน 4 · สนามแบดมินตัน'];
+const STATIONS_ORDER = ['ฐาน 1 · โดม', 'ฐาน 2 · โดม', 'ฐาน 3 · HCEC', 'ฐาน 4 · หอประชุมหลังเก่า'];
+// 21 ก.ค. 2569: ชื่อกิจกรรม/เกมประจำแต่ละฐาน (ครูให้มา) — โชว์คู่กับชื่อฐานในหน้านักเรียน
+// เพื่อให้นักเรียนเห็นแล้วเข้าใจว่าฐานนั้นคือกิจกรรมอะไร ไม่ใช่แค่ชื่อสถานที่เฉยๆ
+const STATION_ACTIVITY = {
+  'ฐาน 1 · โดม': 'Pattern Blocks',
+  'ฐาน 2 · โดม': 'Math Survivor',
+  'ฐาน 3 · HCEC': 'Human Operation',
+  'ฐาน 4 · หอประชุมหลังเก่า': 'ม่านแม็ท',
+};
 const SCHEDULE = [
   { round: 1, time: '10:30–10:50', matches: [
     { station: 'ฐาน 1 · โดม', teamA: 'เขียว', teamB: 'ชมพู' },
     { station: 'ฐาน 2 · โดม', teamA: 'แดง',   teamB: 'ม่วง' },
     { station: 'ฐาน 3 · HCEC', teamA: 'ฟ้า',   teamB: 'ส้ม' },
-    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เหลือง', teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 4 · หอประชุมหลังเก่า', teamA: 'เหลือง', teamB: 'น้ำเงิน' },
   ]},
   { round: 2, time: '10:50–11:10', matches: [
     { station: 'ฐาน 1 · โดม', teamA: 'ส้ม',   teamB: 'ม่วง' },
     { station: 'ฐาน 2 · โดม', teamA: 'เหลือง', teamB: 'ชมพู' },
     { station: 'ฐาน 3 · HCEC', teamA: 'เขียว', teamB: 'น้ำเงิน' },
-    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'แดง', teamB: 'ฟ้า' },
+    { station: 'ฐาน 4 · หอประชุมหลังเก่า', teamA: 'แดง', teamB: 'ฟ้า' },
   ]},
   { round: 3, time: '11:10–11:30', matches: [
     { station: 'ฐาน 1 · โดม', teamA: 'แดง',   teamB: 'น้ำเงิน' },
     { station: 'ฐาน 2 · โดม', teamA: 'ฟ้า',   teamB: 'เขียว' },
     { station: 'ฐาน 3 · HCEC', teamA: 'เหลือง', teamB: 'ม่วง' },
-    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'ส้ม', teamB: 'ชมพู' },
+    { station: 'ฐาน 4 · หอประชุมหลังเก่า', teamA: 'ส้ม', teamB: 'ชมพู' },
   ]},
   { round: 4, time: '11:30–11:50', matches: [
     { station: 'ฐาน 1 · โดม', teamA: 'ฟ้า',   teamB: 'เหลือง' },
     { station: 'ฐาน 2 · โดม', teamA: 'ส้ม',   teamB: 'น้ำเงิน' },
     { station: 'ฐาน 3 · HCEC', teamA: 'แดง',  teamB: 'ชมพู' },
-    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เขียว', teamB: 'ม่วง' },
+    { station: 'ฐาน 4 · หอประชุมหลังเก่า', teamA: 'เขียว', teamB: 'ม่วง' },
   ]},
 ];
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAS7E41O7b9xkyHOunboZJL_vRhytH15Ft8bz-mfHbMhcNxuglgOM8ShcSxrLzORpN/exec';
@@ -761,7 +771,7 @@ function renderStationStatus() {
     banner.className = 'status-banner live';
     banner.innerHTML = `
       <div class="sb-label">🟢 ตอนนี้ · รอบ ${current.round}</div>
-      <div class="sb-main">${current.station}</div>
+      <div class="sb-main">${current.station}${STATION_ACTIVITY[current.station] ? `<span class="sb-activity">🎯 ${STATION_ACTIVITY[current.station]}</span>` : ''}</div>
       <div class="sb-sub">พบกับทีม ${teamById(current.opp).emoji} ${teamById(current.opp).name}</div>
       <div class="sb-sub" style="margin-top:6px;">${round < 4 ? 'รอบถัดไปจะเปิดให้เห็นเมื่อครูเริ่มรอบต่อไป' : 'รอบสุดท้ายแล้ว รอครูประกาศจบกิจกรรม'}</div>`;
   } else if (round >= 5) {
@@ -784,6 +794,7 @@ function renderStationStatus() {
         <div class="rnd-num">รอบ ${r.round}</div>
         <div class="rnd-info">
           <div class="rnd-station">${r.station}</div>
+          ${STATION_ACTIVITY[r.station] ? `<div class="rnd-activity">🎯 ${STATION_ACTIVITY[r.station]}</div>` : ''}
           <div class="rnd-vs">vs <span style="color:${teamById(r.opp).hex}">${teamById(r.opp).emoji} ${teamById(r.opp).name}</span></div>
         </div>
         <div class="rnd-time">${r.time}</div>
