@@ -195,10 +195,10 @@
     <label>📍 ฐานที่บันทึก</label>
     <select id="select-station">
       <option value="">-- กรุณาเลือกฐาน --</option>
-      <option value="ฐาน 1 · โดม">ฐาน 1 · โดม</option>
-      <option value="ฐาน 2 · โดม">ฐาน 2 · โดม</option>
-      <option value="ฐาน 3 · HCEC">ฐาน 3 · HCEC</option>
-      <option value="ฐาน 4 · สนามแบดมินตัน">ฐาน 4 · สนามแบดมินตัน</option>
+      <option value="ฐาน 1 · โดม">ฐาน 1 · โดม (Pattern Blocks)</option>
+      <option value="ฐาน 2 · โดม">ฐาน 2 · โดม (Math Survivor)</option>
+      <option value="ฐาน 3 · HCEC">ฐาน 3 · HCEC (Human Operation)</option>
+      <option value="ฐาน 4 · หอประชุมหลังเก่า">ฐาน 4 · หอประชุมหลังเก่า (ม่านแม็ท)</option>
     </select>
   </div>
 
@@ -335,31 +335,31 @@ const TEAMS = [
 ];
 
 // ── ตารางหมุนเวียนฐาน: 4 รอบ x 4 ฐาน ไม่ซ้ำคู่แข่งขัน ไม่ซ้ำฐาน (คำนวณไว้ล่วงหน้า) ──
-const STATIONS_ORDER = ['ฐาน 1 · โดม', 'ฐาน 2 · โดม', 'ฐาน 3 · HCEC', 'ฐาน 4 · สนามแบดมินตัน'];
+const STATIONS_ORDER = ['ฐาน 1 · โดม', 'ฐาน 2 · โดม', 'ฐาน 3 · HCEC', 'ฐาน 4 · หอประชุมหลังเก่า'];
 const SCHEDULE = [
   { round: 1, time: '10:30–10:50', matches: [
     { station: 'ฐาน 1 · โดม', teamA: 'เขียว', teamB: 'ชมพู' },
     { station: 'ฐาน 2 · โดม', teamA: 'แดง',   teamB: 'ม่วง' },
     { station: 'ฐาน 3 · HCEC', teamA: 'ฟ้า',   teamB: 'ส้ม' },
-    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เหลือง', teamB: 'น้ำเงิน' },
+    { station: 'ฐาน 4 · หอประชุมหลังเก่า', teamA: 'เหลือง', teamB: 'น้ำเงิน' },
   ]},
   { round: 2, time: '10:50–11:10', matches: [
     { station: 'ฐาน 1 · โดม', teamA: 'ส้ม',   teamB: 'ม่วง' },
     { station: 'ฐาน 2 · โดม', teamA: 'เหลือง', teamB: 'ชมพู' },
     { station: 'ฐาน 3 · HCEC', teamA: 'เขียว', teamB: 'น้ำเงิน' },
-    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'แดง', teamB: 'ฟ้า' },
+    { station: 'ฐาน 4 · หอประชุมหลังเก่า', teamA: 'แดง', teamB: 'ฟ้า' },
   ]},
   { round: 3, time: '11:10–11:30', matches: [
     { station: 'ฐาน 1 · โดม', teamA: 'แดง',   teamB: 'น้ำเงิน' },
     { station: 'ฐาน 2 · โดม', teamA: 'ฟ้า',   teamB: 'เขียว' },
     { station: 'ฐาน 3 · HCEC', teamA: 'เหลือง', teamB: 'ม่วง' },
-    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'ส้ม', teamB: 'ชมพู' },
+    { station: 'ฐาน 4 · หอประชุมหลังเก่า', teamA: 'ส้ม', teamB: 'ชมพู' },
   ]},
   { round: 4, time: '11:30–11:50', matches: [
     { station: 'ฐาน 1 · โดม', teamA: 'ฟ้า',   teamB: 'เหลือง' },
     { station: 'ฐาน 2 · โดม', teamA: 'ส้ม',   teamB: 'น้ำเงิน' },
     { station: 'ฐาน 3 · HCEC', teamA: 'แดง',  teamB: 'ชมพู' },
-    { station: 'ฐาน 4 · สนามแบดมินตัน', teamA: 'เขียว', teamB: 'ม่วง' },
+    { station: 'ฐาน 4 · หอประชุมหลังเก่า', teamA: 'เขียว', teamB: 'ม่วง' },
   ]},
 ];
 
