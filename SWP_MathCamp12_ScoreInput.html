@@ -302,7 +302,7 @@
       </div>
     </div>
     <label style="margin-top:16px;">มูลค่าคะแนนพิเศษ (บาท)</label>
-    <input type="number" id="bonus-value" placeholder="เช่น 50000" value="50000" />
+    <input type="number" id="bonus-value" placeholder="เช่น 5000" value="5000" />
     <div style="margin-top:16px;">
       <button class="btn btn-success" onclick="confirmBonus()">⭐ บันทึกคะแนนพิเศษ</button>
     </div>
@@ -870,7 +870,7 @@ function confirmBonus() {
   showToast(`⭐ บันทึกแล้ว! ${teamName} ได้รับโบนัส ${assetLabel(selectedBonusType)} มูลค่า ${fmtCurrency(value)}`);
 
   document.getElementById('bonus-select-team').value = '';
-  document.getElementById('bonus-value').value = '50000';
+  document.getElementById('bonus-value').value = '5000';
   selectedBonusType = null;
   document.querySelectorAll('#bonus-options .reward-option').forEach(el => el.classList.remove('selected'));
 
