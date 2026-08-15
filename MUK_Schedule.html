@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กำหนดการ · ค่ายบูรณาการคณิต-อังกฤษ มุกดาหาร</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0d0d;
+    color: #fff;
+    font-family: 'Sarabun', sans-serif;
+    padding: 30px 20px 60px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    margin-bottom: 32px;
+  }
+
+  .time-badge {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .time-badge .time {
+    display: inline-block;
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 12px 32px;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+
+  .time-badge .label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 4px;
+    letter-spacing: 2px;
+  }
+
+  .timeline {
+    max-width: 680px;
+    margin: 0 auto;
+    position: relative;
+    padding-left: 28px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #e63946, #457b9d, #e9c46a, #a8dadc, #f4a261, #2a9d8f, #e76f51);
+  }
+
+  .tl-item {
+    position: relative;
+    margin-bottom: 22px;
+    background: #111;
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+
+  .tl-dot {
+    position: absolute;
+    left: -24px;
+    top: 20px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid #0d0d0d;
+  }
+
+  .tl-time {
+    font-size: 0.75rem;
+    color: #666;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .tl-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .tl-desc {
+    font-size: 0.88rem;
+    color: #aaa;
+    line-height: 1.7;
+  }
+
+  .tl-badge {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .act-list {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .act-tag {
+    display: inline-block;
+    background: #1a1a1a;
+    color: #ddd;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 0.82rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>ค่ายบูรณาการคณิตศาสตร์-ภาษาอังกฤษ</h1>
+<div class="subtitle">โรงเรียนมุกดาหาร · 29 สิงหาคม 2569 · ม.1 40 คน + ม.4 40 คน รวม 80 คน</div>
+
+<div class="time-badge">
+  <div class="time">08:00 — 16:30</div>
+  <div class="label">กำหนดการกิจกรรม</div>
+</div>
+
+<div class="timeline">
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#888;"></div>
+    <div class="tl-time">08:00 — 08:30</div>
+    <div class="tl-title" style="color:#aaa;">ลงทะเบียน</div>
+    <div class="tl-desc">รับนักเรียน ม.1 และ ม.4 เข้าค่าย</div>
+    <span class="tl-badge" style="background:#88888822;color:#888;">80 คน · 30 นาที</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#888;"></div>
+    <div class="tl-time">08:30 — 09:00</div>
+    <div class="tl-title" style="color:#aaa;">พิธีเปิด</div>
+    <div class="tl-desc">—</div>
+    <span class="tl-badge" style="background:#88888822;color:#888;">80 คน · 30 นาที</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#888;"></div>
+    <div class="tl-time">09:00 — 09:45</div>
+    <div class="tl-title" style="color:#aaa;">นันทนาการ ละลายพฤติกรรม</div>
+    <div class="tl-desc">—</div>
+    <span class="tl-badge" style="background:#88888822;color:#888;">80 คน · 45 นาที</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#555;"></div>
+    <div class="tl-time">09:45 — 10:00</div>
+    <div class="tl-title" style="color:#777;">☕ พักเบรก</div>
+    <div class="tl-desc">—</div>
+    <span class="tl-badge" style="background:#55555522;color:#666;">15 นาที</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#e63946;"></div>
+    <div class="tl-time">10:00 — 12:00</div>
+    <div class="tl-title" style="color:#e63946;">กิจกรรมฐาน 4 ฐาน (บูรณาการคณิต + อังกฤษ)</div>
+    <div class="tl-desc">
+      เล่นรวมกันทั้ง 80 คน
+      <div class="act-list">
+        <span class="act-tag">ฐานที่ 1</span>
+        <span class="act-tag">ฐานที่ 2</span>
+        <span class="act-tag">ฐานที่ 3</span>
+        <span class="act-tag">ฐานที่ 4</span>
+      </div>
+    </div>
+    <span class="tl-badge" style="background:#e6394622;color:#e63946;">80 คน · 2 ชม.</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#555;"></div>
+    <div class="tl-time">12:00 — 13:00</div>
+    <div class="tl-title" style="color:#777;">🍱 พักรับประทานอาหารกลางวัน</div>
+    <div class="tl-desc">—</div>
+    <span class="tl-badge" style="background:#55555522;color:#666;">60 นาที</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#ffd166;"></div>
+    <div class="tl-time">13:00 — 13:30</div>
+    <div class="tl-title" style="color:#ffd166;">⚡ Boost Energy</div>
+    <div class="tl-desc">นันทนาการปลุกพลังก่อนเข้ากิจกรรมภาคบ่าย</div>
+    <span class="tl-badge" style="background:#ffd16622;color:#c9950b;">80 คน · 30 นาที</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#f4a261;"></div>
+    <div class="tl-time">13:30 — 14:30</div>
+    <div class="tl-title" style="color:#f4a261;">กิจกรรมเซลฟี่ (บูรณาการคณิต + อังกฤษ)</div>
+    <div class="tl-desc">—</div>
+    <span class="tl-badge" style="background:#f4a26122;color:#f4a261;">80 คน · 60 นาที</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#2a9d8f;"></div>
+    <div class="tl-time">14:30 — 15:30</div>
+    <div class="tl-title" style="color:#2a9d8f;">กิจกรรมบูรณาการ STEM</div>
+    <div class="tl-desc">—</div>
+    <span class="tl-badge" style="background:#2a9d8f22;color:#2a9d8f;">80 คน · 60 นาที</span>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot" style="background:#e76f51;"></div>
+    <div class="tl-time">15:30 — 16:30</div>
+    <div class="tl-title" style="color:#e76f51;">นันทนาการและสรุปกิจกรรม</div>
+    <div class="tl-desc">ปิดค่าย มอบรางวัล/เกียรติบัตร</div>
+    <span class="tl-badge" style="background:#e76f5122;color:#e76f51;">80 คน · 60 นาที</span>
+  </div>
+
+</div>
+
+</body>
+</html>
