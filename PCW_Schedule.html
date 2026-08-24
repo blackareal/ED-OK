@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กำหนดการ · ค่ายบูรณาการวิทย์-คณิต-เทคโนโลยี พรเจริญ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0d0d;
+    color: #f0f0f0;
+    font-family: 'Sarabun', sans-serif;
+    padding: 36px 40px 60px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #999;
+    font-size: 0.92rem;
+    margin-bottom: 28px;
+  }
+
+  .day-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 26px auto 10px;
+    max-width: 760px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #333;
+  }
+
+  table.sched {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    border-collapse: collapse;
+  }
+
+  table.sched tr { border-bottom: 1px solid #222; }
+  table.sched tr:last-child { border-bottom: none; }
+
+  table.sched td {
+    padding: 11px 10px;
+    vertical-align: top;
+  }
+
+  td.time-col {
+    width: 108px;
+    font-weight: 700;
+    font-size: 0.90rem;
+    color: #eee;
+    white-space: nowrap;
+    border-left: 4px solid #444;
+    padding-left: 14px;
+  }
+
+  td.act-col {
+    padding-left: 18px;
+  }
+
+  .act-title {
+    font-weight: 700;
+    font-size: 0.96rem;
+    color: #eee;
+    margin-bottom: 2px;
+  }
+
+  .act-desc {
+    font-size: 0.83rem;
+    color: #999;
+    line-height: 1.5;
+  }
+
+  .act-meta {
+    font-size: 0.76rem;
+    color: #777;
+    margin-top: 3px;
+  }
+
+  tr.c-gray   td.time-col { border-left-color: #666; }
+  tr.c-blue   td.time-col { border-left-color: #457b9d; }
+  tr.c-green  td.time-col { border-left-color: #2a9d8f; }
+  tr.c-purple td.time-col { border-left-color: #6a4c93; }
+  tr.c-orange td.time-col { border-left-color: #f4a261; }
+  tr.c-red    td.time-col { border-left-color: #e63946; }
+  tr.c-indigo td.time-col { border-left-color: #3a3aa0; }
+  tr.c-coral  td.time-col { border-left-color: #e76f51; }
+
+  tr.c-blue   .act-title { color: #6fa8c8; }
+  tr.c-green  .act-title { color: #2a9d8f; }
+  tr.c-purple .act-title { color: #9b7fc7; }
+  tr.c-orange .act-title { color: #f4a261; }
+  tr.c-red    .act-title { color: #e63946; }
+  tr.c-indigo .act-title { color: #7a7ae0; }
+  tr.c-coral  .act-title { color: #e76f51; }
+</style>
+</head>
+<body>
+
+<h1>ค่ายบูรณาการวิทยาศาสตร์ คณิตศาสตร์ เทคโนโลยี</h1>
+<div class="subtitle">โรงเรียนพรเจริญวิทยา · ห้องเรียนพิเศษ 64 คน · 3–5 ตุลาคม 2569</div>
+
+<div class="day-title">วันเสาร์ที่ 3 ตุลาคม 2569 — เดินทาง / เปิดค่าย / กลุ่มสัมพันธ์ / ดูดาว</div>
+<table class="sched">
+  <tr class="c-gray">
+    <td class="time-col">07:00–08:30</td>
+    <td class="act-col">
+      <div class="act-title">เดินทางจากโรงเรียนถึงสถานที่ค่าย</div>
+      <div class="act-meta">64 คน · 90 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">08:30–09:00</td>
+    <td class="act-col">
+      <div class="act-title">พิธีเปิดค่าย</div>
+      <div class="act-meta">64 คน · 30 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-blue">
+    <td class="time-col">09:00–10:00</td>
+    <td class="act-col">
+      <div class="act-title">นันทนาการ ละลายพฤติกรรม แบ่งกลุ่ม สร้างป้ายทีม</div>
+      <div class="act-meta">64 คน · 60 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-green">
+    <td class="time-col">10:00–12:00</td>
+    <td class="act-col">
+      <div class="act-title">ฐานกิจกรรมบูรณาการ วิทย์-คณิต-เทคโนฯ รอบที่ 1</div>
+      <div class="act-desc">เน้นคิดวิเคราะห์และแก้ปัญหาร่วมกันเป็นทีม</div>
+      <div class="act-meta">64 คน · 2 ชม.</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">12:00–13:00</td>
+    <td class="act-col">
+      <div class="act-title">พักรับประทานอาหารกลางวัน</div>
+      <div class="act-meta">60 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-green">
+    <td class="time-col">13:00–15:00</td>
+    <td class="act-col">
+      <div class="act-title">ฐานกิจกรรมบูรณาการ วิทย์-คณิต-เทคโนฯ รอบที่ 2</div>
+      <div class="act-desc">สลับฐาน ต่อเนื่องจากช่วงเช้า</div>
+      <div class="act-meta">64 คน · 2 ชม.</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">15:00–15:30</td>
+    <td class="act-col">
+      <div class="act-title">พักเบรก</div>
+      <div class="act-meta">30 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-purple">
+    <td class="time-col">15:30–17:00</td>
+    <td class="act-col">
+      <div class="act-title">กิจกรรมท้าทายทีม ฝึกภาวะผู้นำและความกล้าแสดงออก</div>
+      <div class="act-meta">64 คน · 90 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">17:00–18:30</td>
+    <td class="act-col">
+      <div class="act-title">อาบน้ำ พักผ่อน รับประทานอาหารเย็น</div>
+      <div class="act-meta">90 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-indigo">
+    <td class="time-col">18:30–20:00</td>
+    <td class="act-col">
+      <div class="act-title">กิจกรรมกลุ่มสัมพันธ์ยามค่ำ (Night Game)</div>
+      <div class="act-meta">64 คน · 90 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-indigo">
+    <td class="time-col">20:00–21:00</td>
+    <td class="act-col">
+      <div class="act-title">ดูดาว (Stargazing)</div>
+      <div class="act-desc">แนะนำกลุ่มดาวและปรากฏการณ์ท้องฟ้าเบื้องต้น เชื่อมโยงวิทยาศาสตร์ดาราศาสตร์</div>
+      <div class="act-meta">64 คน · 60 นาที · ขึ้นกับสภาพอากาศ</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">21:00</td>
+    <td class="act-col">
+      <div class="act-title">สรุปกิจกรรม สวดมนต์ ไหว้พระ เข้านอน</div>
+    </td>
+  </tr>
+</table>
+
+<div class="day-title">วันอาทิตย์ที่ 4 ตุลาคม 2569 — เดินป่าศึกษาธรรมชาติ / กีฬาสี / นำเสนอผลงาน</div>
+<table class="sched">
+  <tr class="c-gray">
+    <td class="time-col">06:00–07:00</td>
+    <td class="act-col">
+      <div class="act-title">ตื่นนอน ทำภารกิจส่วนตัว</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">07:00–08:00</td>
+    <td class="act-col">
+      <div class="act-title">รับประทานอาหารเช้า</div>
+    </td>
+  </tr>
+  <tr class="c-green">
+    <td class="time-col">08:00–10:00</td>
+    <td class="act-col">
+      <div class="act-title">เดินป่าศึกษาพันธุ์ไม้และสัตว์ป่า</div>
+      <div class="act-desc">ร่วมกับเจ้าหน้าที่ศูนย์ฯ</div>
+      <div class="act-meta">64 คน · 2 ชม.</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">10:00–10:30</td>
+    <td class="act-col">
+      <div class="act-title">พักเบรก</div>
+      <div class="act-meta">30 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-green">
+    <td class="time-col">10:30–12:00</td>
+    <td class="act-col">
+      <div class="act-title">ฐานกิจกรรมบูรณาการ ต่อยอดจากการเดินป่า</div>
+      <div class="act-desc">เชื่อมโยงข้อมูลที่สำรวจมาสู่โจทย์วิทย์-คณิต-เทคโนฯ</div>
+      <div class="act-meta">64 คน · 90 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">12:00–13:00</td>
+    <td class="act-col">
+      <div class="act-title">พักรับประทานอาหารกลางวัน</div>
+      <div class="act-meta">60 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-orange">
+    <td class="time-col">13:00–15:00</td>
+    <td class="act-col">
+      <div class="act-title">กีฬาสีชาวค่าย / เกมท้าทายทีม</div>
+      <div class="act-desc">ฝึกภาวะผู้นำและความกล้าแสดงออก</div>
+      <div class="act-meta">64 คน · 2 ชม.</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">15:00–15:30</td>
+    <td class="act-col">
+      <div class="act-title">พักเบรก</div>
+      <div class="act-meta">30 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-purple">
+    <td class="time-col">15:30–17:00</td>
+    <td class="act-col">
+      <div class="act-title">นำเสนอผลงาน STEM (Project Pitch) แข่งขันทีม</div>
+      <div class="act-meta">64 คน · 90 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">17:00–18:30</td>
+    <td class="act-col">
+      <div class="act-title">อาบน้ำ พักผ่อน รับประทานอาหารเย็น</div>
+      <div class="act-meta">90 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-coral">
+    <td class="time-col">18:30–20:30</td>
+    <td class="act-col">
+      <div class="act-title">รอบกองไฟ การแสดงของแต่ละทีม (Stage Show)</div>
+      <div class="act-desc">ฝึกความกล้าแสดงออก</div>
+      <div class="act-meta">64 คน · 2 ชม.</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">20:30–21:00</td>
+    <td class="act-col">
+      <div class="act-title">สรุปกิจกรรม มอบรางวัล</div>
+      <div class="act-meta">30 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">21:00</td>
+    <td class="act-col">
+      <div class="act-title">สวดมนต์ ไหว้พระ เข้านอน</div>
+    </td>
+  </tr>
+</table>
+
+<div class="day-title">วันจันทร์ที่ 5 ตุลาคม 2569 — สรุปบทเรียน / ปิดค่าย / เดินทางกลับ</div>
+<table class="sched">
+  <tr class="c-gray">
+    <td class="time-col">06:30–07:30</td>
+    <td class="act-col">
+      <div class="act-title">ตื่นนอน ทำภารกิจส่วนตัว เก็บสัมภาระ</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">07:30–08:30</td>
+    <td class="act-col">
+      <div class="act-title">รับประทานอาหารเช้า</div>
+    </td>
+  </tr>
+  <tr class="c-blue">
+    <td class="time-col">08:30–09:30</td>
+    <td class="act-col">
+      <div class="act-title">ถอดบทเรียน สรุปการเรียนรู้ตลอดค่าย</div>
+      <div class="act-meta">64 คน · 60 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">09:30–10:00</td>
+    <td class="act-col">
+      <div class="act-title">พิธีปิดค่าย มอบเกียรติบัตร</div>
+      <div class="act-meta">30 นาที</div>
+    </td>
+  </tr>
+  <tr class="c-gray">
+    <td class="time-col">10:00</td>
+    <td class="act-col">
+      <div class="act-title">เดินทางกลับโรงเรียน</div>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
