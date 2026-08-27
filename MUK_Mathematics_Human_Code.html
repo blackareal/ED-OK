@@ -179,12 +179,12 @@ html, body {
   <div id="sb-rows"></div>
 </div>
 <div id="nav">
-  <button class="nav-btn" id="prev-btn" onclick="go(-1)">← ก่อนหน้า</button>
+  <button class="nav-btn" id="prev-btn" onclick="go(-1)">← Prev</button>
   <div class="nav-info">
     <span id="sl-num"></span>
     <button class="fs-btn" onclick="fs()">⛶ Full</button>
   </div>
-  <button class="nav-btn" id="next-btn" onclick="go(1)">ถัดไป →</button>
+  <button class="nav-btn" id="next-btn" onclick="go(1)">Next →</button>
 </div>
 
 <script>
@@ -199,10 +199,10 @@ const TIERS = {
 // คะแนนในเกมนี้เป็นสกอร์บอร์ดของตัวเองในหน้านี้ (ไม่ผูกกับ Google Sheet) — ครูดูผลสรุป
 // ท้ายเกมแล้วนำไปกรอกอันดับในแท็บ "บันทึกผลการแข่งขัน" ของ MUK_ScoreInput.html เอง
 const GROUPS = [
-  {name:'ทีมสีม่วง',  short:'ม่วง',  color:'#a855f7'},
-  {name:'ทีมสีฟ้า',   short:'ฟ้า',   color:'#0ea5e9'},
-  {name:'ทีมสีชมพู',  short:'ชมพู',  color:'#ec4899'},
-  {name:'ทีมสีแดง',   short:'แดง',   color:'#ef4444'},
+  {name:'VIOLET TEAM',  short:'VIOLET',  color:'#a855f7'},
+  {name:'BLUE TEAM',   short:'BLUE',   color:'#0ea5e9'},
+  {name:'PINK TEAM',  short:'PINK',  color:'#ec4899'},
+  {name:'RED TEAM',   short:'RED',   color:'#ef4444'},
 ];
 // 1 point per correct answer (flat scoring)
 
@@ -222,54 +222,54 @@ const SLIDES = [
   // ข้อ 1-5 (ม.1, ก่อนพัก) ง่าย→ปานกลาง · ข้อ 6-12 (ม.4, หลังพัก) ปานกลาง→ยาก
   {id:'i1',type:'intro',num:1},
   {id:'q1',type:'q',num:1,t:45,lines:['DIFFERENCE: 12 &#8722; 7 = ?']},
-  {id:'a1',type:'ans',qid:'q1',num:1,digits:['5'],ans:'5',formula:'12 &#8722; 7 = 5  (ใช้ 5 คน)'},
+  {id:'a1',type:'ans',qid:'q1',num:1,digits:['5'],ans:'5',formula:'12 &#8722; 7 = 5  (uses 5 people)'},
 
   {id:'i2',type:'intro',num:2},
   {id:'q2',type:'q',num:2,t:45,lines:['SUM: 4 + 5 = ?']},
-  {id:'a2',type:'ans',qid:'q2',num:2,digits:['9'],ans:'9',formula:'4 + 5 = 9  (ใช้ 6 คน)'},
+  {id:'a2',type:'ans',qid:'q2',num:2,digits:['9'],ans:'9',formula:'4 + 5 = 9  (uses 6 people)'},
 
   {id:'i3',type:'intro',num:3},
   {id:'q3',type:'q',num:3,t:45,lines:['PRODUCT: 2 &#215; 4 = ?']},
-  {id:'a3',type:'ans',qid:'q3',num:3,digits:['8'],ans:'8',formula:'2 &#215; 4 = 8  (ใช้ 7 คน)'},
+  {id:'a3',type:'ans',qid:'q3',num:3,digits:['8'],ans:'8',formula:'2 &#215; 4 = 8  (uses 7 people)'},
 
   {id:'i4',type:'intro',num:4},
   {id:'q4',type:'q',num:4,t:60,lines:['PERCENT: 20% &#215; 80 = ?']},
-  {id:'a4',type:'ans',qid:'q4',num:4,digits:['1','6'],ans:'16',formula:'20% ของ 80 = 0.20 &#215; 80 = 16  (ใช้ 8 คน)'},
+  {id:'a4',type:'ans',qid:'q4',num:4,digits:['1','6'],ans:'16',formula:'20% of 80 = 0.20 &#215; 80 = 16  (uses 8 people)'},
 
   {id:'i5',type:'intro',num:5},
-  {id:'q5',type:'q',num:5,t:60,lines:['AVERAGE: 12, 18, 24, 30, 36','ค่าเฉลี่ยเลขคณิตเท่ากับเท่าไร?']},
-  {id:'a5',type:'ans',qid:'q5',num:5,digits:['2','4'],ans:'24',formula:'(12+18+24+30+36) &#247; 5 = 120 &#247; 5 = 24  (ใช้ 9 คน)'},
+  {id:'q5',type:'q',num:5,t:60,lines:['AVERAGE: 12, 18, 24, 30, 36','What is the arithmetic mean?']},
+  {id:'a5',type:'ans',qid:'q5',num:5,digits:['2','4'],ans:'24',formula:'(12+18+24+30+36) &#247; 5 = 120 &#247; 5 = 24  (uses 9 people)'},
 
-  // พักกลางเกม
+  // Halftime break
   {id:'timeout',type:'timeout',t:90},
 
   {id:'i6',type:'intro',num:6},
   {id:'q6',type:'q',num:6,t:45,lines:['EXPONENT: 8&#178; = ?']},
-  {id:'a6',type:'ans',qid:'q6',num:6,digits:['6','4'],ans:'64',formula:'8&#178; = 8 &#215; 8 = 64  (ใช้ 10 คน)'},
+  {id:'a6',type:'ans',qid:'q6',num:6,digits:['6','4'],ans:'64',formula:'8&#178; = 8 &#215; 8 = 64  (uses 10 people)'},
 
   {id:'i7',type:'intro',num:7},
-  {id:'q7',type:'q',num:7,t:60,lines:['EQUATION: ถ้า 2x + 5 = 131 จงหาค่า x']},
-  {id:'a7',type:'ans',qid:'q7',num:7,digits:['6','3'],ans:'63',formula:'2x + 5 = 131 &#8594; 2x = 126 &#8594; x = 63  (ใช้ 11 คน)'},
+  {id:'q7',type:'q',num:7,t:60,lines:['EQUATION: If 2x + 5 = 131, find x']},
+  {id:'a7',type:'ans',qid:'q7',num:7,digits:['6','3'],ans:'63',formula:'2x + 5 = 131 &#8594; 2x = 126 &#8594; x = 63  (uses 11 people)'},
 
   {id:'i8',type:'intro',num:8},
-  {id:'q8',type:'q',num:8,t:60,lines:['DISCOUNT: ราคาสินค้า 40 บาท','ลดราคา 5% เหลือกี่บาท?']},
-  {id:'a8',type:'ans',qid:'q8',num:8,digits:['3','8'],ans:'38',formula:'ส่วนลด = 5% &#215; 40 = 2 &#8594; 40 &#8722; 2 = 38 บาท  (ใช้ 12 คน)'},
+  {id:'q8',type:'q',num:8,t:60,lines:['DISCOUNT: An item costs 40 baht.','After a 5% discount, what is the price?']},
+  {id:'a8',type:'ans',qid:'q8',num:8,digits:['3','8'],ans:'38',formula:'Discount = 5% &#215; 40 = 2 &#8594; 40 &#8722; 2 = 38 baht  (uses 12 people)'},
 
   {id:'i9',type:'intro',num:9},
-  {id:'q9',type:'q',num:9,t:60,lines:['EQUATION: ถ้า 3x &#8722; 4 = 200 จงหาค่า x']},
-  {id:'a9',type:'ans',qid:'q9',num:9,digits:['6','8'],ans:'68',formula:'3x &#8722; 4 = 200 &#8594; 3x = 204 &#8594; x = 68  (ใช้ 13 คน)'},
+  {id:'q9',type:'q',num:9,t:60,lines:['EQUATION: If 3x &#8722; 4 = 200, find x']},
+  {id:'a9',type:'ans',qid:'q9',num:9,digits:['6','8'],ans:'68',formula:'3x &#8722; 4 = 200 &#8594; 3x = 204 &#8594; x = 68  (uses 13 people)'},
 
   {id:'i10',type:'intro',num:10},
   {id:'q10',type:'q',num:10,t:45,lines:['PRODUCT: 8 &#215; 11 = ?']},
-  {id:'a10',type:'ans',qid:'q10',num:10,digits:['8','8'],ans:'88',formula:'8 &#215; 11 = 88  (ใช้ 14 คน)'},
+  {id:'a10',type:'ans',qid:'q10',num:10,digits:['8','8'],ans:'88',formula:'8 &#215; 11 = 88  (uses 14 people)'},
 
   {id:'i11',type:'intro',num:11},
   {id:'q11',type:'q',num:11,t:60,lines:['SQUARE: 15&#178; = ?']},
-  {id:'a11',type:'ans',qid:'q11',num:11,digits:['2','2','5'],ans:'225',formula:'15&#178; = 15 &#215; 15 = 225  (ใช้ 15 คน)'},
+  {id:'a11',type:'ans',qid:'q11',num:11,digits:['2','2','5'],ans:'225',formula:'15&#178; = 15 &#215; 15 = 225  (uses 15 people)'},
 
   {id:'i12',type:'intro',num:12},
-  {id:'q12',type:'q',num:12,t:90,lines:['SYSTEM OF EQUATIONS','x + y = 350 และ x &#8722; y = 90','จงหาค่า x']},
-  {id:'a12',type:'ans',qid:'q12',num:12,digits:['2','2','0'],ans:'220',formula:'บวกสองสมการ: 2x = 440 &#8594; x = 220  (ข้อสุดท้าย! ทั้งกลุ่มรวมพลังกัน — ใช้ 16 คน)'},
+  {id:'q12',type:'q',num:12,t:90,lines:['SYSTEM OF EQUATIONS','x + y = 350 and x &#8722; y = 90','Find x']},
+  {id:'a12',type:'ans',qid:'q12',num:12,digits:['2','2','0'],ans:'220',formula:'Add both equations: 2x = 440 &#8594; x = 220  (Final question! The whole team joins forces — uses 16 people)'},
 
 
   {id:'final',type:'final'},
@@ -329,10 +329,10 @@ function buildSlides() {
       inner=`<div style="text-align:center">
         <div style="font-size:clamp(48px,9vw,108px);line-height:1;margin-bottom:12px">🧮</div>
         <div class="title-main">Mathematics<br>Human Code</div>
-        <div style="font-size:clamp(14px,2vw,22px);color:var(--gray);margin-top:10px">When Words Meet Numbers · ม.1 &amp; ม.4</div>
-        <div style="font-size:clamp(12px,1.6vw,18px);color:#3a3a6a;margin-top:6px">วันเสาร์ที่ 29 สิงหาคม 2569 · โรงเรียนมุกดาหาร</div>
+        <div style="font-size:clamp(14px,2vw,22px);color:var(--gray);margin-top:10px">When Words Meet Numbers · M.1 &amp; M.4</div>
+        <div style="font-size:clamp(12px,1.6vw,18px);color:#3a3a6a;margin-top:6px">Saturday, August 29, 2026 · Mukdahan School</div>
         <div style="margin-top:20px;display:flex;gap:22px;justify-content:center;flex-wrap:wrap;color:#3a3a5a;font-size:clamp(12px,1.7vw,17px)">
-          <span>👥 4 ทีมสี</span><span>🏆 ~20 คน/ทีม</span><span>⏱️ 30 นาที</span><span>📝 12 ข้อ</span>
+          <span>👥 4 Teams</span><span>🏆 ~20 students/team</span><span>⏱️ 30 minutes</span><span>📝 12 Questions</span>
         </div>
         <div style="margin-top:34px;color:#2a2a4a;font-size:12px;letter-spacing:2px">PRESS SPACE · → · ENTER TO START</div>
       </div>`;
@@ -341,27 +341,27 @@ function buildSlides() {
     else if (s.type==='seg-explain') {
       cls='bg-explain';
       inner=`<div style="text-align:center;width:100%">
-        <div class="tag tag-orange">ทำไมถึงเรียกว่า 7-Segment?</div>
+        <div class="tag tag-orange">Why is it called 7-Segment?</div>
         <div style="font-size:clamp(22px,3.8vw,46px);font-weight:900;margin-bottom:16px">
-          มี <span style="color:var(--orange)">7</span> ขีด  ·  7 Segments
+          <span style="color:var(--orange)">7</span> Segments
         </div>
         <div class="explain-layout">
           <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
             ${labeledDigitSVG()}
-            <div style="color:var(--gray);font-size:clamp(11px,1.4vw,14px)">เลข 8 = ทุก segment เปิด (ON)</div>
+            <div style="color:var(--gray);font-size:clamp(11px,1.4vw,14px)">Digit 8 = every segment ON</div>
           </div>
           <div class="seg-legend">
-            <div style="font-size:clamp(12px,1.6vw,16px);color:var(--lgray);margin-bottom:6px">แต่ละ segment มีชื่อ a – g</div>
-            <div class="seg-legend-row"><div class="seg-chip">a</div><span class="seg-pos">บน (Top)</span></div>
-            <div class="seg-legend-row"><div class="seg-chip">b</div><span class="seg-pos">บนขวา (Top Right)</span></div>
-            <div class="seg-legend-row"><div class="seg-chip">c</div><span class="seg-pos">ล่างขวา (Bottom Right)</span></div>
-            <div class="seg-legend-row"><div class="seg-chip">d</div><span class="seg-pos">ล่าง (Bottom)</span></div>
-            <div class="seg-legend-row"><div class="seg-chip">e</div><span class="seg-pos">ล่างซ้าย (Bottom Left)</span></div>
-            <div class="seg-legend-row"><div class="seg-chip">f</div><span class="seg-pos">บนซ้าย (Top Left)</span></div>
-            <div class="seg-legend-row"><div class="seg-chip">g</div><span class="seg-pos">กลาง (Middle)</span></div>
+            <div style="font-size:clamp(12px,1.6vw,16px);color:var(--lgray);margin-bottom:6px">Each segment is named a – g</div>
+            <div class="seg-legend-row"><div class="seg-chip">a</div><span class="seg-pos">Top</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">b</div><span class="seg-pos">Top Right</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">c</div><span class="seg-pos">Bottom Right</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">d</div><span class="seg-pos">Bottom</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">e</div><span class="seg-pos">Bottom Left</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">f</div><span class="seg-pos">Top Left</span></div>
+            <div class="seg-legend-row"><div class="seg-chip">g</div><span class="seg-pos">Middle</span></div>
             <div style="margin-top:10px;padding:10px 16px;background:rgba(255,255,255,.05);border-radius:8px;font-size:clamp(12px,1.5vw,15px);color:var(--lgray);border:1px solid rgba(255,255,255,.08)">
-              แต่ละ segment เปิด / ปิดได้<br>
-              2<sup>7</sup> = 128 รูปแบบ → ใช้ 10 รูปแบบสำหรับ 0–9
+              Each segment can be ON or OFF<br>
+              2<sup>7</sup> = 128 combinations → 10 are used for digits 0–9
             </div>
           </div>
         </div>
@@ -371,13 +371,13 @@ function buildSlides() {
     else if (s.type==='rules') {
       cls='bg-rules';
       inner=`<div style="text-align:center;width:100%">
-        <div class="tag tag-cyan">ตัวเลข 0 – 9</div>
-        <div style="font-size:clamp(20px,3.5vw,44px);font-weight:900;margin:6px 0 3px">เลขแต่ละตัวมีหน้าตาอย่างนี้</div>
-        <div style="color:var(--gray);font-size:clamp(11px,1.5vw,16px);margin-bottom:16px">ใช้ร่างกายต่อกันเป็น segment</div>
+        <div class="tag tag-cyan">Digits 0 – 9</div>
+        <div style="font-size:clamp(20px,3.5vw,44px);font-weight:900;margin:6px 0 3px">Here's what each digit looks like</div>
+        <div style="color:var(--gray);font-size:clamp(11px,1.5vw,16px);margin-bottom:16px">Form each segment with your team's bodies</div>
         <div class="digit-grid">${'0123456789'.split('').map(d=>`<div class="digit-item">${segSVG(d,64)}<span class="digit-num">${d}</span></div>`).join('')}</div>
         <div style="margin-top:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 20px;max-width:640px;margin-left:auto;margin-right:auto;font-size:clamp(11px,1.5vw,15px);color:var(--lgray);line-height:2">
-          💡 ตอบ 2 หลัก → แบ่ง 2 กลุ่มย่อย ต่อพร้อมกัน &nbsp;|&nbsp;
-          3 กลุ่มแรก ได้ <span style="color:gold">🥇+3</span> <span style="color:silver">🥈+2</span> <span style="color:#cd7f32">🥉+1</span>
+          💡 2-digit answer → split into 2 subgroups, form them at the same time &nbsp;|&nbsp;
+          Every team that answers correctly gets <span style="color:var(--green)">+1 point</span>
         </div>
       </div>`;
     }
@@ -385,17 +385,17 @@ function buildSlides() {
     else if (s.type==='demo-intro') {
       cls='bg-explain';
       inner=`<div style="text-align:center">
-        <div class="tag tag-yellow">🎬 สาธิต</div>
-        <div style="font-size:clamp(44px,8vw,120px);font-weight:900;line-height:1;color:var(--yellow);text-shadow:0 0 40px rgba(255,215,0,.45)">ตัวอย่าง</div>
+        <div class="tag tag-yellow">🎬 DEMO</div>
+        <div style="font-size:clamp(44px,8vw,120px);font-weight:900;line-height:1;color:var(--yellow);text-shadow:0 0 40px rgba(255,215,0,.45)">EXAMPLE</div>
         <div style="font-size:clamp(16px,2.4vw,28px);font-weight:700;color:rgba(255,255,255,.8);margin-top:14px">Mathematics Human Code</div>
-        <div style="color:#444;font-size:clamp(12px,1.5vw,16px);margin-top:18px;letter-spacing:3px">— ดูให้ดี ก่อนเริ่มแข่งจริง —</div>
+        <div style="color:#444;font-size:clamp(12px,1.5vw,16px);margin-top:18px;letter-spacing:3px">— WATCH CLOSELY BEFORE THE REAL GAME —</div>
       </div>`;
     }
 
     else if (s.type==='demo-q') {
       cls='bg-q';
-      inner=`<div class="pose-badge pose-t1" style="background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.4);color:var(--yellow)">🎬 ตัวอย่าง · สต๊าฟสาธิต</div>
-        <div class="tag tag-yellow">ตัวอย่าง</div>
+      inner=`<div class="pose-badge pose-t1" style="background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.4);color:var(--yellow)">🎬 Example · Staff Demo</div>
+        <div class="tag tag-yellow">EXAMPLE</div>
         <div class="q-text">${s.lines[0]}</div>
         ${(s.lines.slice(1)||[]).map(l=>`<div class="q-sub">${l}</div>`).join('')}
         <div class="timer-wrap">
@@ -406,10 +406,10 @@ function buildSlides() {
               <span class="time-preset" id="tp-demo-q">${fmt(s.t)}</span>
               <button class="btn-adj" onclick="adjT('demo-q',30)">+</button>
             </div>
-            <button class="btn btn-start" id="tb-demo-q" onclick="tAction('demo-q',${s.t})">▶ เริ่ม</button>
-            <button class="btn btn-reset" onclick="tReset('demo-q',${s.t})">↺ รีเซต</button>
+            <button class="btn btn-start" id="tb-demo-q" onclick="tAction('demo-q',${s.t})">▶ START</button>
+            <button class="btn btn-reset" onclick="tReset('demo-q',${s.t})">↺ RESET</button>
           </div>
-          <div style="color:#2a2a4a;font-size:11px;margin-top:3px">[Space] หยุด / ต่อ</div>
+          <div style="color:#2a2a4a;font-size:11px;margin-top:3px">[Space] Pause / Resume</div>
         </div>`;
     }
 
@@ -417,12 +417,12 @@ function buildSlides() {
       cls='bg-ans';
       const n=s.digits.length, sz=n===1?200:n===2?168:126;
       inner=`<div class="answer-wrap">
-        <div class="tag tag-yellow">✅ เฉลยตัวอย่าง</div>
+        <div class="tag tag-yellow">✅ Example Answer</div>
         <div class="seg-row">${s.digits.map(d=>segSVG(d,sz)).join('')}</div>
         <div class="answer-equals">= ${s.ans}</div>
         <div class="formula-text">${s.formula}</div>
         <div style="margin-top:18px;padding:12px 24px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.2);border-radius:10px;color:var(--yellow);font-size:clamp(13px,1.8vw,18px)">
-          🎬 นี่คือวิธีเล่น — ตอนแข่งจริงทำแบบเดียวกันนี้เลย!
+          🎬 That's how it works — do the same thing during the real game!
         </div>
       </div>`;
     }
@@ -443,16 +443,16 @@ function buildSlides() {
     else if (s.type==='intro') {
       cls='bg-q';
       inner=`<div style="text-align:center">
-        <div class="tag tag-cyan">ข้อที่</div>
+        <div class="tag tag-cyan">QUESTION</div>
         <div class="intro-num" style="color:var(--cyan);text-shadow:0 0 40px rgba(51,153,255,.35)">${s.num}</div>
-        <div class="intro-hint">เตรียมพร้อม — โจทย์กำลังจะขึ้น...</div>
+        <div class="intro-hint">Get ready — the question is coming up...</div>
       </div>`;
     }
 
     else if (s.type==='q') {
       cls='bg-q';
       const qCls=s.compact?'q-text compact':'q-text';
-      inner=`<div class="tag tag-cyan">ข้อที่ ${s.num}</div>
+      inner=`<div class="tag tag-cyan">QUESTION ${s.num}</div>
         ${s.lines.map(l=>`<div class="${qCls}">${l}</div>`).join('')}
         <div class="timer-wrap">
           <div class="timer-digits" id="td-${s.id}">--:--</div>
@@ -462,10 +462,10 @@ function buildSlides() {
               <span class="time-preset" id="tp-${s.id}">${fmt(s.t)}</span>
               <button class="btn-adj" onclick="adjT('${s.id}',30)">+</button>
             </div>
-            <button class="btn btn-start" id="tb-${s.id}" onclick="tAction('${s.id}',${s.t})">▶ เริ่ม</button>
-            <button class="btn btn-reset" onclick="tReset('${s.id}',${s.t})">↺ รีเซต</button>
+            <button class="btn btn-start" id="tb-${s.id}" onclick="tAction('${s.id}',${s.t})">▶ START</button>
+            <button class="btn btn-reset" onclick="tReset('${s.id}',${s.t})">↺ RESET</button>
           </div>
-          <div style="color:#2a2a4a;font-size:11px;margin-top:3px">[Space] หยุด / ต่อ</div>
+          <div style="color:#2a2a4a;font-size:11px;margin-top:3px">[Space] Pause / Resume</div>
         </div>`;
     }
 
@@ -473,12 +473,12 @@ function buildSlides() {
       cls='bg-ans';
       const n=s.digits.length, sz=n===1?200:n===2?168:126;
       inner=`<div class="answer-wrap">
-        <div class="tag tag-yellow">✅ เฉลย ข้อที่ ${s.num}</div>
+        <div class="tag tag-yellow">✅ ANSWER · Question ${s.num}</div>
         <div class="seg-row">${s.digits.map(d=>segSVG(d,sz)).join('')}</div>
         <div class="answer-equals">= ${s.ans}</div>
         <div class="formula-text">${s.formula}</div>
         <div class="scoring-area">
-          <div class="scoring-hint">กดกลุ่มที่ตอบถูก · กดอีกครั้งเพื่อยกเลิก</div>
+          <div class="scoring-hint">Tap the team(s) that got it right · tap again to undo</div>
           <div class="scoring-btns" id="sbtns-${s.qid}"></div>
         </div>
       </div>`;
@@ -487,15 +487,15 @@ function buildSlides() {
     else if (s.type==='timeout') {
       cls='bg-timeout';
       inner=`<div style="text-align:center">
-        <div class="tag tag-yellow">⏸ พักระหว่างเซต</div>
+        <div class="tag tag-yellow">⏸ HALFTIME BREAK</div>
         <div style="font-size:clamp(34px,5.8vw,68px);font-weight:900;color:var(--yellow)">Tactical Timeout</div>
         <div style="color:var(--gray);font-size:clamp(13px,1.8vw,20px);margin:8px 0 24px">
-          คุยกันว่าเมื่อกี้พังตรงไหน — วางแผนแก้เกมข้อต่อไป
+          Talk about what went wrong — plan your strategy for the next round
         </div>
         <div class="timer-wrap">
           <div class="timer-digits" id="td-timeout">01:30</div>
           <div class="timer-row">
-            <button class="btn btn-start" id="tb-timeout" onclick="tAction('timeout',90)" style="background:var(--yellow);color:#000">▶ เริ่มพัก</button>
+            <button class="btn btn-start" id="tb-timeout" onclick="tAction('timeout',90)" style="background:var(--yellow);color:#000">▶ START BREAK</button>
             <button class="btn btn-reset" onclick="tReset('timeout',90)">↺</button>
           </div>
         </div>
@@ -506,11 +506,11 @@ function buildSlides() {
       cls='bg-final';
       inner=`<div style="text-align:center;width:100%">
         <div style="font-size:clamp(28px,5vw,56px);font-weight:900;background:linear-gradient(135deg,gold,var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
-          🏆 ผลการแข่งขัน
+          🏆 FINAL RESULTS
         </div>
-        <div style="color:var(--gray);font-size:clamp(12px,1.6vw,17px);margin-top:6px">Mathematics Human Code · 12 ข้อ · คะแนนสูงสุด 12 แต้ม · ม.1 &amp; ม.4 · 4 ทีมสี</div>
+        <div style="color:var(--gray);font-size:clamp(12px,1.6vw,17px);margin-top:6px">Mathematics Human Code · 12 Questions · Max Score 12 Points · M.1 &amp; M.4 · 4 Teams</div>
         <div class="final-board" id="final-board"></div>
-        <div style="margin-top:22px;color:#333;font-size:14px">🧘 ยืดเหยียดกล้ามเนื้อ · Cool Down · 4 นาที</div>
+        <div style="margin-top:22px;color:#333;font-size:14px">🧘 Stretch · Cool Down · 4 minutes</div>
       </div>`;
     }
 
@@ -532,18 +532,18 @@ function tAction(id,def){
   initT(id,def); const st=timerSt[id],btn=document.getElementById('tb-'+id);
   if(st.running){
     st.running=false; clearInterval(st.iv);
-    if(btn){btn.textContent=id==='timeout'?'▶ ต่อพัก':'▶ ต่อ';btn.className='btn btn-start';}
+    if(btn){btn.textContent=id==='timeout'?'▶ RESUME BREAK':'▶ RESUME';btn.className='btn btn-start';}
   } else {
     if(st.rem<=0)st.rem=st.total; st.running=true;
-    if(btn){btn.textContent='⏸ หยุด';btn.className='btn btn-stop';}
+    if(btn){btn.textContent='⏸ PAUSE';btn.className='btn btn-stop';}
     st.iv=setInterval(()=>{
       st.rem--;
       const td=document.getElementById('td-'+id); if(!td)return;
       if(st.rem>0){td.textContent=fmt(st.rem);td.className=st.rem<=10?'timer-digits danger':'timer-digits';}
       else{
         clearInterval(st.iv);st.running=false;
-        td.textContent='⏰ หมดเวลา!';td.className='timer-digits done';
-        if(btn){btn.textContent='▶ เริ่มใหม่';btn.className='btn btn-start';}
+        td.textContent='⏰ TIME UP!';td.className='timer-digits done';
+        if(btn){btn.textContent='▶ RESTART';btn.className='btn btn-start';}
         playBeep();
         document.getElementById('sc').classList.add('flashing');
         setTimeout(()=>document.getElementById('sc').classList.remove('flashing'),800);
@@ -557,7 +557,7 @@ function tReset(id,def){
   else timerSt[id]={rem:def,total:def,running:false,iv:null};
   const td=document.getElementById('td-'+id),btn=document.getElementById('tb-'+id);
   if(td){td.textContent=fmt(timerSt[id].rem);td.className='timer-digits';}
-  if(btn){btn.className='btn btn-start';btn.textContent=id==='timeout'?'▶ เริ่มพัก':'▶ เริ่ม';}
+  if(btn){btn.className='btn btn-start';btn.textContent=id==='timeout'?'▶ START BREAK':'▶ START';}
 }
 function playBeep(){
   try{
@@ -580,7 +580,7 @@ function renderScoringBtns(qid){
   const awarded=(qScores[qid]||[]);
   c.innerHTML=GROUPS.map((g,gi)=>{
     const correct=awarded.includes(gi);
-    return `<button class="grp-btn${correct?' aw0':''}" style="${correct?'':'border-color:rgba(255,255,255,.2);color:#ddd'}" onclick="award('${qid}',${gi})"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${correct?'#00ff88':'#555'};margin-right:5px;vertical-align:middle"></span>${g.name}${correct?'<br><small>✓ +1 คะแนน</small>':''}</button>`;
+    return `<button class="grp-btn${correct?' aw0':''}" style="${correct?'':'border-color:rgba(255,255,255,.2);color:#ddd'}" onclick="award('${qid}',${gi})"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${correct?'#00ff88':'#555'};margin-right:5px;vertical-align:middle"></span>${g.name}${correct?'<br><small>✓ +1 point</small>':''}</button>`;
   }).join('');
 }
 function award(qid,gi){
@@ -598,7 +598,7 @@ function renderFinal(){
   const el=document.getElementById('final-board'); if(!el)return;
   const sorted=GROUPS.map((g,i)=>({...g,s:scores[i]})).sort((a,b)=>b.s-a.s);
   const medals=['🥇','🥈','🥉','4.','5.','6.','7.','8.','9.','10.'],mc=['gold','silver','#cd7f32','#888','#888','#888','#888','#888','#888','#888'];
-  el.innerHTML=sorted.map((g,i)=>`<div class="final-row" style="${i<3?`border:1px solid ${mc[i]};background:rgba(255,255,255,.07)`:``}"><span style="font-weight:700">${medals[i]} <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${g.color};margin:0 6px;vertical-align:middle"></span>${g.name}</span><span style="font-weight:900;color:${mc[i]}">${g.s} คะแนน</span></div>`).join('');
+  el.innerHTML=sorted.map((g,i)=>`<div class="final-row" style="${i<3?`border:1px solid ${mc[i]};background:rgba(255,255,255,.07)`:``}"><span style="font-weight:700">${medals[i]} <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${g.color};margin:0 6px;vertical-align:middle"></span>${g.name}</span><span style="font-weight:900;color:${mc[i]}">${g.s} pts</span></div>`).join('');
 }
 
 /* ── NAVIGATION ── */
