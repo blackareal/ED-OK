@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบคะแนน · MUK Math-English Camp</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #1e3a5f, #0f172a);
+    padding: 16px 24px;
+    border-bottom: 1px solid #334155;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { font-size: 1.3rem; color: #93c5fd; font-weight: 700; }
+
+  .btc-color { color: #f97316; }
+  .gold-color { color: #eab308; }
+  .land-color { color: #22c55e; }
+
+  nav { display: flex; background: #1e293b; border-bottom: 1px solid #334155; overflow-x: auto; }
+  nav button {
+    padding: 14px 20px; background: none; border: none; color: #94a3b8;
+    cursor: pointer; font-size: 0.9rem; white-space: nowrap; border-bottom: 3px solid transparent;
+    transition: all .2s;
+  }
+  nav button.active { color: #93c5fd; border-bottom-color: #3b82f6; font-weight: 600; }
+  nav button:hover:not(.active) { color: #e2e8f0; background: #0f172a; }
+
+  .tab { display: none; padding: 24px; max-width: 900px; margin: 0 auto; }
+  .tab.active { display: block; }
+
+  .section-title { font-size: 1.1rem; font-weight: 700; color: #93c5fd; margin-bottom: 16px; }
+
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+
+  label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; margin-top: 12px; }
+  label:first-child { margin-top: 0; }
+  input, select {
+    width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; color: #e2e8f0; font-size: 0.95rem; outline: none;
+  }
+  input:focus, select:focus { border-color: #3b82f6; }
+
+  .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all .2s; }
+  .btn-primary { background: #3b82f6; color: white; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-success { background: #16a34a; color: white; }
+  .btn-success:hover { background: #15803d; }
+  .btn-danger { background: #dc2626; color: white; font-size: 0.75rem; padding: 6px 12px; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .reward-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+  .reward-option {
+    border: 2px solid #334155; border-radius: 12px; padding: 16px; text-align: center;
+    cursor: pointer; transition: all .2s; background: #0f172a;
+  }
+  .reward-option:hover { border-color: #475569; background: #1e293b; }
+  .reward-option.selected { border-color: #3b82f6; background: #1e3a5f; }
+  .reward-option .icon { font-size: 2rem; margin-bottom: 8px; }
+  .reward-option .name { font-weight: 700; margin-bottom: 4px; }
+  .reward-option .current-price { font-size: 0.8rem; color: #94a3b8; }
+  .reward-option .current-price span { font-weight: 700; }
+
+  .wallet-grid { display: flex; flex-direction: column; gap: 16px; }
+  .wallet-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
+  .wallet-header { background: #0f172a; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .wallet-name { font-weight: 700; font-size: 1rem; }
+  .wallet-total { font-size: 0.9rem; }
+  .wallet-items { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .wallet-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #0f172a; border-radius: 8px; gap: 8px; }
+  .wallet-item-left { display: flex; align-items: center; gap: 10px; }
+  .wallet-item-icon { font-size: 1.3rem; }
+  .wallet-item-name { font-weight: 600; font-size: 0.9rem; }
+  .wallet-item-detail { font-size: 0.75rem; color: #64748b; }
+  .wallet-item-right { text-align: right; }
+  .wallet-item-current { font-weight: 700; font-size: 0.95rem; }
+  .wallet-item-change { font-size: 0.75rem; }
+  .positive { color: #22c55e; }
+  .negative { color: #ef4444; }
+  .neutral { color: #94a3b8; }
+  .wallet-empty { color: #64748b; font-size: 0.85rem; padding: 8px 0; }
+
+
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .history-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0f172a; border-radius: 8px; font-size: 0.85rem; }
+  .history-time { color: #64748b; min-width: 70px; }
+  .history-text { flex: 1; }
+  .btn-del-history { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+
+  .notice { background: #1e3a5f; border: 1px solid #3b82f6; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: #93c5fd; margin-bottom: 16px; }
+
+  @media (max-width: 600px) {
+    .reward-options { grid-template-columns: 1fr; }
+    .row { flex-direction: column; }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+
+  .confirm-box { background: #0f172a; border: 1px solid #3b82f6; border-radius: 10px; padding: 16px; margin-top: 16px; display: none; }
+  .confirm-box.show { display: block; }
+  .confirm-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
+  .confirm-row .key { color: #94a3b8; }
+  .confirm-row .val { font-weight: 700; }
+
+  .sched-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .sched-table th, .sched-table td {
+    border: 1px solid #334155; padding: 8px 6px; text-align: center;
+  }
+  .sched-table th { background: #0f172a; color: #94a3b8; font-size: 0.72rem; }
+  .sched-table td.rnd-lbl { background: #0f172a; color: #93c5fd; font-weight: 700; }
+
+  /* ── ควบคุมรอบกิจกรรม + ภารกิจเซลฟี่ (แจ้ง/เปิดให้นักเรียนเห็น) — ย้ายไปอยู่ในแท็บ "ตั้งค่า" แล้ว ── */
+  .rc-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rc-btn {
+    padding: 7px 14px; border-radius: 100px; border: 1px solid #334155; background: #0f172a;
+    color: #94a3b8; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all .15s;
+  }
+  .rc-btn:hover { border-color: #475569; color: #e2e8f0; }
+  .rc-btn.active { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .rc-btn.active.end { background: #7c3aed; border-color: #7c3aed; }
+  .rc-btn.active.locked { background: #dc2626; border-color: #dc2626; }
+  .rc-status { font-size: 0.78rem; color: #64748b; margin-top: 10px; }
+
+  /* ── คะแนนเริ่มต้น (Start Mission) — แจก ฿100,000 ให้ทุกทีม ทีมละเลือกสินทรัพย์เอง ── */
+  .start-mission-grid { display: flex; flex-direction: column; gap: 8px; }
+  .sm-team-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px;
+  }
+  .sm-team-name { font-weight: 700; min-width: 110px; flex-shrink: 0; font-size: 0.9rem; }
+  .sm-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sm-opt-btn {
+    padding: 6px 12px; border-radius: 100px; border: 1px solid #334155; background: #1e293b;
+    color: #94a3b8; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all .15s;
+  }
+  .sm-opt-btn:hover { border-color: #475569; color: #e2e8f0; }
+  .sm-opt-btn.selected { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .sm-given-badge { font-size: 0.72rem; color: #22c55e; font-weight: 700; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🧮📖 ระบบคะแนน When Words Meet Numbers</h1>
+    <div style="font-size:0.7rem; color:#64748b; margin-top:2px;">โรงเรียนมุกดาหาร · ค่ายเสริมทักษะ คณิต-อังกฤษ · 29 ส.ค. 2569</div>
+  </div>
+</header>
+
+<nav>
+  <button onclick="showTab('setup')">⚙️ ตั้งค่า</button>
+  <button class="active" onclick="showTab('award')">🎖️ บันทึกรางวัล</button>
+  <button onclick="showTab('bonus')">⭐ คะแนนพิเศษ</button>
+  <button onclick="showTab('wallets')">👜 กระเป๋าเงิน</button>
+  <button onclick="showTab('history')">📋 ประวัติ</button>
+</nav>
+
+<!-- TAB: ตั้งค่า -->
+<div class="tab" id="tab-setup">
+  <p class="section-title">⚙️ ตั้งค่า</p>
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:12px;">🔔 ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐานของนักเรียน)</p>
+    <div class="rc-buttons" id="rc-buttons"></div>
+    <div class="rc-status" id="rc-status">กำลังโหลด...</div>
+  </div>
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:12px;">📸 ควบคุมภารกิจเซลฟี่ (เปิด/ปิดให้นักเรียนเห็น)</p>
+    <div class="rc-buttons" id="rc-selfie-buttons"></div>
+    <div class="rc-status" id="rc-selfie-status">กำลังโหลด...</div>
+  </div>
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:6px;">🎁 คะแนนเริ่มต้น (Start Mission)</p>
+    <div class="notice" style="margin-bottom:12px;">แจกรางวัลเริ่มต้น ฿100,000 ให้ทุกทีมพร้อมกัน — แต่ละทีมเลือกได้เองว่าจะรับเป็นที่ดิน/ทองคำ/Bitcoin เพื่อให้นักเรียนเข้าใจระบบรางวัลตั้งแต่ต้น</div>
+    <div id="start-mission-grid" class="start-mission-grid"></div>
+    <div style="margin-top:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <button class="btn btn-success" id="btn-start-mission" onclick="confirmStartMission()" disabled>🎁 แจกคะแนนเริ่มต้นให้ทุกทีม</button>
+      <span class="rc-status" id="start-mission-status" style="margin-left:0;">เลือกรางวัลให้ครบทุกทีมก่อน (0/8)</span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: บันทึกผลการแข่งขัน -->
+<div class="tab active" id="tab-award">
+  <p class="section-title">🎖️ บันทึกผลการแข่งขัน</p>
+  <div class="notice">💡 เลือกกิจกรรม → แต่ละทีมเลือกสินทรัพย์ที่จะได้รับ + กรอกมูลค่าเอง (บาท) → ยืนยันบันทึกพร้อมกันทีเดียว</div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <label>🎮 กิจกรรมที่บันทึกผล</label>
+    <select id="select-game" onchange="renderAwardGrid()">
+      <option value="">-- กรุณาเลือกกิจกรรม --</option>
+    </select>
+  </div>
+
+  <div class="card" id="award-grid-card" style="display:none;">
+    <div id="award-grid" class="start-mission-grid"></div>
+    <div style="margin-top:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <button class="btn btn-success" id="btn-award" onclick="confirmAward()" disabled>✅ บันทึกผลกิจกรรมนี้</button>
+      <span class="rc-status" id="award-status" style="margin-left:0;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: คะแนนพิเศษ -->
+<div class="tab" id="tab-bonus">
+  <p class="section-title">⭐ ให้คะแนนพิเศษ</p>
+  <div class="notice">💡 บวกคะแนนพิเศษให้ทีมใดทีมหนึ่ง เช่น รางวัลจากกิจกรรมพิเศษหรือคะแนนโบนัส</div>
+  <div class="card">
+    <label>เลือกทีมที่ได้รับคะแนนพิเศษ</label>
+    <select id="bonus-select-team">
+      <option value="">-- กรุณาเลือกทีม --</option>
+    </select>
+    <label style="margin-top:16px;">ประเภทสินทรัพย์</label>
+    <div class="reward-options" id="bonus-options">
+      <div class="reward-option" onclick="selectBonusType('land')" id="b-opt-land">
+        <div class="icon">🏗️</div>
+        <div class="name land-color">ที่ดิน</div>
+        <div class="current-price">ราคา <span id="b-land-price">-</span>/แปลง</div>
+      </div>
+      <div class="reward-option" onclick="selectBonusType('gold')" id="b-opt-gold">
+        <div class="icon">🥇</div>
+        <div class="name gold-color">ทองคำ</div>
+        <div class="current-price">ราคา <span id="b-gold-price">-</span>/บาท</div>
+      </div>
+      <div class="reward-option" onclick="selectBonusType('btc')" id="b-opt-btc">
+        <div class="icon">₿</div>
+        <div class="name btc-color">Bitcoin</div>
+        <div class="current-price">ราคา <span id="b-btc-price">-</span>/BTC</div>
+      </div>
+    </div>
+    <label style="margin-top:16px;">มูลค่าคะแนนพิเศษ (บาท)</label>
+    <input type="number" id="bonus-value" placeholder="เช่น 5000" value="5000" />
+    <div style="margin-top:16px;">
+      <button class="btn btn-success" onclick="confirmBonus()">⭐ บันทึกคะแนนพิเศษ</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: กระเป๋าเงิน -->
+<div class="tab" id="tab-wallets">
+  <p class="section-title">👜 กระเป๋าเงินแต่ละทีม</p>
+  <div class="wallet-grid" id="wallet-grid"></div>
+</div>
+
+<!-- TAB: ประวัติ -->
+<div class="tab" id="tab-history">
+  <p class="section-title">📋 ประวัติการรับรางวัล</p>
+  <div class="history-list" id="history-list"></div>
+</div>
+
+<script>
+// ======================== STATE ========================
+// 4 ทีมสี — แต่ละทีมรวมนักเรียน ม.1 และ ม.4 ผสมกัน (ไม่แยกทีมตามชั้น)
+// เลี่ยงสีเขียว/ขาว เพราะเป็นสีประจำโรงเรียนมุกดาหาร
+const TEAMS = [
+  { id: 'ม่วง',   name: '🟣 ทีมสีม่วง',   hex: '#a855f7' },
+  { id: 'ฟ้า',    name: '🔵 ทีมสีฟ้า',    hex: '#0ea5e9' },
+  { id: 'ชมพู',   name: '🩷 ทีมสีชมพู',   hex: '#ec4899' },
+  { id: 'แดง',    name: '🔴 ทีมสีแดง',    hex: '#ef4444' },
+];
+
+// ── กิจกรรมที่มีการจัดอันดับ (4 ทีมแข่งพร้อมกันทั้งฮอลล์ ไม่ใช่หมุนฐานแบบ SWP) ──
+// แต่ละกิจกรรมจบแล้ว ครูบันทึกอันดับที่ 1-4 ของทั้ง 4 ทีมพร้อมกันในแท็บ "บันทึกผลการแข่งขัน"
+const GAMES = [
+  { id: 'survivor',  name: 'Number Survivor',        time: '09:30–10:00' },
+  { id: 'tube',      name: 'Magic Tube (ต่อหลอด)',    time: '10:00–10:30' },
+  { id: 'murder',    name: 'Murder Mystery (หาฆาตกร)', time: '10:45–11:15' },
+  { id: 'humancode', name: 'Mathematics Human Code',  time: '11:15–11:45' },
+  { id: 'selfie',    name: 'Selfie Mission',          time: '13:30–14:15' },
+  { id: 'killer',    name: 'ตัวเลขพิฆาต',             time: '15:00–15:30' },
+];
+
+let state = {
+  settings: { landPrice: 100000, currentRound: 0, roundTriggerAt: 0, selfieUnlocked: 0 },
+  transactions: [],
+};
+let prices = { btc: null, gold: null };
+
+// ======================== GOOGLE SHEETS API ========================
+// วาง URL ที่ได้จาก Deploy Apps Script ตรงนี้
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzraQFgmtY_gl-C9mzyfVBMu2Vz9adglHZu6X7C1BQX0Je0kzOq-Cm14mqeziqAAeNK/exec';
+
+async function apiCall(action, params = {}) {
+  if (!SCRIPT_URL) return null;
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', action);
+    for (const [k, v] of Object.entries(params)) {
+      url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    }
+    const res = await fetch(url.toString());
+    return await res.json();
+  } catch(e) {
+    console.warn('[Sheets] API error:', action, e);
+    return null;
+  }
+}
+
+// ======================== LOCALSTORAGE ========================
+function saveState() {
+  localStorage.setItem('mathCampScoreState', JSON.stringify(state));
+}
+function loadState() {
+  const s = localStorage.getItem('mathCampScoreState');
+  if (s) {
+    try {
+      const saved = JSON.parse(s);
+      state.settings = saved.settings ?? state.settings;
+      state.transactions = saved.transactions ?? [];
+    } catch(e) {}
+  }
+}
+
+// ======================== PRICE API ========================
+// 21 ก.ค. 2569: ตัดการแสดงราคา BTC/ทองคำ/ที่ดินที่แถบหัวข้อ (subtitle) ออกตามที่ครูขอ —
+// ยังคงดึงราคาจริง (prices.btc/prices.gold) ไว้ใช้คำนวณมูลค่ารางวัลในแท็บบันทึกรางวัล/
+// คะแนนพิเศษ/คะแนนเริ่มต้นตามปกติ แค่ไม่โชว์ตัวเลขราคาที่หัวหน้าจอแล้ว
+async function fetchPrices() {
+  try {
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb',
+      { cache: 'no-store' }
+    );
+    const data = await res.json();
+
+    prices.btc = data.bitcoin.thb;
+    const xautThb = data['tether-gold'].thb;
+    prices.gold = xautThb * (15.244 / 31.1035);
+  } catch(e) {
+    console.warn('Price fetch error', e);
+  }
+  updatePriceDisplays();
+  refreshWallets();
+}
+
+function updatePriceDisplays() {
+  // ราคาสินทรัพย์ใช้แสดงในกริดจัดอันดับ (renderAwardGrid) ผ่าน assetLabel()/priceForType() โดยตรงแล้ว
+}
+
+// ======================== FORMATTING ========================
+function fmtCurrency(n) {
+  if (!n) return '-';
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+}
+function fmtQty(type, qty) {
+  if (type === 'btc') return qty.toFixed(8) + ' BTC';
+  if (type === 'gold') return qty.toFixed(4) + ' บาท (ทอง)';
+  return qty.toFixed(0) + ' แปลง';
+}
+function assetLabel(type) {
+  if (type === 'btc') return '₿ Bitcoin';
+  if (type === 'gold') return '🥇 ทองคำ';
+  return '🏗️ ที่ดิน';
+}
+function assetIcon(type) {
+  if (type === 'btc') return '₿';
+  if (type === 'gold') return '🥇';
+  return '🏗️';
+}
+function assetColor(type) {
+  if (type === 'btc') return '#f97316';
+  if (type === 'gold') return '#eab308';
+  return '#22c55e';
+}
+function teamById(id) { return TEAMS.find(t => t.id === id); }
+
+// ======================== ควบคุมรอบกิจกรรม (แจ้งเตือนเปลี่ยนฐาน) ========================
+// ครูกดปุ่มตรงนี้เพื่อบอก Student view ว่า "ตอนนี้ทีมควรอยู่รอบไหน" แบบ manual —
+// ไม่อิงตารางเวลาที่ตั้งไว้ล่วงหน้าเลย เผื่อวันจริงกำหนดการเลื่อน/ยืดหยุ่นไม่ตรงตาราง
+// currentRound: 0=ยังไม่เริ่ม, 1-4=รอบที่กำลังทำอยู่, 5=จบกิจกรรมฐานเช้าแล้ว
+// roundTriggerAt: เวลา (ms) ที่กดล่าสุด — เปลี่ยนทุกครั้งที่กด แม้กดรอบเดิมซ้ำ
+// เพื่อให้ Student view ตรวจจับได้ว่ามีการกดใหม่แล้วยิงแจ้งเตือนอีกรอบ
+const ROUND_OPTIONS = [
+  { val: 0, label: 'ยังไม่เริ่ม' },
+  { val: 1, label: 'รอบ 1' },
+  { val: 2, label: 'รอบ 2' },
+  { val: 3, label: 'รอบ 3' },
+  { val: 4, label: 'รอบ 4' },
+  { val: 5, label: '✅ จบกิจกรรม' },
+];
+
+function renderRoundControl() {
+  const el = document.getElementById('rc-buttons');
+  if (!el) return;
+  const current = state.settings.currentRound ?? 0;
+  el.innerHTML = ROUND_OPTIONS.map(o => `
+    <button class="rc-btn ${o.val === current ? 'active' : ''} ${o.val === 5 ? 'end' : ''}" onclick="setCurrentRound(${o.val})">${o.label}</button>
+  `).join('');
+  updateRoundStatusLabel();
+}
+
+function updateRoundStatusLabel() {
+  const statusEl = document.getElementById('rc-status');
+  if (!statusEl) return;
+  const current = state.settings.currentRound ?? 0;
+  const triggeredAt = state.settings.roundTriggerAt;
+  const opt = ROUND_OPTIONS.find(o => o.val === current);
+  const timeText = triggeredAt ? new Date(triggeredAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+  statusEl.textContent = `สถานะปัจจุบัน: ${opt ? opt.label : '-'} · กดล่าสุด ${timeText}`;
+}
+
+function setCurrentRound(val) {
+  const opt = ROUND_OPTIONS.find(o => o.val === val);
+  if (!confirm(`ยืนยันตั้งสถานะเป็น "${opt.label}"?\nนักเรียนทุกทีมจะได้รับการแจ้งเตือนทันที`)) return;
+  const triggerAt = Date.now();
+  state.settings.currentRound = val;
+  state.settings.roundTriggerAt = triggerAt;
+  saveState();
+  apiCall('saveSettings', { data: { currentRound: val, roundTriggerAt: triggerAt } });
+  renderRoundControl();
+  showToast(`🔔 แจ้งเตือนนักเรียนแล้ว: ${opt.label}`);
+}
+
+// ======================== ควบคุมภารกิจเซลฟี่ (เปิด/ปิดให้นักเรียนเห็น) ========================
+// ครูกดปุ่มตรงนี้เพื่อเปิด/ปิดแท็บ "เซลฟี่" ในหน้านักเรียนแบบสด — เดิมต้องแก้โค้ด
+// SELFIE_UNLOCKED ในไฟล์ StudentView ตรงๆ (ไม่สะดวกตอนใช้งานจริง) เปลี่ยนมาควบคุมผ่าน
+// แถบเดียวกับ currentRound ด้านบนนี้แทน (config key 'selfieUnlocked': 0=ล็อกอยู่, 1=เปิดแล้ว)
+const SELFIE_OPTIONS = [
+  { val: 0, label: '🔒 ปิดอยู่ (ล็อก)' },
+  { val: 1, label: '📸 เปิดให้ทำภารกิจ' },
+];
+
+function renderSelfieControl() {
+  const el = document.getElementById('rc-selfie-buttons');
+  if (!el) return;
+  const current = state.settings.selfieUnlocked ? 1 : 0;
+  el.innerHTML = SELFIE_OPTIONS.map(o => `
+    <button class="rc-btn ${o.val === current ? 'active' : ''} ${o.val === 0 ? 'locked' : ''}" onclick="setSelfieUnlocked(${o.val})">${o.label}</button>
+  `).join('');
+  const statusEl = document.getElementById('rc-selfie-status');
+  if (statusEl) {
+    const opt = SELFIE_OPTIONS.find(o => o.val === current);
+    statusEl.textContent = `สถานะปัจจุบัน: ${opt ? opt.label : '-'}`;
+  }
+}
+
+function setSelfieUnlocked(val) {
+  const opt = SELFIE_OPTIONS.find(o => o.val === val);
+  const msg = val === 1
+    ? 'ยืนยันเปิดภารกิจเซลฟี่?\nนักเรียนทุกทีมจะเห็นแท็บเซลฟี่และเริ่มส่งภารกิจได้ทันที'
+    : 'ยืนยันปิด/ล็อกภารกิจเซลฟี่?\nนักเรียนจะไม่เห็นแท็บเซลฟี่อีกจนกว่าจะเปิดใหม่';
+  if (!confirm(msg)) return;
+  state.settings.selfieUnlocked = val;
+  saveState();
+  apiCall('saveSettings', { data: { selfieUnlocked: val } });
+  renderSelfieControl();
+  showToast(val === 1 ? '📸 เปิดภารกิจเซลฟี่แล้ว' : '🔒 ปิดภารกิจเซลฟี่แล้ว');
+}
+
+function populateTeamSelects() {
+  ['bonus-select-team'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">-- กรุณาเลือก --</option>';
+    TEAMS.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      sel.appendChild(opt);
+    });
+    if (current) sel.value = current;
+  });
+}
+
+// ======================== AWARD (จัดอันดับ 4 ทีมต่อกิจกรรม) ========================
+const ALL_TYPES = ['land', 'gold', 'btc'];
+
+function priceForType(type) {
+  if (type === 'land') return state.settings.landPrice;
+  if (type === 'gold') return prices.gold;
+  if (type === 'btc')  return prices.btc;
+  return null;
+}
+
+function calcTx(type, value) {
+  const price = priceForType(type);
+  if (!price) return null;
+  return { price, qty: value / price };
+}
+
+function populateGameSelect() {
+  const sel = document.getElementById('select-game');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- กรุณาเลือกกิจกรรม --</option>' +
+    GAMES.map(g => `<option value="${g.id}">${g.name} (${g.time})</option>`).join('');
+}
+
+// { [teamId]: { asset: 'land'|'gold'|'btc', value: number } } — ครูกำหนดมูลค่าเอง ไม่คิดจากอันดับ
+const awardSelection = {};
+
+function currentGame() {
+  const id = document.getElementById('select-game').value;
+  return GAMES.find(g => g.id === id) || null;
+}
+
+function renderAwardGrid() {
+  const game = currentGame();
+  const card = document.getElementById('award-grid-card');
+  const grid = document.getElementById('award-grid');
+  if (!game) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  // เริ่มกิจกรรมใหม่ทุกครั้งที่เปลี่ยนกิจกรรม (ล้างการเลือกสินทรัพย์/มูลค่าเดิม)
+  Object.keys(awardSelection).forEach(k => delete awardSelection[k]);
+
+  const alreadyDone = TEAMS.every(t => state.transactions.some(tx => tx.studentId === t.id && tx.station === game.name));
+
+  grid.innerHTML = TEAMS.map(t => {
+    const sel = awardSelection[t.id] || {};
+    const assetBtns = ALL_TYPES.map(type => `
+      <button class="sm-opt-btn ${sel.asset === type ? 'selected' : ''}" onclick="selectAwardAsset('${t.id}','${type}')">${assetLabel(type)}</button>
+    `).join('');
+    return `
+      <div class="sm-team-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span class="sm-team-name" style="color:${t.hex}">${t.name}</span>
+          <div class="sm-opts">${assetBtns}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="margin:0; font-size:0.82rem; color:#94a3b8; white-space:nowrap;">มูลค่า (บาท)</label>
+          <input type="number" min="0" step="1000" placeholder="เช่น 100000" value="${sel.value ?? ''}" style="max-width:180px;" oninput="setAwardValue('${t.id}', this.value)">
+        </div>
+      </div>`;
+  }).join('') + (alreadyDone ? '<div class="rc-status" style="color:#22c55e;">✅ กิจกรรมนี้บันทึกผลไปแล้วทั้ง 4 ทีม (บันทึกซ้ำได้ถ้าต้องการแก้ไข)</div>' : '');
+
+  updateAwardStatus();
+}
+
+function selectAwardAsset(teamId, asset) {
+  const price = priceForType(asset);
+  if (!price) { alert('รอราคา ' + assetLabel(asset) + ' โหลดก่อนนะครับ'); return; }
+  awardSelection[teamId] = { ...(awardSelection[teamId] || {}), asset };
+  renderAwardGrid();
+}
+
+function setAwardValue(teamId, value) {
+  const num = parseFloat(value);
+  awardSelection[teamId] = { ...(awardSelection[teamId] || {}), value: isNaN(num) ? undefined : num };
+  updateAwardStatus();
+}
+
+function updateAwardStatus() {
+  const statusEl = document.getElementById('award-status');
+  const btn = document.getElementById('btn-award');
+  const complete = TEAMS.every(t => awardSelection[t.id]?.asset && awardSelection[t.id]?.value > 0);
+  if (statusEl) statusEl.textContent = complete ? '✅ พร้อมบันทึก' : 'กรุณาเลือกสินทรัพย์ + กรอกมูลค่าให้ครบทั้ง 4 ทีม';
+  if (btn) btn.disabled = !complete;
+}
+
+async function confirmAward() {
+  const game = currentGame();
+  if (!game) return;
+  const complete = TEAMS.every(t => awardSelection[t.id]?.asset && awardSelection[t.id]?.value > 0);
+  if (!complete) return;
+  if (!confirm(`ยืนยันบันทึกผล "${game.name}" ให้ครบทั้ง 4 ทีม?`)) return;
+
+  const btn = document.getElementById('btn-award');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...'; }
+
+  const now = new Date().toISOString();
+  let okCount = 0;
+  const failedTeams = [];
+
+  for (const t of TEAMS) {
+    const sel = awardSelection[t.id];
+    const tx = calcTx(sel.asset, sel.value);
+    if (!tx) { failedTeams.push(t.name); continue; }
+    const record = {
+      id: Date.now() + '-' + t.id, studentId: t.id, type: sel.asset,
+      qty: tx.qty, priceAtAward: tx.price, valueAtAward: sel.value,
+      timestamp: now, station: game.name,
+    };
+    const res = await apiCall('addTransaction', { data: record });
+    if (res && res.success) { state.transactions.push(record); okCount++; }
+    else failedTeams.push(t.name);
+  }
+
+  saveState();
+  if (failedTeams.length) {
+    showToast(`⚠️ บันทึกสำเร็จ ${okCount} ทีม — พลาด: ${failedTeams.join(', ')} ลองกดบันทึกซ้ำได้`);
+  } else {
+    showToast(`✅ บันทึกผล "${game.name}" ครบทั้ง 4 ทีมเรียบร้อย!`);
+  }
+
+  if (btn) btn.textContent = '✅ บันทึกผลกิจกรรมนี้';
+  refreshWallets();
+  renderHistory();
+  renderAwardGrid();
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16a34a;color:white;padding:12px 20px;border-radius:10px;font-weight:600;z-index:9999;font-size:.9rem;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ======================== CURRENT VALUE ========================
+function currentPrice(type) {
+  if (type === 'land') return state.settings.landPrice;
+  if (type === 'gold') return prices.gold;
+  if (type === 'btc') return prices.btc;
+  return null;
+}
+function currentValue(tx) {
+  const cp = currentPrice(tx.type);
+  if (!cp) return null;
+  return tx.qty * cp;
+}
+
+// ======================== WALLETS ========================
+function refreshWallets() {
+  const container = document.getElementById('wallet-grid');
+  if (!container) return;
+  container.innerHTML = TEAMS.map(team => {
+    const txs = state.transactions.filter(t => t.studentId === team.id);
+    const totalInvested = txs.reduce((s, t) => s + t.valueAtAward, 0);
+    const totalCurrent = txs.reduce((s, t) => {
+      const cv = currentValue(t);
+      return cv !== null ? s + cv : s;
+    }, 0);
+    const gain = totalCurrent - totalInvested;
+    const gainPct = totalInvested > 0 ? (gain / totalInvested) * 100 : 0;
+
+    const itemsHtml = txs.length === 0
+      ? '<div class="wallet-empty">ยังไม่มีรางวัล</div>'
+      : txs.map(t => {
+          const cv = currentValue(t);
+          const g = cv !== null ? cv - t.valueAtAward : null;
+          const gp = g !== null && t.valueAtAward > 0 ? (g / t.valueAtAward) * 100 : null;
+          const time = new Date(t.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div class="wallet-item">
+              <div class="wallet-item-left">
+                <div class="wallet-item-icon">${assetIcon(t.type)}</div>
+                <div class="wallet-item-info">
+                  <div class="wallet-item-name" style="color:${assetColor(t.type)}">${assetLabel(t.type)}</div>
+                  <div class="wallet-item-detail">${fmtQty(t.type, t.qty)} · รับเวลา ${time}</div>
+                  <div class="wallet-item-detail">ราคาตอนรับ: ${fmtCurrency(t.priceAtAward)}/หน่วย</div>
+                </div>
+              </div>
+              <div class="wallet-item-right">
+                <div class="wallet-item-current">${cv !== null ? fmtCurrency(cv) : '?'}</div>
+                ${gp !== null ? `<div class="wallet-item-change ${gp >= 0 ? 'positive' : 'negative'}">${gp >= 0 ? '▲' : '▼'} ${Math.abs(gp).toFixed(1)}%</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+    const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
+    const gainText = totalInvested > 0 ? `${gain >= 0 ? '+' : ''}${fmtCurrency(gain)} (${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)` : '-';
+
+    return `
+      <div class="wallet-card">
+        <div class="wallet-header">
+          <div class="wallet-name" style="color:${team.hex}">${team.name}</div>
+          <div class="wallet-total">
+            <span style="color:#93c5fd; font-weight:700;">${fmtCurrency(totalCurrent)}</span>
+            <span class="${gainClass}" style="font-size:.8rem; margin-left:8px;">${gainText}</span>
+          </div>
+        </div>
+        <div class="wallet-items">${itemsHtml}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ======================== HISTORY ========================
+function renderHistory() {
+  const container = document.getElementById('history-list');
+  if (!container) return;
+  if (state.transactions.length === 0) {
+    container.innerHTML = '<p style="color:#64748b; font-size:.85rem;">ยังไม่มีประวัติ</p>';
+    return;
+  }
+  const sorted = [...state.transactions].reverse();
+  container.innerHTML = sorted.map(t => {
+    const team = teamById(t.studentId);
+    const name = team ? team.name : (t.studentId || '(ไม่พบ)');
+    const time = new Date(t.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return `
+      <div class="history-item">
+        <span class="history-time">${time}</span>
+        <span class="history-text">
+          ${t.station ? `<span style="color:#475569; font-size:0.75rem;">${t.station} · </span>` : ''}
+          <strong>${name}</strong> รับ <strong style="color:${assetColor(t.type)}">${assetLabel(t.type)}</strong>
+          ${fmtQty(t.type, t.qty)} · ราคา ${fmtCurrency(t.priceAtAward)}/หน่วย · มูลค่า ${fmtCurrency(t.valueAtAward)}
+        </span>
+        <button class="btn-del-history" onclick="deleteTx('${t.id}')" title="ลบ">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteTx(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  state.transactions = state.transactions.filter(t => t.id !== id);
+  saveState();
+  apiCall('deleteTransaction', { id });
+  renderHistory();
+  refreshWallets();
+}
+
+// ======================== BONUS ========================
+let selectedBonusType = null;
+
+function selectBonusType(type) {
+  selectedBonusType = type;
+  document.querySelectorAll('#bonus-options .reward-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('b-opt-' + type).classList.add('selected');
+}
+
+function updateBonusPrices() {
+  const lp = state.settings.landPrice;
+  document.getElementById('b-land-price').textContent = fmtCurrency(lp);
+  document.getElementById('b-gold-price').textContent = prices.gold ? fmtCurrency(prices.gold) : '-';
+  document.getElementById('b-btc-price').textContent  = prices.btc  ? fmtCurrency(prices.btc)  : '-';
+}
+
+function confirmBonus() {
+  const teamId = document.getElementById('bonus-select-team').value;
+  const value  = parseFloat(document.getElementById('bonus-value').value);
+  if (!teamId)           { alert('กรุณาเลือกทีม'); return; }
+  if (!selectedBonusType){ alert('กรุณาเลือกประเภทสินทรัพย์'); return; }
+  if (!value || value <= 0) { alert('กรุณากรอกมูลค่า'); return; }
+
+  const price = priceForType(selectedBonusType);
+  if (!price) { alert('ราคายังโหลดไม่ครบ กรุณารอสักครู่'); return; }
+
+  const qty = value / price;
+  const tx = {
+    id: Date.now() + 'b',
+    studentId: teamId,
+    type: selectedBonusType,
+    qty,
+    priceAtAward: price,
+    valueAtAward: value,
+    timestamp: new Date().toISOString(),
+    station: 'โบนัส',
+  };
+
+  state.transactions.push(tx);
+  saveState();
+  apiCall('addTransaction', { data: tx });
+
+  const teamName = teamById(teamId)?.name ?? teamId;
+  showToast(`⭐ บันทึกแล้ว! ${teamName} ได้รับโบนัส ${assetLabel(selectedBonusType)} มูลค่า ${fmtCurrency(value)}`);
+
+  document.getElementById('bonus-select-team').value = '';
+  document.getElementById('bonus-value').value = '5000';
+  selectedBonusType = null;
+  document.querySelectorAll('#bonus-options .reward-option').forEach(el => el.classList.remove('selected'));
+
+  refreshWallets();
+  renderHistory();
+}
+
+// ======================== คะแนนเริ่มต้น (Start Mission) ========================
+// แจกรางวัลเริ่มต้น ฿100,000 ให้ทุกทีมพร้อมกัน แต่ทีมเลือกเองว่าจะรับเป็นที่ดิน/ทองคำ/
+// Bitcoin (ช่วยให้นักเรียนเข้าใจระบบรางวัลของค่ายตั้งแต่ต้น ก่อนเริ่มกิจกรรมฐานจริง)
+const START_MISSION_VALUE = 100000;
+const START_MISSION_STATION = 'เริ่มต้น (Start Mission)';
+const startMissionSelection = {}; // { [teamId]: 'land' | 'gold' | 'btc' }
+
+function renderStartMissionGrid() {
+  const el = document.getElementById('start-mission-grid');
+  if (!el) return;
+  el.innerHTML = TEAMS.map(t => {
+    const alreadyGiven = state.transactions.some(tx => tx.studentId === t.id && tx.station === START_MISSION_STATION);
+    const sel = startMissionSelection[t.id];
+    const opts = ALL_TYPES.map(type => `
+      <button class="sm-opt-btn ${sel === type ? 'selected' : ''}" onclick="selectStartMissionAsset('${t.id}','${type}')">${assetLabel(type)}</button>
+    `).join('');
+    return `
+      <div class="sm-team-row">
+        <span class="sm-team-name" style="color:${t.hex}">${t.name}</span>
+        <div class="sm-opts">${opts}</div>
+        ${alreadyGiven ? `<span class="sm-given-badge">✅ แจกแล้ว</span>` : ''}
+      </div>`;
+  }).join('');
+  updateStartMissionStatus();
+}
+
+function selectStartMissionAsset(teamId, type) {
+  const price = priceForType(type);
+  if (!price) { alert('รอราคา ' + assetLabel(type) + ' โหลดก่อนนะครับ'); return; }
+  startMissionSelection[teamId] = type;
+  renderStartMissionGrid();
+}
+
+function updateStartMissionStatus() {
+  const count = Object.keys(startMissionSelection).length;
+  const statusEl = document.getElementById('start-mission-status');
+  const btn = document.getElementById('btn-start-mission');
+  if (statusEl) {
+    statusEl.textContent = count >= TEAMS.length
+      ? '✅ เลือกครบทุกทีมแล้ว พร้อมแจก'
+      : `เลือกรางวัลให้ครบทุกทีมก่อน (${count}/${TEAMS.length})`;
+  }
+  if (btn) btn.disabled = count < TEAMS.length;
+}
+
+// 21 ก.ค. 2569: แก้บั๊กสำคัญ — เดิมยิง apiCall('addTransaction', ...) ทั้ง 8 ทีม
+// พร้อมกันโดยไม่ await (fire-and-forget) ทำให้ Apps Script backend ได้รับ request
+// พร้อมกันเกือบ 8 ตัว แล้ว appendRow() (ไม่มีการล็อก) คำนวณ "แถวถัดไป" ชนกัน
+// เขียนทับกันเอง ทำให้บางทีมไม่ถูกบันทึกแบบเงียบๆ (ไม่มี error ให้เห็นเลย)
+// แก้โดย (1) ส่งทีละคำขอด้วย await ให้เสร็จก่อนค่อยส่งทีมถัดไป กันชนกันตั้งแต่ต้น
+// (2) เพิ่ม LockService ฝั่ง backend เป็นเกราะป้องกันอีกชั้น (ดู AppsScript.js)
+// (3) เช็คผลลัพธ์จริงจาก server ก่อนนับว่าสำเร็จ ไม่ใช่นับทันทีที่ยิง request ออกไป
+// (4) ข้ามทีมที่เคยได้รับไปแล้ว กันแจกซ้ำถ้าครูต้องกดแจกใหม่เพราะบางทีมพลาดตอนแรก
+async function confirmStartMission() {
+  if (Object.keys(startMissionSelection).length < TEAMS.length) return;
+  if (!confirm(`ยืนยันแจกคะแนนเริ่มต้น ฿${START_MISSION_VALUE.toLocaleString('th-TH')} ให้ทุกทีม (${TEAMS.length} ทีม) ตามรางวัลที่แต่ละทีมเลือกไว้?`)) return;
+
+  const btn = document.getElementById('btn-start-mission');
+  if (btn) { btn.disabled = true; btn.textContent = `⏳ กำลังแจก... (0/${TEAMS.length})`; }
+
+  const now = new Date().toISOString();
+  let okCount = 0;
+  let skipCount = 0;
+  const failedTeams = [];
+
+  for (let i = 0; i < TEAMS.length; i++) {
+    const t = TEAMS[i];
+
+    const alreadyGiven = state.transactions.some(tx => tx.studentId === t.id && tx.station === START_MISSION_STATION);
+    if (alreadyGiven) {
+      skipCount++;
+      if (btn) btn.textContent = `⏳ กำลังแจก... (${i + 1}/${TEAMS.length})`;
+      continue;
+    }
+
+    const type = startMissionSelection[t.id];
+    const price = priceForType(type);
+    if (!type || !price) { failedTeams.push(t.name); continue; } // ไม่ควรเกิดขึ้น เพราะเช็คราคาไว้ตอนเลือกแล้ว
+    const qty = START_MISSION_VALUE / price;
+    const tx = {
+      id: Date.now() + '-sm' + i,
+      studentId: t.id,
+      type,
+      qty,
+      priceAtAward: price,
+      valueAtAward: START_MISSION_VALUE,
+      timestamp: now,
+      station: START_MISSION_STATION,
+    };
+
+    const res = await apiCall('addTransaction', { data: tx });
+    if (res && res.success) {
+      state.transactions.push(tx);
+      okCount++;
+    } else {
+      failedTeams.push(t.name);
+    }
+    if (btn) btn.textContent = `⏳ กำลังแจก... (${i + 1}/${TEAMS.length})`;
+  }
+
+  saveState();
+
+  if (failedTeams.length) {
+    showToast(`⚠️ แจกสำเร็จ ${okCount} ทีม${skipCount ? ` (ข้ามทีมที่ได้แล้ว ${skipCount} ทีม)` : ''} — พลาด: ${failedTeams.join(', ')} ลองกดแจกซ้ำได้ ระบบจะข้ามทีมที่ได้แล้วให้อัตโนมัติ`);
+  } else if (skipCount === TEAMS.length) {
+    showToast('ทุกทีมได้รับคะแนนเริ่มต้นไปแล้ว ไม่มีทีมไหนต้องแจกเพิ่ม');
+  } else {
+    showToast(`🎁 แจกคะแนนเริ่มต้น ฿${START_MISSION_VALUE.toLocaleString('th-TH')} ให้ ${okCount} ทีมเรียบร้อย!${skipCount ? ` (ข้ามทีมที่ได้แล้ว ${skipCount} ทีม)` : ''}`);
+  }
+
+  if (btn) btn.textContent = '🎁 แจกคะแนนเริ่มต้นให้ทุกทีม';
+  updateStartMissionStatus();
+
+  refreshWallets();
+  renderHistory();
+  renderStartMissionGrid();
+}
+
+// ======================== TABS ========================
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+
+  if (name === 'wallets')     refreshWallets();
+  if (name === 'history')     renderHistory();
+  if (name === 'award')       { updatePriceDisplays(); renderAwardGrid(); }
+  if (name === 'bonus')       updateBonusPrices();
+  if (name === 'setup')       renderStartMissionGrid();
+}
+
+// ======================== INIT ========================
+async function init() {
+  loadState();
+
+  const remote = await apiCall('getAll');
+  if (remote && !remote.error) {
+    if (remote.transactions?.length) state.transactions = remote.transactions;
+    if (remote.settings) state.settings = { ...state.settings, ...remote.settings };
+    saveState();
+  }
+
+  populateTeamSelects();
+  populateGameSelect();
+  updatePriceDisplays();
+  renderHistory();
+  renderRoundControl();
+  renderSelfieControl();
+  renderStartMissionGrid();
+
+  fetchPrices();
+  setInterval(fetchPrices, 60000);
+}
+
+init();
+</script>
+</body>
+</html>
