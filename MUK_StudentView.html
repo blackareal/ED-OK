@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>นักเรียน · MUK Camp — When Words Meet Numbers</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+/* ═══════ สีโทนโรงเรียน: เขียว-ขาว (สุวรรณภูมิพิทยไพศาล) ═══════
+   ปรับจากธีมกรมท่า/น้ำเงินเดิม → เขียว-ขาว ทั้งหมด ยกเว้นสีเฉพาะทีม (t.hex ต่อทีม
+   ที่ตั้งผ่าน --myhex/inline style) และสีสื่อความหมายสากล (แดง=error/ลบ,
+   เขียวสด=live/สำเร็จ, เหลือง/อำพัน=รอ) ซึ่งคงไว้ตามเดิมเพื่อความชัดเจนของ UX */
+body {
+  font-family: 'Sarabun', 'Segoe UI', sans-serif;
+  background: #04120a;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+button { font-family: inherit; }
+
+/* ═══════ TEAM SELECT (first launch) ═══════ */
+#teamSelectScreen {
+  position: fixed; inset: 0; z-index: 100;
+  background: radial-gradient(circle at top, #123a24, #04120a);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px; text-align: center;
+}
+#teamSelectScreen.hidden { display: none; }
+.ts-title { font-size: 1.3rem; font-weight: 800; color: #86efac; margin-bottom: 4px; }
+.ts-sub { font-size: 0.82rem; color: #6b8f7a; margin-bottom: 24px; }
+.ts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 380px; }
+.ts-btn {
+  border: 2px solid #1f3d2c; background: #0a1f14; color: #e2e8f0;
+  border-radius: 14px; padding: 16px 8px; font-weight: 800; font-size: 0.95rem;
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.ts-btn .dot { width: 22px; height: 22px; border-radius: 50%; }
+
+/* ═══════ APP SHELL ═══════ */
+#app { display: none; flex-direction: column; min-height: 100vh; }
+#app.active { display: flex; }
+
+#top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: linear-gradient(90deg, #0a1f14, #123a24);
+  border-bottom: 2px solid var(--myhex, #22c55e); flex-shrink: 0; position: sticky; top: 0; z-index: 20;
+}
+.tb-team { display: flex; align-items: center; gap: 8px; }
+.tb-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--myhex, #22c55e); flex-shrink: 0; }
+.tb-name { font-weight: 800; font-size: 0.95rem; }
+.tb-camp { font-size: 0.62rem; color: #6b8f7a; }
+.tb-right { text-align: right; }
+.tb-clock { font-size: 0.95rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tb-change { font-size: 0.65rem; color: #4ade80; text-decoration: underline; cursor: pointer; margin-top: 2px; }
+
+#content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 90px; }
+.pane { display: none; }
+.pane.active { display: block; }
+
+.card { background: #0a1f16; border: 1px solid #10241a; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+.card-title { font-size: 0.72rem; font-weight: 700; color: #6b8f7a; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+
+/* my team card */
+.mt-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.mt-chart-btn {
+  background: #123a24; border: 1px solid #22c55e; color: #86efac; border-radius: 100px;
+  width: 34px; height: 34px; font-size: 1rem; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.mt-value { font-size: 2.1rem; font-weight: 900; color: var(--myhex, #86efac); line-height: 1.1; }
+.mt-gain { font-size: 0.9rem; font-weight: 700; margin-top: 4px; }
+.mt-rank-badge { display: inline-block; margin-top: 8px; background: #123a24; border: 1px solid #22c55e; border-radius: 100px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; color: #86efac; }
+
+/* price chart modal — กราฟราคาย้อนหลัง 6 ชม. */
+#priceChartOverlay {
+  display: none; position: fixed; inset: 0; background: rgba(4,10,7,0.85);
+  z-index: 999; align-items: center; justify-content: center; padding: 16px;
+}
+#priceChartOverlay.show { display: flex; }
+.pc-box { background: #0a1f16; border: 1px solid #10241a; border-radius: 16px; padding: 16px; max-width: 460px; width: 100%; max-height: 88vh; overflow-y: auto; }
+.pc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.pc-title { font-size: 0.92rem; font-weight: 800; color: #e2e8f0; }
+.pc-close { background: #123a24; border: 1px solid #22c55e; color: #86efac; border-radius: 50%; width: 30px; height: 30px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.pc-chart-card { background: #071a10; border: 1px solid #0a2417; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.pc-chart-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: #9fc2ab; margin-bottom: 8px; }
+.pc-chart-body { height: 140px; position: relative; }
+.pc-hint { font-size: 0.68rem; color: #4b6b58; text-align: center; margin-top: 4px; }
+
+.asset-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #10241a; }
+.asset-left { display: flex; align-items: center; gap: 8px; }
+.asset-icon { font-size: 1.3rem; }
+.asset-name { font-weight: 700; font-size: 0.88rem; }
+.asset-qty { font-size: 0.7rem; color: #6b8f7a; }
+.asset-val { font-weight: 800; text-align: right; }
+.asset-chg { font-size: 0.7rem; text-align: right; }
+
+.hist-item { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #10241a; font-size: 0.82rem; }
+.hist-time { color: #6b8f7a; min-width: 46px; flex-shrink: 0; }
+.hist-empty { color: #24413a; font-size: 0.85rem; text-align: center; padding: 20px 0; }
+
+/* ranking */
+.rank-row { display: flex; align-items: center; gap: 12px; background: #0a1f16; border: 1px solid #10241a; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+.rank-row.me { border-color: var(--myhex, #22c55e); background: #123a24; }
+.rank-num { font-size: 1.2rem; font-weight: 900; width: 30px; text-align: center; flex-shrink: 0; }
+.rank-info { flex: 1; }
+.rank-name { font-weight: 800; font-size: 0.9rem; }
+.rank-val { font-weight: 900; text-align: right; }
+
+/* station tab — live=เขียว, รอ=อำพัน (เพื่อให้แยกจาก live เห็นชัด), เสร็จแล้ว=เทากลาง */
+.status-banner { border-radius: 14px; padding: 16px; margin-bottom: 14px; text-align: center; }
+.status-banner.live { background: linear-gradient(135deg, #052e14, #0a1f16); border: 1px solid #16a34a; }
+.status-banner.wait { background: linear-gradient(135deg, #2a2410, #0a1f16); border: 1px solid #ca8a04; }
+.status-banner.done { background: #0a1f16; border: 1px solid #24413a; }
+.sb-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #9fc2ab; margin-bottom: 6px; }
+.sb-main { font-size: 1.15rem; font-weight: 900; }
+.sb-sub { font-size: 0.8rem; color: #9fc2ab; margin-top: 4px; }
+.sb-activity { display: block; font-size: 0.75rem; font-weight: 700; color: #86efac; margin-top: 3px; }
+.sb-countdown { font-size: 1.6rem; font-weight: 900; font-variant-numeric: tabular-nums; margin-top: 6px; }
+
+.notif-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #2a4a3a; background: #0f2b1f; color: #9fc2ab; font-weight: 700; font-size: 0.85rem; margin-bottom: 14px; cursor: pointer; }
+.notif-btn.on { border-color: #16a34a; background: #052e14; color: #4ade80; }
+
+.rnd-row { display: flex; align-items: center; gap: 10px; background: #0a1f16; border: 1px solid #10241a; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+.rnd-row.current { border-color: #16a34a; background: #052e1444; }
+.rnd-num { font-size: 0.75rem; color: #6b8f7a; min-width: 54px; }
+.rnd-info { flex: 1; }
+.rnd-station { font-weight: 700; font-size: 0.88rem; }
+.rnd-activity { font-size: 0.72rem; color: #86efac; margin-top: 1px; }
+.rnd-vs { font-size: 0.78rem; color: #9fc2ab; margin-top: 2px; }
+.rnd-time { font-size: 0.75rem; color: #6b8f7a; text-align: right; }
+
+/* selfie lock */
+.lock-wrap { text-align: center; padding: 60px 20px; }
+.lock-icon { font-size: 3.5rem; margin-bottom: 12px; }
+.lock-title { font-size: 1.1rem; font-weight: 800; color: #9fc2ab; margin-bottom: 6px; }
+.lock-sub { font-size: 0.85rem; color: #6b8f7a; line-height: 1.6; }
+
+/* selfie mission cards (ms- = mission selfie) */
+.ms-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
+.ms-toolbar-right { display: flex; align-items: center; gap: 8px; }
+.ms-refresh-btn { padding: 8px 14px; border-radius: 100px; border: 1px solid #2a4a3a; background: #0f2b1f; color: #9fc2ab; font-weight: 700; font-size: 0.75rem; cursor: pointer; }
+.ms-timer-inline {
+  padding: 8px 14px; border-radius: 100px; border: 1px solid #16a34a; background: #0f2b1f;
+  color: #4ade80; font-weight: 800; font-size: 0.8rem; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ms-timer-inline.warning { color: #eab308; border-color: #eab308; }
+.ms-timer-inline.danger { color: #ef4444; border-color: #ef4444; }
+.ms-card { background: #0a1f16; border: 1px solid #10241a; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.ms-card.done { border-color: #16a34a; }
+.ms-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ms-no { font-weight: 800; font-size: 0.8rem; color: #6b8f7a; }
+.ms-cat-badge { font-size: 0.65rem; font-weight: 700; padding: 0.2em 0.6em; border-radius: 100px; color: #04120a; white-space: nowrap; }
+.ms-cat-badge.catA { background: #22c55e; }
+.ms-cat-badge.catB { background: #4ade80; }
+.ms-cat-badge.catC { background: #a3e635; }
+.ms-cat-badge.catE { background: #38bdf8; }
+.ms-cat-badge.catS { background: #facc15; }
+.ms-text { font-size: 0.85rem; line-height: 1.55; margin-bottom: 10px; color: #e2e8f0; }
+.ms-answer-input {
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #24413a;
+  background: #04120a; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 8px;
+}
+.ms-answer-input:focus { outline: none; border-color: #22c55e; }
+.ms-file-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ms-file-input { display: none; }
+.ms-upload-btn {
+  padding: 8px 12px; border-radius: 10px; border: 1px dashed #2a4a3a; background: #0f2b1f;
+  color: #9fc2ab; font-size: 0.78rem; font-weight: 700; cursor: pointer; flex-shrink: 0;
+}
+.ms-submit-btn {
+  padding: 8px 16px; border-radius: 10px; border: none; background: #22c55e;
+  color: #04120a; font-weight: 800; font-size: 0.8rem; cursor: pointer; flex-shrink: 0;
+}
+.ms-submit-btn:disabled { opacity: 0.6; cursor: default; }
+.ms-status { width: 100%; font-size: 0.72rem; margin-top: 6px; padding: 6px 10px; border-radius: 8px; }
+.ms-status.loading { background: #2a2410; color: #facc15; }
+.ms-status.ready   { background: #0f2b1f; color: #4ade80; }
+.ms-status.success { background: #052e14; color: #4ade80; }
+.ms-status.error   { background: #3a0d0d; color: #fca5a5; }
+.ms-config-warning { background: #3a0d0d; border: 1px solid #ef4444; color: #fca5a5; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; font-size: 0.78rem; display: none; }
+
+/* alert overlay */
+#stationAlert {
+  position: fixed; inset: 0; z-index: 200; display: none;
+  background: rgba(4,18,10,0.94); align-items: center; justify-content: center; padding: 24px; text-align: center;
+}
+#stationAlert.show { display: flex; }
+.alert-box { background: #0a1f14; border: 2px solid #16a34a; border-radius: 20px; padding: 32px 24px; max-width: 380px; }
+.alert-icon { font-size: 3rem; margin-bottom: 10px; }
+.alert-title { font-size: 1.3rem; font-weight: 900; color: #4ade80; margin-bottom: 8px; }
+.alert-detail { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.alert-sub { font-size: 0.85rem; color: #9fc2ab; margin-bottom: 18px; }
+.alert-close { padding: 10px 28px; border-radius: 100px; border: none; background: #16a34a; color: #fff; font-weight: 800; cursor: pointer; }
+
+/* bottom nav */
+#bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  display: flex; background: #071a10; border-top: 1px solid #123a24;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-btn {
+  flex: 1; background: none; border: none; color: #6b8f7a; padding: 10px 4px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; font-size: 0.66rem; font-weight: 700;
+}
+.nav-btn .icon { font-size: 1.25rem; }
+.nav-btn.active { color: #4ade80; }
+.nav-btn .lockdot { position: relative; }
+.nav-btn .lockdot::after { content: '🔒'; position: absolute; top: -4px; right: -8px; font-size: 0.55rem; }
+
+.positive { color: #22c55e; }
+.negative { color: #ef4444; }
+.neutral  { color: #6b8f7a; }
+</style>
+</head>
+<body>
+
+<!-- ═══════ TEAM SELECT ═══════ -->
+<div id="teamSelectScreen">
+  <div class="ts-title">🧮📖 When Words Meet Numbers</div>
+  <div class="ts-sub">เลือกทีมสีของคุณก่อนเริ่มใช้งาน</div>
+  <div class="ts-grid" id="teamGrid"></div>
+</div>
+
+<!-- ═══════ PRICE CHART MODAL — กราฟราคาย้อนหลัง 6 ชม. (ช่วยตัดสินใจเลือกรับรางวัล) ═══════ -->
+<div id="priceChartOverlay" onclick="if(event.target===this) closePriceChartModal()">
+  <div class="pc-box">
+    <div class="pc-head">
+      <div class="pc-title">📈 กราฟราคาย้อนหลัง 6 ชั่วโมง</div>
+      <button class="pc-close" onclick="closePriceChartModal()">✕</button>
+    </div>
+    <div class="pc-chart-card">
+      <div class="pc-chart-top">
+        <span>₿ Bitcoin</span>
+        <span id="pcBtcPrice">กำลังโหลด...</span>
+      </div>
+      <div class="pc-chart-body"><canvas id="pcChartBtc"></canvas></div>
+    </div>
+    <div class="pc-chart-card">
+      <div class="pc-chart-top">
+        <span>🥇 ทองคำ</span>
+        <span id="pcGoldPrice">กำลังโหลด...</span>
+      </div>
+      <div class="pc-chart-body"><canvas id="pcChartGold"></canvas></div>
+    </div>
+    <div class="pc-hint">🏗️ ที่ดินราคาคงที่ กำหนดโดยครู ไม่มีกราฟย้อนหลัง</div>
+  </div>
+</div>
+
+<!-- ═══════ APP SHELL ═══════ -->
+<div id="app">
+  <div id="top-bar">
+    <div class="tb-team">
+      <div class="tb-dot" id="tbDot"></div>
+      <div>
+        <div class="tb-name" id="tbName">-</div>
+        <div class="tb-camp">ร.ร.มุกดาหาร · 29 ส.ค. 2569</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-clock" id="tbClock">--:--:--</div>
+      <div class="tb-change" onclick="changeTeam()">เปลี่ยนทีม</div>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- PANE: My Team -->
+    <div class="pane active" id="pane-myteam">
+      <div class="card">
+        <div class="mt-card-head">
+          <div class="card-title" style="margin-bottom:0;">💼 มูลค่าพอร์ตทีมของฉัน</div>
+          <button class="mt-chart-btn" onclick="openPriceChartModal()" aria-label="ดูกราฟราคาย้อนหลัง 6 ชั่วโมง">📈</button>
+        </div>
+        <div class="mt-value" id="mtValue">฿–</div>
+        <div class="mt-gain" id="mtGain"></div>
+        <div class="mt-rank-badge" id="mtRankBadge">อันดับ –</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎁 สินทรัพย์ที่ได้รับ</div>
+        <div id="mtAssets"><div class="hist-empty">กำลังโหลด...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 ประวัติการบันทึกคะแนน</div>
+        <div id="mtHistory"><div class="hist-empty">กำลังโหลด...</div></div>
+      </div>
+    </div>
+
+    <!-- PANE: Ranking -->
+    <div class="pane" id="pane-ranking">
+      <div class="card-title" style="margin-bottom:10px;">📊 อันดับคะแนนทุกทีม</div>
+      <div id="rankingList"><div class="hist-empty">กำลังโหลด...</div></div>
+    </div>
+
+    <!-- PANE: Selfie (locked / unlocked) -->
+    <div class="pane" id="pane-selfie">
+      <div id="selfieLocked" class="lock-wrap">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-title">ภารกิจเซลฟี่ยังไม่เปิด</div>
+        <div class="lock-sub">ภารกิจเซลฟี่จะเปิดให้เห็นในหน้านี้เร็วๆ นี้<br>ติดตามประกาศจากครู/สต๊าฟค่ายอีกครั้ง</div>
+      </div>
+      <div id="selfieUnlockedContent" style="display:none;">
+        <div class="ms-config-warning" id="msConfigWarning"></div>
+        <div class="ms-toolbar">
+          <div class="card-title" style="margin-bottom:0;">📸 ภารกิจเซลฟี่คณิต (<span id="msDoneCount">0</span>/<span id="msTotalCount">0</span>)</div>
+          <div class="ms-toolbar-right">
+            <div class="ms-timer-inline" id="msTimerInline">⏳ 45:00</div>
+            <button class="ms-refresh-btn" id="msBtnRefresh">🔄 เช็คสถานะ</button>
+          </div>
+        </div>
+        <div id="msGrid"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="bottom-nav">
+    <button class="nav-btn active" id="nav-myteam" onclick="switchPane('myteam')"><span class="icon">🏆</span>ทีมฉัน</button>
+    <button class="nav-btn" id="nav-ranking" onclick="switchPane('ranking')"><span class="icon">📊</span>อันดับ</button>
+    <button class="nav-btn" id="nav-selfie" onclick="switchPane('selfie')"><span class="icon lockdot">📸</span>เซลฟี่</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG — ใช้ชุดเดียวกับ ScoreBoard/ScoreInput (Apps Script + Sheet เดียวกัน)
+// ═══════════════════════════════════════════════════════
+// 4 ทีมสี — แต่ละทีมรวมนักเรียน ม.1 และ ม.4 ผสมกัน (ไม่แยกทีมตามชั้น)
+// เลี่ยงสีเขียว/ขาว เพราะเป็นสีประจำโรงเรียนมุกดาหาร
+const TEAMS = [
+  { id: 'ม่วง',   name: 'ทีมสีม่วง',   emoji: '🟣', hex: '#a855f7' },
+  { id: 'ฟ้า',    name: 'ทีมสีฟ้า',    emoji: '🔵', hex: '#0ea5e9' },
+  { id: 'ชมพู',   name: 'ทีมสีชมพู',   emoji: '🩷', hex: '#ec4899' },
+  { id: 'แดง',    name: 'ทีมสีแดง',    emoji: '🔴', hex: '#ef4444' },
+];
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzraQFgmtY_gl-C9mzyfVBMu2Vz9adglHZu6X7C1BQX0Je0kzOq-Cm14mqeziqAAeNK/exec';
+const GOLD_TROY_TO_BAHT = 15.244 / 31.1035;
+
+// ═══════════════════════════════════════════════════════
+//  SELFIE — ชุดโจทย์ใหม่ตามแนวทางค่ายเต่างอย "ถอดรหัส→ลงพื้นที่→แก้โจทย์"
+//  (20 ก.ค. 2569: เปลี่ยนจากชุดเดิม 30 ข้อ single-photo มาเป็นชุดนี้)
+//  ทีมส่ง "คำตอบข้อความ + รูปภาพ" คู่กันเสมอ ผ่าน POST เดียวกับ ScoreBoard/backend
+//  ⚠️ สถานที่เฉลย 30 จุด (ในไฟล์ ScoreBoard เท่านั้น) เป็นการตีความจากอาคาร/สถานที่
+//  ที่ยืนยันว่ามีอยู่จริงในโรงเรียน (ดู README "บริบทโรงเรียน") แต่ยังไม่ได้เดินสำรวจ
+//  เทียบพิกัดจริงทุกจุด — ข้อ 31 (พิกัด GPS) เป็นค่าประมาณ ยังไม่ยืนยัน ต้องให้ครู
+//  ตรวจสอบก่อนใช้งานจริงจากที่ระบุไว้ในหัวข้อสถานะของ README
+//  ห้ามแก้ข้อความภารกิจที่นี่โดยไม่แก้ ANSWER_KEY ใน MUK_ScoreBoard.html
+//  ให้ตรงกันด้วย (ข้อความต้องเหมือนกันทุกตัวอักษร)
+// ═══════════════════════════════════════════════════════
+// 21 ก.ค. 2569: เปลี่ยนจาก const คงที่ในไฟล์ → ควบคุมสดจากครูผ่านแถบเดียวกับ
+// currentRound ใน ScoreInput (config key 'selfieUnlocked' อ่านผ่าน action=getSettings
+// ทุก 5 วิ เหมือนกับ currentRound) ค่าเริ่มต้นก่อน poll ครั้งแรกคือ false (ล็อกไว้ก่อน
+// เพื่อความปลอดภัย เผื่อโหลดข้อมูลจาก server ไม่ทันหรือ error)
+let selfieUnlocked = false;
+const MISSIONS = [
+  [0, "S", "🫂 TEAM UP! ถ่ายภาพรวมกับสมาชิกทุกคนในทีมของคุณ (จะถ่ายที่ไหนในโรงเรียนก็ได้) แล้วพิมพ์จำนวนสมาชิกในทีมเป็นคำตอบ"],
+  [1, "A", "🚩 FLAGPOLE — หาเสาธงกลางลานโรงเรียนที่ธงไตรรงค์โบกสะบัดทุกเช้า สมมติเสาต้นนี้สูง 12 เมตร และเงาของเสาทอดยาว 9 เมตรทำมุมฉากกับพื้น จงหาระยะจากยอดเสาถึงปลายเงา (ด้านตรงข้ามมุมฉาก) แล้วยืนข้างเสาธงโพสท่าทหารถ่ายรูป!"],
+  [2, "A", "📚 LIBRARY — ห้องที่เงียบที่สุดในโรงเรียน เต็มไปด้วยหนังสือรอให้อ่าน สมมติห้องนี้เป็นรูปสี่เหลี่ยมผืนผ้า กว้าง 8 เมตร ยาว 12 เมตร มีพื้นที่กี่ตารางเมตร? นั่งลงทำท่าอ่านหนังสือถ่ายรูป!"],
+  [3, "A", "🏀 BASKETBALL COURT — ที่ที่รองเท้าผ้าใบเสียงดังเอี๊ยดและเสียงนกหวีดดังทุกเย็น วงกลมกลางสนามมีรัศมี 1.8 เมตร เส้นรอบวงยาวกี่เมตร? (π ≈ 3.14 ปัดทศนิยม 1 ตำแหน่ง) ยืนในวงกลมกลางสนามโพสท่านักบาสถ่ายรูป!"],
+  [4, "A", "🚰 WATER STATION — จุดเติมน้ำที่ทุกคนแวะระหว่างคาบเรียน ถังเก็บน้ำทรงกระบอกที่นี่มีรัศมี 0.5 เมตร สูง 1.2 เมตร มีปริมาตรกี่ลูกบาศก์เมตร? (π ≈ 3.14 ปัดทศนิยม 2 ตำแหน่ง) ทำหน้ากระหายน้ำสุด ๆ ถ่ายรูป!"],
+  [5, "B", "🛵 TEACHER PARKING — ลานจอดรถของคุณครู ถ้า x คือจำนวนรถยนต์ (4 ล้อ) และ y คือจำนวนรถจักรยานยนต์ (2 ล้อ) จงเขียนนิพจน์แสดงจำนวนล้อรวมทั้งหมดในลานนี้"],
+  [6, "B", "🥤 CANTEEN SNACK SHOP — ร้านขายขนม/น้ำดื่มตอนพัก น้ำดื่มขวดละ 15 บาท แต่ถ้าซื้อยกลัง (ลังละ 20 ขวด) จะจ่ายรวมแค่ 250 บาท ซื้อยกลังประหยัดกว่าซื้อแยกทีละขวดกี่บาท?"],
+  [7, "B", "🧯 FIRE EXTINGUISHER — อุปกรณ์สีแดงที่หวังว่าไม่ต้องได้ใช้ หาให้เจอที่ผนังตึกไหนก็ได้ ถ้า 2x − 6 = 40 จงหาค่า x แล้วทำท่าคำนับให้ถังดับเพลิงถ่ายรูป!"],
+  [8, "B", "🕐 SCHOOL CLOCK — นาฬิกาเรือนใดก็ได้ในโรงเรียน ถ้า 3y + 9 = 72 จงหาค่า y แล้วชูนิ้วมือ (หรือเขียนกระดาษ) แสดงตัวเลข y ถ่ายรูปคู่กับนาฬิกา!"],
+  [9, "C", "🗑️ RECYCLE BIN — ถังคัดแยกขยะ สมมติในถังนี้มีขวดพลาสติก 5 ใบ แก้วกระดาษ 8 ใบ กระป๋อง 3 ใบ ฐานนิยม (Mode) ของสิ่งของในถังนี้คือประเภทใด? (ตอบเป็นภาษาอังกฤษ: bottles / cups / cans)"],
+  [10, "C", "🎒 SCHOOL GATE — ประตูที่คุณเดินผ่านทุกวัน จากการสำรวจนักเรียน 40 คนที่เดินผ่านจุดนี้ พบว่า 30 คนติดบัตรนักเรียนถูกต้อง คิดเป็นร้อยละเท่าใด?"],
+  [11, "C", "🧴 HAND-WASHING POINT — จุดล้างมือจุดใดก็ได้ในโรงเรียน ในถุงมีลูกปัดสีขาว 6 เม็ด สีดำ 4 เม็ด สุ่มหยิบ 1 เม็ด ความน่าจะเป็นที่จะได้สีดำมีค่าเท่าใด? (ตอบเศษส่วนอย่างต่ำ)"],
+  [12, "C", "🌳 BIG TREE — ต้นไม้ใหญ่ที่สุดในโรงเรียน นับจำนวนเพื่อนในทีมที่ต้องจับมือกันให้ครบรอบลำต้นพอดี แล้วบอกว่าจำนวนคนนั้นเป็นจำนวนเฉพาะ (prime) หรือไม่ใช่จำนวนเฉพาะ (not prime)?"],
+  [13, "E", "💻 COMPUTER ROOM — ทายชื่อห้องจากตัวอักษร: C _ M P _ T _ R   R _ _ M แล้วไปที่ห้องนั้น จากนั้นแก้โจทย์ 15² เท่ากับเท่าไร?"],
+  [14, "E", "🏥 NURSE'S ROOM — ทายจากอิโมจิ: 🤒💊🩹 แล้วไปที่ห้องนั้น จากนั้นแก้โจทย์ 7 × 8 − 6 เท่ากับเท่าไร?"],
+  [15, "E", "📢 NOTICE BOARD — riddle: \"I am covered with papers, announcements, and news. Everyone checks me to know what's happening today.\" หาป้ายนี้ให้เจอ แล้วแก้โจทย์ (12 + 18 + 30) ÷ 3 เท่ากับเท่าไร?"],
+  [16, "S", "🎯 FINAL CHALLENGE — ขอจำนวนนักเรียนทั้งหมดในค่ายวันนี้จากครู (80 คน) คำนวณร้อยละ 15 ของจำนวนนั้น (ปัดเป็นจำนวนเต็ม) แล้วรวมเพื่อนในทีมให้ได้จำนวนเท่ากับคำตอบ ถ่ายรูปกลุ่มใหญ่!"],
+];
+
+const CAT_LABELS = { A: '📐 เรขาคณิต', B: '🔢 พีชคณิต', C: '🎲 สถิติ', E: '🔤 คำศัพท์อังกฤษ', S: '🎯 พิเศษ' };
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let myTeam = localStorage.getItem('swpStudentTeam') || null;
+let remoteState = { transactions: [], settings: { landPrice: 100000 } };
+let prices = { btc: null, gold: null };
+let currentPane = 'myteam';
+
+const fmt = n => n == null ? '–' : '฿' + Math.round(n).toLocaleString('th-TH');
+function teamById(id) { return TEAMS.find(t => t.id === id); }
+function assetLabel(type) { return type === 'btc' ? '₿ Bitcoin' : type === 'gold' ? '🥇 ทองคำ' : '🏗️ ที่ดิน'; }
+function assetIcon(type) { return type === 'btc' ? '₿' : type === 'gold' ? '🥇' : '🏗️'; }
+function fmtQty(type, qty) {
+  if (type === 'btc') return qty.toFixed(8) + ' BTC';
+  if (type === 'gold') return qty.toFixed(4) + ' บาท (ทอง)';
+  return qty.toFixed(0) + ' แปลง';
+}
+
+// ═══════════════════════════════════════════════════════
+//  TEAM SELECT
+// ═══════════════════════════════════════════════════════
+document.getElementById('teamGrid').innerHTML = TEAMS.map(t => `
+  <button class="ts-btn" style="border-color:${t.hex}" onclick="selectTeam('${t.id}')">
+    <span class="dot" style="background:${t.hex}"></span>
+    ${t.emoji} ${t.name.replace('ทีมสี','')}
+  </button>`).join('');
+
+function selectTeam(id) {
+  myTeam = id;
+  localStorage.setItem('swpStudentTeam', id);
+  boot();
+}
+function changeTeam() {
+  document.getElementById('teamSelectScreen').classList.remove('hidden');
+  document.getElementById('app').classList.remove('active');
+}
+
+function boot() {
+  if (!myTeam) {
+    document.getElementById('teamSelectScreen').classList.remove('hidden');
+    document.getElementById('app').classList.remove('active');
+    return;
+  }
+  const team = teamById(myTeam);
+  document.getElementById('teamSelectScreen').classList.add('hidden');
+  document.getElementById('app').classList.add('active');
+  document.documentElement.style.setProperty('--myhex', team.hex);
+  document.getElementById('tbDot').style.background = team.hex;
+  document.getElementById('tbName').textContent = team.emoji + ' ' + team.name;
+  initSelfiePane();
+  refresh();
+  pollRoundControl();
+}
+
+// ═══════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════
+function updateClock() {
+  document.getElementById('tbClock').textContent = new Date().toLocaleTimeString('th-TH', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════
+//  FETCH DATA
+// ═══════════════════════════════════════════════════════
+async function fetchRemoteState() {
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getAll');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    remoteState = await res.json();
+  } catch (e) { console.warn('fetch state failed', e); }
+  return remoteState;
+}
+async function fetchPrices() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb', { cache: 'no-store' });
+    const data = await res.json();
+    prices.btc = data.bitcoin.thb;
+    prices.gold = data['tether-gold'].thb * GOLD_TROY_TO_BAHT;
+  } catch (e) { console.warn('fetch prices failed', e); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PRICE CHART MODAL — กราฟราคา BTC/ทองคำ ย้อนหลัง 6 ชม. (เหมือนจอหลัก ScoreBoard)
+//  เพื่อช่วยนักเรียนตัดสินใจว่าจะรับรางวัลเป็นสินทรัพย์ไหน — ดึงข้อมูลสดทุกครั้งที่กดเปิด
+// ═══════════════════════════════════════════════════════
+let pcChartBtc = null;
+let pcChartGold = null;
+
+function pcTimeFmt(ts) {
+  return new Date(ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+function pcSampleData(arr, maxPts = 24) {
+  if (arr.length <= maxPts) return arr;
+  const step = Math.ceil(arr.length / maxPts);
+  return arr.filter((_, i) => i % step === 0 || i === arr.length - 1);
+}
+function pcMakeChartData(rawPrices) {
+  const sampled = pcSampleData(rawPrices);
+  return { labels: sampled.map(p => pcTimeFmt(p[0])), values: sampled.map(p => Math.round(p[1])) };
+}
+const PC_CHART_OPTS = (color) => ({
+  responsive: true, maintainAspectRatio: false,
+  animation: { duration: 500 },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#10241a', borderColor: '#1c3327', borderWidth: 1,
+      titleColor: '#6b8f7a', bodyColor: '#e2e8f0',
+      callbacks: { label: ctx => '฿' + ctx.parsed.y.toLocaleString('th-TH') }
+    }
+  },
+  scales: {
+    x: { grid: { color: '#10241a' }, ticks: { color: '#4b6b58', maxTicksLimit: 5, font: { size: 9 }, maxRotation: 0 } },
+    y: { grid: { color: '#0c1f14' }, ticks: { color: '#4b6b58', font: { size: 9 },
+         callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v } }
+  }
+});
+function pcMakeGradient(ctx, chart, hex) {
+  const { chartArea } = chart;
+  if (!chartArea) return hex + '33';
+  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, hex + '55');
+  g.addColorStop(1, hex + '00');
+  return g;
+}
+function pcInitChart(canvasId, d, color) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels: d.labels, datasets: [{
+      data: d.values, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.35, fill: true,
+      backgroundColor: (context) => pcMakeGradient(context.chart.ctx, context.chart, color)
+    }] },
+    options: PC_CHART_OPTS(color),
+  });
+}
+function pcUpdateChart(chart, d) {
+  chart.data.labels = d.labels;
+  chart.data.datasets[0].data = d.values;
+  chart.update('none');
+}
+
+async function loadPriceChartData() {
+  const cutoff = Date.now() - 6 * 60 * 60 * 1000;
+  try {
+    const btcRes  = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+    const btcJson = await btcRes.json();
+    const btcPts  = btcJson.prices.filter(p => p[0] >= cutoff);
+
+    const gRes  = await fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+    const gJson = await gRes.json();
+    const gPts  = gJson.prices.filter(p => p[0] >= cutoff).map(p => [p[0], p[1] * GOLD_TROY_TO_BAHT]);
+
+    if (btcPts.length) document.getElementById('pcBtcPrice').textContent = fmt(btcPts.at(-1)[1]);
+    if (gPts.length)   document.getElementById('pcGoldPrice').textContent = fmt(gPts.at(-1)[1]);
+
+    const bd = pcMakeChartData(btcPts);
+    const gd = pcMakeChartData(gPts);
+
+    if (!pcChartBtc)  pcChartBtc  = pcInitChart('pcChartBtc',  bd, '#f97316');
+    else              pcUpdateChart(pcChartBtc, bd);
+
+    if (!pcChartGold) pcChartGold = pcInitChart('pcChartGold', gd, '#eab308');
+    else              pcUpdateChart(pcChartGold, gd);
+  } catch (e) {
+    console.warn('load price chart failed', e);
+    document.getElementById('pcBtcPrice').textContent = 'โหลดไม่ได้';
+    document.getElementById('pcGoldPrice').textContent = 'โหลดไม่ได้';
+  }
+}
+
+function openPriceChartModal() {
+  document.getElementById('priceChartOverlay').classList.add('show');
+  loadPriceChartData();
+}
+function closePriceChartModal() {
+  document.getElementById('priceChartOverlay').classList.remove('show');
+}
+
+function calcTeamValue(teamId, s) {
+  const landPrice = s.settings?.landPrice ?? 100000;
+  const rows = (s.transactions ?? []).filter(t => t.studentId === teamId);
+  let invested = 0, current = 0;
+  rows.forEach(t => {
+    invested += t.valueAtAward ?? 0;
+    if      (t.type === 'land') current += t.qty * landPrice;
+    else if (t.type === 'gold' && prices.gold) current += t.qty * prices.gold;
+    else if (t.type === 'btc'  && prices.btc ) current += t.qty * prices.btc;
+    else current += t.valueAtAward ?? 0;
+  });
+  return { invested, current, gain: current - invested, rows, landPrice };
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: MY TEAM
+// ═══════════════════════════════════════════════════════
+function renderMyTeam() {
+  const { invested, current, gain, rows, landPrice } = calcTeamValue(myTeam, remoteState);
+  document.getElementById('mtValue').textContent = fmt(current);
+  const gainPct = invested > 0 ? ((gain / invested) * 100).toFixed(1) : null;
+  const gainEl = document.getElementById('mtGain');
+  if (gainPct != null) {
+    gainEl.textContent = (gain >= 0 ? '+' : '') + fmt(gain) + ' (' + (gain >= 0 ? '+' : '') + gainPct + '%)';
+    gainEl.className = 'mt-gain ' + (gain >= 0 ? 'positive' : 'negative');
+  } else {
+    gainEl.textContent = 'ยังไม่มีรางวัล';
+    gainEl.className = 'mt-gain neutral';
+  }
+
+  const allScores = TEAMS.map(t => calcTeamValue(t.id, remoteState).current).sort((a, b) => b - a);
+  const rankIdx = allScores.indexOf(current);
+  document.getElementById('mtRankBadge').textContent = `อันดับ ${rankIdx + 1} จาก ${TEAMS.length} ทีม`;
+
+  const assetsEl = document.getElementById('mtAssets');
+  if (!rows.length) {
+    assetsEl.innerHTML = '<div class="hist-empty">ยังไม่มีสินทรัพย์</div>';
+  } else {
+    assetsEl.innerHTML = rows.map(t => {
+      let cv = null;
+      if      (t.type === 'land') cv = t.qty * landPrice;
+      else if (t.type === 'gold' && prices.gold) cv = t.qty * prices.gold;
+      else if (t.type === 'btc'  && prices.btc)  cv = t.qty * prices.btc;
+      return `
+        <div class="asset-row">
+          <div class="asset-left">
+            <span class="asset-icon">${assetIcon(t.type)}</span>
+            <div>
+              <div class="asset-name">${assetLabel(t.type)}</div>
+              <div class="asset-qty">${fmtQty(t.type, t.qty)}</div>
+            </div>
+          </div>
+          <div>
+            <div class="asset-val">${cv !== null ? fmt(cv) : '?'}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  const histEl = document.getElementById('mtHistory');
+  if (!rows.length) {
+    histEl.innerHTML = '<div class="hist-empty">ยังไม่มีประวัติ</div>';
+  } else {
+    const sorted = [...rows].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    histEl.innerHTML = sorted.map(t => {
+      const time = new Date(t.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="hist-item">
+          <span class="hist-time">${time}</span>
+          <span>${t.station ? `<span style="color:#475569">${t.station} · </span>` : ''}ได้รับ <b>${assetLabel(t.type)}</b> ${fmtQty(t.type, t.qty)} · มูลค่าตอนได้รับ ${fmt(t.valueAtAward)}</span>
+        </div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: RANKING
+// ═══════════════════════════════════════════════════════
+function renderRanking() {
+  const scores = TEAMS.map(t => ({ ...t, ...calcTeamValue(t.id, remoteState) }))
+    .sort((a, b) => b.current - a.current);
+  const icons = ['🥇','🥈','🥉'];
+  document.getElementById('rankingList').innerHTML = scores.map((t, i) => `
+    <div class="rank-row ${t.id === myTeam ? 'me' : ''}" style="${t.id === myTeam ? `--myhex:${t.hex}` : ''}">
+      <div class="rank-num">${icons[i] || '#' + (i + 1)}</div>
+      <div class="rank-info">
+        <div class="rank-name" style="color:${t.hex}">${t.emoji} ${t.name}${t.id === myTeam ? ' ★' : ''}</div>
+      </div>
+      <div class="rank-val" style="color:${t.hex}">${fmt(t.current)}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATION / SCHEDULE + NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  SYNC — เช็คสถานะ selfieUnlocked + นาฬิกาจับเวลาจาก ScoreBoard ทุก 5 วิ
+//  (MUK ไม่มีระบบหมุนฐาน จึงตัดส่วนแจ้งเตือนเปลี่ยนฐานของ SWP ออก)
+// ═══════════════════════════════════════════════════════
+async function pollRoundControl() {
+  if (!myTeam || !SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) return;
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getSettings');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    const s = await res.json();
+    if (!s || s.error) return;
+    remoteState.settings = { ...remoteState.settings, ...s };
+
+    const wasUnlocked = selfieUnlocked;
+    selfieUnlocked = Number(s.selfieUnlocked) === 1;
+    if (selfieUnlocked !== wasUnlocked) initSelfiePane();
+
+    msTimerStatus = Number(s.selfieTimerStatus) || 0;
+    msTimerEndAt = Number(s.selfieTimerEndAt) || 0;
+    if (s.selfieTimerRemaining !== undefined) msTimerRemaining = Number(s.selfieTimerRemaining);
+    renderMsTimer();
+  } catch (e) { console.warn('poll round control failed', e); }
+}
+setInterval(pollRoundControl, 5000);
+
+// ═══════════════════════════════════════════════════════
+//  SELFIE PANE — ส่งคำตอบข้อความ + รูปภาพคู่กันต่อภารกิจ (รูปแบบเดียวกับเต่างอย)
+// ═══════════════════════════════════════════════════════
+let msInited = false;
+
+// ── นาฬิกาจับเวลาภารกิจเซลฟี่ (45 นาที) — ซิงก์มาจาก ScoreBoard แท็บ "⏱️ จับเวลา"
+// ผ่าน config key เดียวกับที่ ScoreBoard เขียน (selfieTimerStatus/EndAt/Remaining)
+// อัปเดตค่าจาก pollRoundControl() ทุก 5 วิ แล้ว tick ทุก 1 วิ ในเครื่องเพื่อความลื่นไหล
+// โดยอิง msTimerEndAt (นาฬิกาจริง) ไม่ใช่แค่นับถอยหลังในเครื่องเฉยๆ กันเวลาเพี้ยน
+let msTimerStatus = 0;      // 0=ยังไม่เริ่ม/รีเซ็ตแล้ว, 1=กำลังนับถอยหลัง, 2=หยุดชั่วคราว
+let msTimerEndAt = 0;
+let msTimerRemaining = 45 * 60;
+
+function msFormatTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+function renderMsTimer() {
+  const el = document.getElementById('msTimerInline');
+  if (!el) return;
+  const remaining = msTimerStatus === 1
+    ? Math.max(0, Math.round((msTimerEndAt - Date.now()) / 1000))
+    : msTimerRemaining;
+  el.textContent = '⏳ ' + msFormatTime(remaining);
+  el.classList.toggle('warning', remaining <= 300 && remaining > 60);
+  el.classList.toggle('danger', remaining <= 60);
+}
+setInterval(renderMsTimer, 1000);
+
+const msState = {};        // { [no]: { status, message } }
+const msPendingFile = {};  // { [no]: File }
+const msPendingB64 = {};   // { [no]: string }
+const msCompressing = {};  // { [no]: Promise }
+const msCompressGen = {};  // { [no]: number }
+const MS_MAX_FILE_MB = 20;
+
+function initSelfiePane() {
+  const navIcon = document.querySelector('#nav-selfie .icon');
+  if (selfieUnlocked && MISSIONS.length) {
+    document.getElementById('selfieLocked').style.display = 'none';
+    document.getElementById('selfieUnlockedContent').style.display = 'block';
+    if (navIcon) navIcon.classList.remove('lockdot');
+    if (!msInited) {
+      msInited = true;
+      renderSelfieGrid();
+      const grid = document.getElementById('msGrid');
+      grid.addEventListener('change', (e) => {
+        const input = e.target.closest('.ms-file-input');
+        if (!input || !input.files || !input.files.length) return;
+        const no = parseInt(input.dataset.no, 10);
+        const file = input.files[0];
+        input.value = '';
+        msPendingFile[no] = file;
+        msStartCompressing(no, file);
+      });
+      grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.ms-submit-btn');
+        if (!btn) return;
+        submitMission(parseInt(btn.dataset.no, 10));
+      });
+      document.getElementById('msBtnRefresh').addEventListener('click', refreshMissionStatus);
+      if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) {
+        const w = document.getElementById('msConfigWarning');
+        w.style.display = 'block';
+        w.textContent = '⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL — แจ้งครู/สต๊าฟก่อนใช้งาน';
+      }
+    }
+    refreshMissionStatus();
+  } else {
+    document.getElementById('selfieLocked').style.display = 'block';
+    document.getElementById('selfieUnlockedContent').style.display = 'none';
+    if (navIcon) navIcon.classList.add('lockdot');
+  }
+}
+
+function renderSelfieGrid() {
+  document.getElementById('msTotalCount').textContent = MISSIONS.length;
+  document.getElementById('msGrid').innerHTML = MISSIONS.map(([no, cat, text]) => `
+    <div class="ms-card" id="msCard-${no}">
+      <div class="ms-card-top">
+        <div class="ms-no">Selfie#${no}</div>
+        <span class="ms-cat-badge cat${cat}">${CAT_LABELS[cat] || cat}</span>
+      </div>
+      <div class="ms-text">🔍 ${text}</div>
+      <input type="text" class="ms-answer-input" id="msAnswer-${no}" placeholder="พิมพ์คำตอบที่นี่...">
+      <div class="ms-file-row">
+        <input type="file" accept="image/*" class="ms-file-input" id="msFile-${no}" data-no="${no}">
+        <label for="msFile-${no}" class="ms-upload-btn">📷 เลือกรูป</label>
+        <button class="ms-submit-btn" data-no="${no}">ส่งคำตอบ + รูป</button>
+      </div>
+      <div class="ms-status" id="msStatus-${no}" style="display:none;"></div>
+    </div>`).join('');
+}
+
+function msWithTimeout(promise, ms, message) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
+  });
+}
+
+function msCompressImage(file, maxDim, quality) {
+  const attempt = new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('เปิดรูปไม่สำเร็จ'));
+      img.onload = () => {
+        try {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+        } catch (err) { reject(err); }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  return msWithTimeout(attempt, 25000, 'เตรียมรูปนานเกิน 25 วิ — ลองถ่ายรูปใหม่หรือลองอีกครั้ง');
+}
+
+function msSetStatus(no, status, message) {
+  msState[no] = { status, message };
+  const el = document.getElementById('msStatus-' + no);
+  if (el) { el.style.display = 'block'; el.textContent = message; el.className = 'ms-status ' + status; }
+}
+
+function msStartCompressing(no, file) {
+  msCompressGen[no] = (msCompressGen[no] || 0) + 1;
+  const myGen = msCompressGen[no];
+  delete msPendingB64[no];
+  if (file.size > MS_MAX_FILE_MB * 1024 * 1024) {
+    msSetStatus(no, 'error', `❌ ไฟล์ใหญ่เกินไป (${(file.size / 1024 / 1024).toFixed(1)}MB, สูงสุด ${MS_MAX_FILE_MB}MB)`);
+    delete msPendingFile[no];
+    return;
+  }
+  msSetStatus(no, 'loading', '⏳ กำลังเตรียมรูป...');
+  msCompressing[no] = msCompressImage(file, 1280, 0.72).then((b64) => {
+    if (msCompressGen[no] !== myGen) return;
+    msPendingB64[no] = b64;
+    msSetStatus(no, 'ready', '✅ รูปพร้อมแล้ว — พิมพ์คำตอบแล้วกด "ส่งคำตอบ + รูป"');
+    const inputEl = document.getElementById('msAnswer-' + no);
+    if (inputEl) inputEl.focus();
+  }).catch((err) => {
+    if (msCompressGen[no] !== myGen) return;
+    msSetStatus(no, 'error', '❌ เตรียมรูปไม่สำเร็จ — ลองเลือกใหม่ (' + err.message + ')');
+    delete msPendingFile[no];
+  });
+}
+
+async function submitMission(no) {
+  if (!myTeam) { alert('กรุณาเลือกทีมก่อน'); return; }
+  if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) { alert('ยังไม่ได้ตั้งค่า SCRIPT_URL'); return; }
+  const answerInput = document.getElementById('msAnswer-' + no);
+  const answerText = (answerInput ? answerInput.value : '').trim();
+  const file = msPendingFile[no];
+  if (!answerText) { alert('กรุณาพิมพ์คำตอบก่อนส่ง'); return; }
+  if (!file) { alert('กรุณาเลือกรูปก่อนส่ง'); return; }
+  if (msState[no] && msState[no].status === 'loading') return;
+
+  const btn = document.querySelector(`.ms-submit-btn[data-no="${no}"]`);
+  const originalText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังส่ง...'; }
+  try {
+    let b64 = msPendingB64[no];
+    if (!b64) {
+      msSetStatus(no, 'loading', '⏳ กำลังบีบอัดรูป...');
+      b64 = await (msCompressing[no] || msCompressImage(file, 1280, 0.72));
+    }
+    msSetStatus(no, 'loading', '⏳ กำลังอัปโหลด...');
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        team: myTeam,
+        missionNo: no,
+        answerText: answerText,
+        filename: `MISSION${no}_${myTeam}_${Date.now()}.jpg`,
+        mimeType: 'image/jpeg',
+        imageBase64: b64,
+      }),
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      msSetStatus(no, 'success', '✅ ส่งสำเร็จ (อัปโหลดใหม่อีกครั้งได้หากต้องการเปลี่ยนคำตอบ)');
+      const card = document.getElementById('msCard-' + no);
+      if (card) card.classList.add('done');
+      delete msPendingB64[no]; delete msPendingFile[no]; delete msCompressing[no];
+      msUpdateDoneCount();
+    } else {
+      throw new Error(data.message || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
+    }
+  } catch (err) {
+    msSetStatus(no, 'error', '❌ ส่งไม่สำเร็จ — ลองอีกครั้ง (' + err.message + ')');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalText || 'ส่งคำตอบ + รูป'; }
+  }
+}
+
+function msUpdateDoneCount() {
+  const doneCount = document.querySelectorAll('#msGrid .ms-card.done').length;
+  document.getElementById('msDoneCount').textContent = doneCount;
+}
+
+let msRefreshInFlight = false;
+async function refreshMissionStatus() {
+  if (!myTeam || !SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) return;
+  if (msRefreshInFlight) return;
+  msRefreshInFlight = true;
+  const btn = document.getElementById('msBtnRefresh');
+  const originalLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '🔄 กำลังเช็ค...'; }
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getMissions');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const headers = data.headers || [];
+    const rows = data.rows || [];
+    const teamColIdx = headers.findIndex(h => h === 'ทีม');
+    const myRow = rows.find(r => (r[teamColIdx] || '').toString().trim() === myTeam);
+    if (myRow) {
+      for (const [no] of MISSIONS) {
+        if (msState[no] && msState[no].status === 'loading') continue;
+        const photoColIdx = headers.findIndex(h => h === 'M' + no + '_PHOTO');
+        const answerColIdx = headers.findIndex(h => h === 'M' + no + '_ANSWER');
+        if (photoColIdx < 0) continue;
+        const photoCell = (myRow[photoColIdx] || '').toString().trim();
+        const answerCell = answerColIdx >= 0 ? (myRow[answerColIdx] || '').toString().trim() : '';
+        if (photoCell) {
+          msSetStatus(no, 'success', '✅ ส่งแล้ว — คำตอบที่บันทึกไว้: ' + (answerCell || '(ไม่มี)'));
+          const card = document.getElementById('msCard-' + no);
+          if (card) card.classList.add('done');
+          const answerInput = document.getElementById('msAnswer-' + no);
+          if (answerInput && !answerInput.value) answerInput.value = answerCell;
+        }
+      }
+    }
+    msUpdateDoneCount();
+  } catch (err) {
+    console.error('refreshMissionStatus failed', err);
+  } finally {
+    msRefreshInFlight = false;
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel || '🔄 เช็คสถานะ'; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchPane(name) {
+  currentPane = name;
+  document.querySelectorAll('.pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'myteam')  renderMyTeam();
+  if (name === 'ranking') renderRanking();
+  if (name === 'selfie' && selfieUnlocked) refreshMissionStatus();
+}
+
+// ═══════════════════════════════════════════════════════
+//  REFRESH LOOP
+// ═══════════════════════════════════════════════════════
+async function refresh() {
+  await Promise.all([fetchPrices(), fetchRemoteState()]);
+  switchPane(currentPane);
+}
+setInterval(refresh, 60000);
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+boot();
+</script>
+</body>
+</html>
