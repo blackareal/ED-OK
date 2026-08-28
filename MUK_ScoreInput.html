@@ -193,7 +193,7 @@
 
   <div class="card" style="margin-bottom:16px;">
     <label>🎮 กิจกรรมที่บันทึกผล</label>
-    <select id="select-game" onchange="renderAwardGrid()">
+    <select id="select-game" onchange="onGameChange()">
       <option value="">-- กรุณาเลือกกิจกรรม --</option>
     </select>
   </div>
@@ -500,15 +500,18 @@ function currentGame() {
   return GAMES.find(g => g.id === id) || null;
 }
 
+function onGameChange() {
+  // เริ่มกิจกรรมใหม่ทุกครั้งที่เปลี่ยนกิจกรรม (ล้างการเลือกสินทรัพย์/มูลค่าเดิม)
+  Object.keys(awardSelection).forEach(k => delete awardSelection[k]);
+  renderAwardGrid();
+}
+
 function renderAwardGrid() {
   const game = currentGame();
   const card = document.getElementById('award-grid-card');
   const grid = document.getElementById('award-grid');
   if (!game) { card.style.display = 'none'; return; }
   card.style.display = 'block';
-
-  // เริ่มกิจกรรมใหม่ทุกครั้งที่เปลี่ยนกิจกรรม (ล้างการเลือกสินทรัพย์/มูลค่าเดิม)
-  Object.keys(awardSelection).forEach(k => delete awardSelection[k]);
 
   const alreadyDone = TEAMS.every(t => state.transactions.some(tx => tx.studentId === t.id && tx.station === game.name));
 
@@ -592,6 +595,8 @@ async function confirmAward() {
   if (btn) btn.textContent = '✅ บันทึกผลกิจกรรมนี้';
   refreshWallets();
   renderHistory();
+  // ล้างการเลือกหลังบันทึกสำเร็จ เตรียมพร้อมสำหรับกิจกรรมถัดไป
+  Object.keys(awardSelection).forEach(k => delete awardSelection[k]);
   renderAwardGrid();
 }
 
