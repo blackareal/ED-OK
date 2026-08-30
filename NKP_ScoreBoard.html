@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สกอร์บอร์ด · ค่าย STEM หนองหัวคู</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #06060a; color: #f1f5f9; font-family: 'Segoe UI', 'Sarabun', sans-serif;
+    min-height: 100vh; padding: 28px 24px 50px;
+  }
+  header { text-align: center; margin-bottom: 22px; }
+  h1 { font-size: clamp(22px, 3.5vw, 34px); font-weight: 900; }
+  .sub { color: #64748b; font-size: 0.95rem; margin-top: 4px; }
+
+  .tab-nav { display: flex; justify-content: center; gap: 10px; margin: 22px 0 30px; flex-wrap: wrap; }
+  .tab-btn {
+    background: #14141d; border: 1px solid #26263a; color: #94a3b8;
+    padding: 10px 22px; border-radius: 30px; cursor: pointer; font-weight: 700; font-size: 0.9rem;
+  }
+  .tab-btn.active { background: #1e293b; color: #fff; border-color: #38bdf8; }
+
+  .pane { display: none; max-width: 980px; margin: 0 auto; }
+  .pane.active { display: block; }
+
+  /* ── Overall leaderboard ── */
+  .board { display: flex; flex-direction: column; gap: 14px; max-width: 620px; margin: 0 auto; }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #111119; border: 1px solid #22222e; border-radius: 16px;
+    padding: 18px 24px; transition: transform .2s;
+  }
+  .row.top1 { border-color: gold; box-shadow: 0 0 24px rgba(255,215,0,.15); }
+  .row-left { display: flex; align-items: center; gap: 14px; }
+  .medal { font-size: 1.6rem; width: 40px; text-align: center; }
+  .dot { width: 20px; height: 20px; border-radius: 50%; }
+  .name { font-weight: 800; font-size: 1.15rem; }
+  .pts { font-weight: 900; font-size: 1.6rem; }
+
+  /* ── Per-grade bar chart ── */
+  .grade-groups { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; }
+  .grade-group {
+    background: #111119; border: 1px solid #22222e; border-radius: 16px;
+    padding: 18px 16px 14px; flex: 1; min-width: 210px; max-width: 240px;
+  }
+  .grade-title { text-align: center; font-weight: 800; font-size: 1.05rem; margin-bottom: 14px; color: #cbd5e1; }
+  .bars-row { display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 180px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; width: 40px; }
+  .bar-val { font-size: 0.78rem; font-weight: 800; margin-bottom: 4px; }
+  .bar { width: 100%; border-radius: 6px 6px 0 0; transition: height .5s ease; min-height: 3px; }
+  .bar-label { font-size: 0.68rem; color: #94a3b8; margin-top: 6px; text-align: center; }
+
+  .empty { text-align: center; color: #475569; padding: 40px 0; font-size: 0.95rem; }
+  .refresh-note { text-align: center; color: #334155; font-size: 0.75rem; margin-top: 30px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏆 ค่าย STEM หนองหัวคูปวงประชานุเคราะห์</h1>
+  <div class="sub">31 สิงหาคม 2569 · ม.1–ม.6 รวม 220 คน · 4 สี</div>
+</header>
+
+<div class="tab-nav">
+  <button class="tab-btn active" id="tab-btn-overall" onclick="switchTab('overall')">🏆 ภาพรวมคะแนน</button>
+  <button class="tab-btn" id="tab-btn-grade" onclick="switchTab('grade')">📊 คะแนนแยกระดับชั้น</button>
+</div>
+
+<div class="pane active" id="pane-overall">
+  <div class="board" id="overall-board"></div>
+</div>
+
+<div class="pane" id="pane-grade">
+  <div class="grade-groups" id="grade-groups"></div>
+</div>
+
+<div class="refresh-note" id="refresh-note">อัปเดตอัตโนมัติทุก 30 วินาที</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwsgHY5Ik5_rNMK_DQUhdFON1QdPAwzDK294B5PBnQn_tJSXcTXemn9JlKNdDNvnU7T/exec';
+
+const TEAMS = [
+  { id: 'เหลือง', name: 'สีเหลือง', emoji: '🟡', hex: '#eab308' },
+  { id: 'ชมพู',   name: 'สีชมพู',   emoji: '🩷', hex: '#ec4899' },
+  { id: 'ฟ้า',    name: 'สีฟ้า',    emoji: '🔵', hex: '#0ea5e9' },
+  { id: 'เขียว',  name: 'สีเขียว',  emoji: '🟢', hex: '#22c55e' },
+];
+
+const GRADES = [
+  { id: 'ม.1', name: 'ม.1' },
+  { id: 'ม.2', name: 'ม.2' },
+  { id: 'ม.3', name: 'ม.3' },
+  { id: 'ม.ปลาย', name: 'ม.ปลาย' },
+];
+
+const MEDALS = ['🥇', '🥈', '🥉', '4️⃣'];
+
+let scoreRows = [];
+let currentTab = 'overall';
+
+function switchTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  document.getElementById('tab-btn-' + name).classList.add('active');
+  render();
+}
+
+function renderOverall() {
+  const el = document.getElementById('overall-board');
+  if (!scoreRows.length) { el.innerHTML = '<div class="empty">ยังไม่มีการบันทึกคะแนน</div>'; return; }
+
+  const totals = TEAMS.map(t => ({
+    ...t,
+    total: scoreRows.filter(r => r.color === t.id).reduce((s, r) => s + r.points, 0),
+  })).sort((a, b) => b.total - a.total);
+
+  el.innerHTML = totals.map((t, i) => `
+    <div class="row ${i === 0 ? 'top1' : ''}">
+      <div class="row-left">
+        <div class="medal">${MEDALS[i]}</div>
+        <div class="dot" style="background:${t.hex}"></div>
+        <div class="name">${t.emoji} ${t.name}</div>
+      </div>
+      <div class="pts" style="color:${t.hex}">${t.total}</div>
+    </div>`).join('');
+}
+
+function renderGradeGroups() {
+  const el = document.getElementById('grade-groups');
+  if (!scoreRows.length) { el.innerHTML = '<div class="empty">ยังไม่มีการบันทึกคะแนน</div>'; return; }
+
+  // เฉพาะกิจกรรมที่แข่งแยกตามระดับชั้น (ไม่รวม SKY TARGET ซึ่งเป็นกิจกรรมรวมทุกระดับ)
+  const gradeRows = scoreRows.filter(r => GRADES.some(g => g.id === r.grade));
+
+  let max = 1;
+  const data = GRADES.map(g => {
+    const vals = TEAMS.map(t => gradeRows.filter(r => r.grade === g.id && r.color === t.id).reduce((s, r) => s + r.points, 0));
+    max = Math.max(max, ...vals);
+    return { grade: g, vals };
+  });
+
+  el.innerHTML = data.map(d => `
+    <div class="grade-group">
+      <div class="grade-title">${d.grade.name}</div>
+      <div class="bars-row">
+        ${TEAMS.map((t, i) => `
+          <div class="bar-col">
+            <div class="bar-val" style="color:${t.hex}">${d.vals[i]}</div>
+            <div class="bar" style="height:${max ? (d.vals[i] / max * 100) : 0}%; background:${t.hex}"></div>
+            <div class="bar-label">${t.emoji}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function render() {
+  if (currentTab === 'overall') renderOverall();
+  else renderGradeGroups();
+}
+
+async function refreshScores() {
+  if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) {
+    document.getElementById('refresh-note').textContent = '⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL';
+    return;
+  }
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getScores');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    const data = await res.json();
+    const headers = data.headers || [];
+    const rows = data.rows || [];
+    const idx = {};
+    headers.forEach((h, i) => idx[h] = i);
+    scoreRows = rows.map(r => ({
+      id: r[idx.id], timestamp: r[idx.timestamp], grade: r[idx.grade],
+      activityId: r[idx.activityId], activityName: r[idx.activityName],
+      color: r[idx.color], rank: r[idx.rank], points: Number(r[idx.points]) || 0,
+    }));
+    render();
+  } catch (err) {
+    console.error('refreshScores failed', err);
+  }
+}
+
+refreshScores();
+setInterval(refreshScores, 30000);
+</script>
+</body>
+</html>
