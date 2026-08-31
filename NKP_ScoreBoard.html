@@ -135,12 +135,22 @@ function renderGradeGroups() {
   // ทุกกิจกรรมแข่งแยกตามระดับชั้น (รวม SKY TARGET ช่วงบ่ายด้วย)
   const gradeRows = scoreRows.filter(r => GRADES.some(g => g.id === r.grade));
 
-  let max = 1;
   const data = GRADES.map(g => {
     const vals = TEAMS.map(t => gradeRows.filter(r => r.grade === g.id && r.color === t.id).reduce((s, r) => s + r.points, 0));
-    max = Math.max(max, ...vals);
     return { grade: g, vals };
   });
+
+  // คะแนนมักอยู่ในช่วงแคบ (8-20) — ถ้าสเกลจาก 0 แท่งจะดูใกล้เคียงกันหมด
+  // เลยยกฐานกราฟขึ้นมาใกล้ค่าต่ำสุดแทน เพื่อให้เห็นความต่างชัดเจนขึ้น
+  const allVals = data.flatMap(d => d.vals);
+  const maxVal = Math.max(1, ...allVals);
+  const minVal = Math.min(...allVals);
+  const range = maxVal - minVal;
+  const MIN_BAR_PCT = 12; // แท่งค่าต่ำสุดจะยังสูงอย่างน้อย 12% ไม่จมหาย
+  function barHeight(v) {
+    if (range <= 0) return 60;
+    return MIN_BAR_PCT + (v - minVal) / range * (100 - MIN_BAR_PCT);
+  }
 
   el.innerHTML = data.map(d => `
     <div class="grade-group">
@@ -149,7 +159,7 @@ function renderGradeGroups() {
         ${TEAMS.map((t, i) => `
           <div class="bar-col">
             <div class="bar-val" style="color:${t.hex}">${d.vals[i]}</div>
-            <div class="bar" style="height:${max ? (d.vals[i] / max * 100) : 0}%; background:${t.hex}"></div>
+            <div class="bar" style="height:${barHeight(d.vals[i])}%; background:${t.hex}"></div>
             <div class="bar-label">${t.emoji}</div>
           </div>`).join('')}
       </div>
