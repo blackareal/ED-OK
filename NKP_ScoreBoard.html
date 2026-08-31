@@ -132,7 +132,7 @@ function renderGradeGroups() {
   const el = document.getElementById('grade-groups');
   if (!scoreRows.length) { el.innerHTML = '<div class="empty">ยังไม่มีการบันทึกคะแนน</div>'; return; }
 
-  // เฉพาะกิจกรรมที่แข่งแยกตามระดับชั้น (ไม่รวม SKY TARGET ซึ่งเป็นกิจกรรมรวมทุกระดับ)
+  // ทุกกิจกรรมแข่งแยกตามระดับชั้น (รวม SKY TARGET ช่วงบ่ายด้วย)
   const gradeRows = scoreRows.filter(r => GRADES.some(g => g.id === r.grade));
 
   let max = 1;
