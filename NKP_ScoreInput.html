@@ -75,6 +75,38 @@
     background: #16a34a; color: #fff; padding: 11px 18px; border-radius: 10px;
     font-weight: 700; font-size: 0.85rem; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,.5);
   }
+
+  /* ── คะแนนพิเศษ ── */
+  .bonus-pick-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .bonus-team-btn {
+    flex: 1; min-width: 70px; padding: 10px 6px; border-radius: 10px; border: 2px solid #2a2a3a;
+    background: #14141d; color: #cbd5e1; font-weight: 700; font-size: 0.8rem; cursor: pointer;
+  }
+  .bonus-team-btn.selected { box-shadow: 0 0 0 2px currentColor inset; }
+  .bonus-grade-btn {
+    flex: 1; min-width: 62px; padding: 8px 6px; border-radius: 8px; border: 2px solid #2a2a3a;
+    background: #14141d; color: #94a3b8; font-weight: 700; font-size: 0.72rem; cursor: pointer;
+  }
+  .bonus-grade-btn.selected { border-color: #a78bfa; background: rgba(167,139,250,.14); color: #a78bfa; }
+  .bonus-pt-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .bonus-pt-btn {
+    flex: 1; padding: 12px 4px; border-radius: 10px; border: 2px solid #2a2a3a;
+    background: #14141d; color: #eab308; font-weight: 800; font-size: 1rem; cursor: pointer;
+  }
+  .bonus-pt-btn.selected { border-color: #eab308; background: rgba(234,179,8,.14); }
+  #bonus-custom {
+    width: 90px; padding: 11px 8px; border-radius: 10px; border: 1px solid #2a2a3a;
+    background: #04040a; color: #e2e8f0; font-size: 0.9rem; text-align: center;
+  }
+  #bonus-reason {
+    width: 100%; padding: 11px 10px; border-radius: 10px; border: 1px solid #2a2a3a;
+    background: #04040a; color: #e2e8f0; font-size: 0.85rem; margin-top: 4px;
+  }
+  .btn-bonus {
+    width: 100%; padding: 14px; border-radius: 12px; border: none; margin-top: 12px;
+    background: #eab308; color: #1a1400; font-weight: 800; font-size: 1rem; cursor: pointer;
+  }
+  .btn-bonus:disabled { opacity: .35; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -96,6 +128,21 @@
   <div id="team-rows"></div>
   <div class="status-box" id="award-status">เลือกอันดับให้ครบทั้ง 4 สี</div>
   <button class="btn-confirm" id="btn-confirm" onclick="confirmScore()" disabled>✅ บันทึกคะแนน</button>
+</div>
+
+<div class="card">
+  <h2>⭐ คะแนนพิเศษ (ให้นอกเหนือจากฐานกิจกรรม)</h2>
+  <div class="bonus-pick-row" id="bonus-team-row"></div>
+  <div class="bonus-pick-row" id="bonus-grade-row"></div>
+  <div class="bonus-pt-row">
+    <button class="bonus-pt-btn" onclick="setBonusPoints(1)">+1</button>
+    <button class="bonus-pt-btn" onclick="setBonusPoints(2)">+2</button>
+    <button class="bonus-pt-btn" onclick="setBonusPoints(3)">+3</button>
+    <input type="number" id="bonus-custom" placeholder="กำหนดเอง" oninput="setBonusPoints(parseInt(this.value,10))">
+  </div>
+  <input type="text" id="bonus-reason" placeholder="เหตุผล (ไม่บังคับ) เช่น ให้ความร่วมมือดีเยี่ยม">
+  <div class="status-box" id="bonus-status">เลือกทีมสี + คะแนนที่จะให้</div>
+  <button class="btn-bonus" id="btn-bonus-confirm" onclick="confirmBonus()" disabled>⭐ บันทึกคะแนนพิเศษ</button>
 </div>
 
 <div class="card">
@@ -126,7 +173,7 @@ const ACTIVITIES = [
   { id: 'base2', name: 'ฐาน 2 · ต่อแก้ว', scope: 'grade' },
   { id: 'base3', name: 'ฐาน 3 · Blokus Strategy', scope: 'grade' },
   { id: 'base4', name: 'ฐาน 4 · คอนโดแม่ไก่', scope: 'grade' },
-  { id: 'sky', name: 'SKY TARGET (บ่าย รวมทุกระดับ)', scope: 'all' },
+  { id: 'sky', name: 'SKY TARGET (บ่าย)', scope: 'grade' },
 ];
 
 const RANK_POINTS = { 1: 4, 2: 3, 3: 2, 4: 1 };
@@ -254,6 +301,86 @@ async function confirmScore() {
   }
 }
 
+// ── คะแนนพิเศษ ──
+let bonusColor = null;
+let bonusGrade = '';   // '' = ไม่ระบุระดับชั้น (ให้ทั้งทีมสีโดยรวม)
+let bonusPoints = null;
+
+function renderBonusPickers() {
+  const teamRow = document.getElementById('bonus-team-row');
+  teamRow.innerHTML = TEAMS.map(t => `
+    <button class="bonus-team-btn${bonusColor===t.id?' selected':''}" style="color:${t.hex}" onclick="setBonusColor('${t.id}')">${t.emoji} ${t.name}</button>
+  `).join('');
+
+  const gradeRow = document.getElementById('bonus-grade-row');
+  const opts = [{ id: '', name: 'ไม่ระบุระดับ' }, ...GRADES];
+  gradeRow.innerHTML = opts.map(g => `
+    <button class="bonus-grade-btn${bonusGrade===g.id?' selected':''}" onclick="setBonusGrade('${g.id}')">${g.name}</button>
+  `).join('');
+}
+
+function setBonusColor(colorId) { bonusColor = colorId; renderBonusPickers(); updateBonusStatus(); }
+function setBonusGrade(gradeId) { bonusGrade = gradeId; renderBonusPickers(); updateBonusStatus(); }
+
+function setBonusPoints(n) {
+  bonusPoints = (Number.isFinite(n) && n !== 0) ? n : null;
+  document.querySelectorAll('.bonus-pt-btn').forEach(b => b.classList.toggle('selected', b.textContent === ('+' + n)));
+  if (![1,2,3].includes(n)) document.getElementById('bonus-custom').value = bonusPoints ?? '';
+  updateBonusStatus();
+}
+
+function updateBonusStatus() {
+  const el = document.getElementById('bonus-status');
+  const btn = document.getElementById('btn-bonus-confirm');
+  const ready = bonusColor && bonusPoints;
+  btn.disabled = !ready;
+  el.className = 'status-box' + (ready ? ' ready' : '');
+  el.textContent = ready
+    ? `✅ พร้อมให้ ${bonusPoints > 0 ? '+' : ''}${bonusPoints} คะแนน แก่ ${bonusColor}${bonusGrade ? ' (' + bonusGrade + ')' : ''}`
+    : 'เลือกทีมสี + คะแนนที่จะให้';
+}
+
+async function confirmBonus() {
+  if (!bonusColor || !bonusPoints) return;
+  if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) { alert('ยังไม่ได้ตั้งค่า SCRIPT_URL'); return; }
+  const reason = (document.getElementById('bonus-reason').value || '').trim();
+  if (!confirm(`ยืนยันให้คะแนนพิเศษ ${bonusPoints > 0 ? '+' : ''}${bonusPoints} แก่ ${bonusColor}${bonusGrade ? ' (' + bonusGrade + ')' : ''} ?`)) return;
+
+  const btn = document.getElementById('btn-bonus-confirm');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+
+  const record = {
+    id: Date.now() + '-bonus-' + bonusColor,
+    grade: bonusGrade,
+    activityId: 'bonus',
+    activityName: 'คะแนนพิเศษ' + (reason ? ': ' + reason : ''),
+    color: bonusColor,
+    rank: '',
+    points: bonusPoints,
+  };
+
+  try {
+    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ records: [record] }) });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      showToast(`⭐ ให้คะแนนพิเศษ ${bonusPoints > 0 ? '+' : ''}${bonusPoints} แก่ ${bonusColor} เรียบร้อย!`);
+      bonusColor = null; bonusGrade = ''; bonusPoints = null;
+      document.getElementById('bonus-reason').value = '';
+      document.getElementById('bonus-custom').value = '';
+      document.querySelectorAll('.bonus-pt-btn').forEach(b => b.classList.remove('selected'));
+      renderBonusPickers();
+      await refreshScores();
+    } else {
+      alert('เกิดข้อผิดพลาด: ' + (data.message || 'ไม่ทราบสาเหตุ'));
+    }
+  } catch (err) {
+    alert('ส่งข้อมูลไม่สำเร็จ: ' + err.message);
+  } finally {
+    btn.textContent = '⭐ บันทึกคะแนนพิเศษ';
+    updateBonusStatus();
+  }
+}
+
 function showToast(msg) {
   const t = document.createElement('div');
   t.className = 'toast';
@@ -299,6 +426,7 @@ async function refreshScores() {
 
 function init() {
   populateActivitySelect();
+  renderBonusPickers();
   if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) {
     document.getElementById('configWarning').style.display = 'block';
   }
