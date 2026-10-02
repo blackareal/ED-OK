@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Screen หลัก · ค่ายพรเจริญ ESMT</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy: #1B4D3E;
+  --gold: #22C55E;
+  --dark-bg: #0A2417;
+  --light-bg: #F3FAF5;
+  --ok: #16A34A;
+  --warn: #C0392B;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Sarabun', 'Leelawadee UI', 'Segoe UI', sans-serif;
+  background: #04140b;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.tab-nav { display: flex; gap: 4px; padding: 8px 24px 0; background: #071a10; border-bottom: 1px solid #123a24; flex-shrink: 0; overflow-x: auto; }
+.tab-btn {
+  padding: 7px 18px; border: none; border-radius: 8px 8px 0 0; background: transparent;
+  color: #4b6b58; font-size: 0.82rem; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
+  transition: color .2s, background .2s; white-space: nowrap;
+}
+.tab-btn:hover { color: #9fc2ab; background: #123a24; }
+.tab-btn.active { color: #e2e8f0; background: #123a24; border-bottom: 2px solid #22c55e; }
+
+.view-pane { display: none; flex: 1; overflow: hidden; }
+.view-pane.active { display: flex; }
+#view-wallet.active { display: block; overflow-y: auto; padding: 20px 24px; }
+#view-answerkey.active { display: block; overflow-y: auto; }
+
+.wallet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.wallet-color-col { display: flex; flex-direction: column; gap: 10px; }
+.wallet-card { background: #071a10; border: 1px solid #123a24; border-radius: 10px; padding: 12px; transition: border-color .2s; }
+.wallet-card:hover { border-color: #22c55e; }
+.wallet-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.wallet-team-name { font-size: 0.85rem; font-weight: 800; }
+.wallet-team-total { font-size: 0.9rem; font-weight: 900; text-align: right; }
+.wallet-team-gain { font-size: 0.65rem; text-align: right; margin-top: 1px; }
+.wallet-empty { font-size: 0.72rem; color: #1c3327; text-align: center; padding: 16px 0; }
+.wallet-asset-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-top: 1px solid #0a2417; font-size: 0.75rem; }
+.wallet-asset-left { display: flex; align-items: center; gap: 5px; }
+.wallet-asset-icon { font-size: 0.9rem; }
+.wallet-asset-name { color: #6b8f7a; }
+.wallet-asset-qty  { font-size: 0.65rem; color: #1c4a35; margin-top: 1px; }
+.wallet-asset-right { text-align: right; }
+.wallet-asset-val  { font-weight: 700; }
+.wallet-asset-chg  { font-size: 0.63rem; margin-top: 1px; }
+
+#page-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 10px 28px;
+  background: linear-gradient(90deg, #0a2417 0%, #123a24 50%, #0a2417 100%);
+  border-bottom: 2px solid #22c55e; flex-shrink: 0;
+}
+.camp-name { font-size: 1.05rem; font-weight: 800; color: #86efac; line-height: 1.3; }
+.camp-sub  { font-size: 0.72rem; color: #6b8f7a; margin-top: 3px; }
+.header-right { display: flex; align-items: center; gap: 18px; }
+.clock-wrap { text-align: right; }
+.clock { font-size: 2rem; font-weight: 900; color: #e2e8f0; font-variant-numeric: tabular-nums; letter-spacing: 2px; }
+.refresh-label { font-size: 0.68rem; color: #4b6b58; margin-top: 2px; }
+
+.header-qr-btn {
+  display: flex; align-items: center; gap: 6px; background: #123a24; color: #86efac;
+  border: 1px solid #22c55e; border-radius: 100px; padding: 8px 16px; font-size: 0.82rem;
+  font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.header-qr-btn:hover { background: #1a4d30; }
+
+.header-fullscreen-btn {
+  display: flex; align-items: center; justify-content: center; background: #123a24;
+  color: #86efac; border: 1px solid #22c55e; border-radius: 50%; width: 36px; height: 36px;
+  font-size: 0.95rem; cursor: pointer; transition: all .15s; flex-shrink: 0;
+}
+.header-fullscreen-btn:hover { background: #1a4d30; }
+.header-fullscreen-btn.active { background: #16a34a; color: #fff; }
+
+.qr-modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(4,10,7,0.82);
+  z-index: 999; align-items: center; justify-content: center;
+}
+.qr-modal-overlay.show { display: flex; }
+.qr-modal-box { position: relative; }
+.qr-modal-close {
+  position: absolute; top: -18px; right: -18px; width: 36px; height: 36px; border-radius: 50%;
+  background: #1B4D3E; color: #fff; border: 2px solid #fff; font-size: 1rem; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+main { display: flex; flex: 1; overflow: hidden; }
+
+.scoreboard-panel { flex: 0 0 60%; display: flex; flex-direction: column; padding: 18px 24px; border-right: 1px solid #10241a; }
+.panel-title { font-size: 0.75rem; font-weight: 700; color: #4b6b58; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; flex-shrink: 0; }
+.bars-container { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 5px; }
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-rank { width: 32px; font-size: 1.15rem; text-align: center; flex-shrink: 0; }
+.bar-label-wrap { width: 96px; flex-shrink: 0; }
+.bar-color-name { font-size: 0.9rem; font-weight: 800; line-height: 1.2; }
+.bar-sub-info { font-size: 0.62rem; color: #6b8f7a; margin-top: 1px; }
+.bar-track { flex: 1; height: 34px; background: #0c1f14; border-radius: 8px; overflow: hidden; border: 1px solid #1a2e20; position: relative; }
+.bar-fill { height: 100%; border-radius: 8px; transition: width 1.8s cubic-bezier(0.4, 0, 0.2, 1); position: relative; min-width: 6px; display: flex; align-items: center; padding-left: 10px; }
+.bar-fill.is-leader { animation: glow-pulse 2s ease-in-out infinite alternate; }
+@keyframes glow-pulse { from { filter: brightness(1) saturate(1); } to { filter: brightness(1.35) saturate(1.2); } }
+.bar-inline-value { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; }
+.bar-right { width: 110px; flex-shrink: 0; text-align: right; }
+.bar-value { font-size: 0.9rem; font-weight: 800; }
+.bar-change { font-size: 0.68rem; margin-top: 1px; }
+
+.charts-panel { flex: 0 0 40%; display: flex; flex-direction: column; padding: 14px 16px; gap: 10px; overflow: hidden; background: #061a0f; }
+.chart-card { flex: 1; background: #0a1f16; border: 1px solid #10241a; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.chart-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; flex-shrink: 0; }
+.chart-title-text { font-size: 0.72rem; font-weight: 700; color: #4b6b58; text-transform: uppercase; letter-spacing: 1.5px; }
+.chart-price-now { font-size: 1.15rem; font-weight: 800; }
+.chart-pct { font-size: 0.8rem; font-weight: 700; margin-top: 2px; text-align: right; }
+.chart-body { flex: 1; position: relative; min-height: 0; }
+
+.land-card { flex: 0 0 auto !important; height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; }
+.land-left .land-label { font-size: 0.72rem; color: #4b6b58; text-transform: uppercase; letter-spacing: 1px; }
+.land-left .land-val  { font-size: 1.5rem; font-weight: 900; color: #22c55e; }
+.land-left .land-note { font-size: 0.66rem; color: #4b6b58; margin-top: 2px; }
+.land-badge { border: 1px solid #166534; background: #052e14; border-radius: 8px; padding: 6px 14px; text-align: center; }
+.land-badge .risk-label { font-size: 0.65rem; color: #4ade80; }
+.land-badge .risk-val   { font-size: 1rem; font-weight: 800; color: #22c55e; }
+
+#page-ticker { display: none; align-items: center; gap: 0; background: #03110a; border-top: 1px solid #10241a; padding: 0 24px; height: 46px; flex-shrink: 0; overflow: hidden; }
+#page-ticker.show { display: flex; }
+.tick-block { display: flex; align-items: center; gap: 10px; padding: 0 20px; }
+.tick-icon  { font-size: 1.2rem; }
+.tick-name  { font-size: 0.65rem; color: #4b6b58; text-transform: uppercase; letter-spacing: 1px; }
+.tick-val   { font-size: 0.95rem; font-weight: 800; }
+.tick-chg   { font-size: 0.72rem; margin-left: 6px; }
+.tick-sep   { width: 1px; height: 28px; background: #10241a; flex-shrink: 0; }
+.tick-right { margin-left: auto; font-size: 0.65rem; color: #1c3327; padding-right: 4px; }
+
+.positive { color: #22c55e; }
+.negative { color: #ef4444; }
+.neutral  { color: #4b6b58; }
+
+@media (max-width: 1000px) {
+  main { flex-direction: column; }
+  .scoreboard-panel, .charts-panel { flex: 1 1 auto; }
+  .wallet-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── SCHEDULE TAB ── */
+#view-schedule.active { display: flex; flex-direction: column; padding: 16px 24px; overflow-y: auto; }
+.view-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
+.vtgl-btn {
+  padding: 6px 16px; border: 1px solid #123a24; border-radius: 20px;
+  background: transparent; color: #4b6b58; font-size: 0.78rem;
+  font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.vtgl-btn.active { background: #123a24; color: #86efac; border-color: #22c55e; }
+
+.sched-grid { display: grid; grid-template-columns: 70px repeat(4, 1fr); gap: 6px; }
+.sched-corner { }
+.sched-hdr {
+  background: #04140b; border: 1px solid #0a2417; border-radius: 6px; padding: 8px 4px;
+  font-size: 0.7rem; font-weight: 700; color: #1c4a35; text-align: center; letter-spacing: 0.5px;
+}
+.sched-hdr-activity { font-size: 0.62rem; font-weight: 400; color: #4b6b58; margin-top: 3px; letter-spacing: 0; }
+.sched-rnd-lbl {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; color: #6b8f7a;
+  background: #04140b; border-radius: 6px; padding: 4px 0; text-align: center;
+}
+.sched-cell {
+  background: #071a10; border: 1px solid #0a2e1f; border-radius: 8px; padding: 10px 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; text-align: center; transition: background .2s;
+}
+.sched-cell:hover { background: #0a2e1f; }
+.sched-team-name { font-size: 0.82rem; font-weight: 800; letter-spacing: 0.3px; }
+.sched-vs-dot { font-size: 0.6rem; color: #1c4a35; }
+
+.team-sched-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.team-col { display: flex; flex-direction: column; gap: 6px; }
+.team-card { background: #071a10; border: 1px solid #0a2e1f; border-radius: 8px; padding: 8px 10px; }
+.team-card-hdr { font-size: 0.88rem; font-weight: 800; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #0a2417; }
+.team-card-row { display: flex; align-items: baseline; gap: 6px; padding: 4px 0; border-top: 1px solid #04140b; }
+.tcr-rnd  { font-size: 0.65rem; color: #1c4a35; min-width: 42px; flex-shrink: 0; }
+.tcr-base { font-size: 0.7rem; font-weight: 700; color: #6b8f7a; flex-shrink: 0; }
+.tcr-vs   { font-size: 0.6rem; color: #1c3327; flex-shrink: 0; }
+.tcr-opp  { font-size: 0.78rem; font-weight: 800; }
+
+@media (max-width: 900px) {
+  .sched-grid { grid-template-columns: 50px repeat(4, 1fr); font-size: 0.85rem; }
+  .team-sched-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ═════════════════ SELFIE MISSION PANES (intro/timer/answerkey) ═════════════════ */
+#view-intro, #view-timer {
+  background: radial-gradient(circle at top, #1F5C3D, var(--dark-bg));
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5vh 2vw;
+  overflow: auto;
+  width: 100%;
+}
+.sf-inner { width: 100%; max-width: 1300px; text-align: center; margin: 0 auto; }
+
+.sf-title {
+  font-size: clamp(1.6rem, 2.6vw + 2vh, 2.8rem);
+  margin: 0 0 0.15em;
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.sf-subtitle { font-size: clamp(0.9rem, 1vw + 1vh, 1.15rem); color: #D6EED9; margin-bottom: 0.6em; }
+
+.sf-intro-columns { display: flex; gap: 2.5vw; align-items: center; justify-content: center; text-align: left; margin-bottom: 1em; flex-wrap: wrap; }
+.sf-rules-grid { display: flex; flex-direction: column; gap: 0.6em; flex: 1 1 420px; max-width: 480px; }
+.sf-qr-col { display: flex; flex-direction: column; align-items: center; gap: 0.8em; flex: 0 0 auto; }
+.sf-rule-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0.6em 1em; display: flex; align-items: center; gap: 0.8em; }
+.sf-rule-card .num { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--gold); color: #1a1a1a; font-weight: 700; font-size: 0.9rem; }
+.sf-rule-card p { flex: 1; margin: 0; font-size: clamp(0.76rem, 0.5vw + 0.9vh, 0.98rem); line-height: 1.4; }
+
+.sf-qr-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 0.5em; background: #fff; border-radius: 20px; padding: 0.9em 1.4em; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+.sf-qr-box { width: clamp(100px, 9vw + 9vh, 170px); height: clamp(100px, 9vw + 9vh, 170px); }
+.sf-qr-box img { display: block; width: 100%; height: 100%; }
+
+.sf-start-btn {
+  background: var(--gold); color: #1a1a1a; border: none;
+  font-size: clamp(0.9rem, 1vw + 1vh, 1.15rem); font-weight: 700;
+  padding: 0.6em 1.8em; border-radius: 100px; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(34,197,94,0.4);
+}
+
+.sf-timer-label { font-size: clamp(1rem, 1.4vw + 1.4vh, 1.7rem); color: #D6EED9; margin-bottom: 0.3em; letter-spacing: 0.05em; }
+.sf-timer-display {
+  font-size: clamp(3.5rem, 9vw + 9vh, 9rem); font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1; margin: 0.15em 0 0.3em; text-shadow: 0 6px 30px rgba(0,0,0,0.5);
+}
+.sf-timer-display.warning { color: #F2C744; }
+.sf-timer-display.danger { color: #E85C5C; animation: sf-pulse 1s infinite; }
+@keyframes sf-pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
+
+.sf-timer-controls { display: flex; gap: 1em; justify-content: center; flex-wrap: wrap; margin-top: 1em; }
+.sf-timer-controls button {
+  font-size: clamp(0.85rem, 1vw + 1vh, 1.1rem); padding: 0.55em 1.6em; border-radius: 100px;
+  border: none; cursor: pointer; font-weight: 700;
+}
+#sfBtnStartPause { background: var(--gold); color: #1a1a1a; }
+#sfBtnReset { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+.sf-hint { margin-top: 1em; font-size: 0.68rem; color: #7BA88F; }
+
+/* Dashboard / Answer key — light theme (readable printed/projected detail views) */
+#view-answerkey { background: var(--light-bg); color: #12261c; width: 100%; }
+.sf-panel-header { background: var(--navy); color: #fff; padding: 1em 1.4em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6em; }
+.sf-panel-header h2 { margin: 0; font-size: 1.15rem; }
+.sf-panel-header p { margin: 0.2em 0 0; font-size: 0.78rem; color: #D6EED9; }
+.sf-status { font-size: 0.78rem; color: #D6EED9; }
+.sf-controls { display: flex; gap: 0.6em; align-items: center; }
+.sf-controls button, .sf-controls label {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: #fff;
+  padding: 0.5em 1em; border-radius: 100px; font-size: 0.82rem; cursor: pointer;
+}
+.sf-wrap { max-width: 1200px; margin: 0 auto; padding: 1.2em; }
+.sf-config-warning { background: #FDECEC; border: 1px solid var(--warn); color: #8a1f1f; padding: 1em; border-radius: 12px; margin-bottom: 1.2em; font-size: 0.88rem; }
+.sf-leaderboard { background: #fff; border-radius: 14px; padding: 1.2em; margin-bottom: 1.5em; box-shadow: 0 2px 10px rgba(20,60,30,0.06); }
+.sf-leaderboard h3 { margin: 0 0 0.8em; font-size: 1.05rem; color: var(--navy); }
+.sf-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.sf-table th, .sf-table td { text-align: left; padding: 0.5em 0.6em; border-bottom: 1px solid #e5f2ea; }
+.sf-table th { color: #5b7d6a; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; }
+.sf-table tr:first-child td { font-weight: 800; color: var(--navy); }
+.sf-group-section { margin-bottom: 2em; }
+.sf-group-title { display: flex; align-items: baseline; gap: 0.6em; margin-bottom: 0.7em; flex-wrap: wrap; }
+.sf-group-title h4 { margin: 0; font-size: 1.1rem; }
+.sf-group-title .score { color: var(--gold); font-weight: 800; }
+.sf-group-title .count { color: #7d9c8c; font-size: 0.83rem; }
+.sf-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.8em; }
+.sf-photo-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(20,60,30,0.08); text-decoration: none; color: inherit; display: block; }
+.sf-photo-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #e5f2ea; display: block; }
+.sf-photo-card .meta { padding: 0.55em 0.7em; }
+.sf-photo-card .word { font-weight: 800; font-size: 0.83rem; color: var(--navy); }
+.sf-photo-card .sub { font-size: 0.7rem; color: #7d9c8c; display: flex; justify-content: space-between; margin-top: 0.2em; }
+.sf-empty { text-align: center; color: #7d9c8c; padding: 3em 1em; }
+
+.sf-lvl-badge { font-size: 0.68rem; font-weight: 700; padding: 0.15em 0.5em; border-radius: 100px; color: #062b1a; white-space: nowrap; display: inline-block; }
+.sf-lvl-badge.catA { background: #22c55e; }
+.sf-lvl-badge.catB { background: #4ade80; }
+.sf-lvl-badge.catC { background: #a3e635; }
+.sf-lvl-badge.catS { background: #facc15; }
+
+.sf-ak-list { display: flex; flex-direction: column; gap: 0.8em; }
+.sf-ak-row { display: grid; grid-template-columns: 260px 1fr; gap: 1em; background: #fff; border-radius: 14px; padding: 0.8em; box-shadow: 0 2px 10px rgba(20,60,30,0.06); }
+@media (max-width: 640px) { .sf-ak-row { grid-template-columns: 1fr; } }
+.sf-ak-no { font-size: 0.68rem; color: #7d9c8c; font-weight: 700; margin-bottom: 0.3em; }
+.sf-ak-mission { font-size: 0.83rem; line-height: 1.45; color: #1c2b22; margin-bottom: 0.5em; }
+.sf-ak-reveal-buttons { display: flex; gap: 0.5em; margin-top: 0.4em; flex-wrap: wrap; }
+.sf-ak-reveal-btn {
+  background: #fff; border: 1px solid var(--navy); color: var(--navy);
+  font-weight: 700; font-size: 0.78rem; padding: 0.45em 0.9em; border-radius: 100px; cursor: pointer;
+}
+.sf-ak-reveal-btn.revealed { background: var(--navy); color: #fff; }
+.sf-ak-hidden-content { margin-top: 0.6em; }
+.sf-ak-loc { font-size: 0.8rem; color: var(--navy); font-weight: 700; margin-bottom: 0.3em; }
+.sf-ak-answer-box { background: var(--navy); color: #fff; border-radius: 10px; padding: 0.6em 0.9em; font-size: 0.83rem; }
+.sf-ak-answer-box b { color: #BEF264; }
+.sf-ak-photos { display: flex; flex-wrap: wrap; gap: 0.5em; align-content: flex-start; align-items: flex-start; margin-top: 0.6em; }
+.sf-ak-photo { width: 68px; text-align: center; }
+.sf-ak-photo-link { display: block; text-decoration: none; color: inherit; }
+.sf-ak-photo img { width: 68px; height: 68px; object-fit: cover; border-radius: 8px; background: #e5f2ea; display: block; }
+.sf-ak-photo .grp { font-size: 0.63rem; color: #6b8f7a; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sf-ak-photo.excluded img { opacity: 0.35; filter: grayscale(70%); }
+.sf-ak-photo.excluded .grp { text-decoration: line-through; }
+.sf-ak-exclude-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 3px; margin-top: 3px;
+  font-size: 0.6rem; color: #ef4444; cursor: pointer; user-select: none;
+}
+.sf-ak-exclude-toggle input { accent-color: #ef4444; width: 11px; height: 11px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header id="page-header">
+  <div>
+    <div class="camp-name">🔬🧪 ค่ายพรเจริญ ESMT</div>
+    <div class="camp-sub">ค่ายวิทยาศาสตร์ คณิตศาสตร์ และเทคโนโลยี โรงเรียนพรเจริญวิทยา · 3-5 ตุลาคม 2569</div>
+  </div>
+  <div class="header-right">
+    <button class="header-fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" aria-label="เต็มหน้าจอ" title="เต็มหน้าจอ">⛶</button>
+    <div class="clock-wrap">
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="refresh-label" id="refresh-label">อัปเดตอัตโนมัติทุก 60 วินาที</div>
+    </div>
+  </div>
+</header>
+
+<div class="tab-nav">
+  <button class="tab-btn active" id="tab-btn-scoreboard" onclick="switchTab('scoreboard')">🏆 SCOREBOARD</button>
+  <button class="tab-btn" id="tab-btn-wallet" onclick="switchTab('wallet')">👜 PORTFOLIO</button>
+  <button class="tab-btn" id="tab-btn-schedule" onclick="switchTab('schedule')">📋 SCHEDULE</button>
+</div>
+
+<div class="view-pane active" id="view-scoreboard">
+<main>
+  <div class="scoreboard-panel">
+    <div class="panel-title">🏆 คะแนนสะสม &mdash; มูลค่าพอร์ตโฟลิโอ (THB)</div>
+    <div class="bars-container" id="bars-container">
+      <div style="color:#1c3327; font-size:.9rem; padding:20px;">กำลังโหลดข้อมูล...</div>
+    </div>
+  </div>
+
+  <div class="charts-panel">
+    <div class="chart-card">
+      <div class="chart-top">
+        <div><div class="chart-title-text">₿ Bitcoin · 6 ชั่วโมงล่าสุด</div></div>
+        <div style="text-align:right">
+          <div class="chart-price-now" style="color:#f97316" id="h-btc-price">กำลังโหลด</div>
+          <div class="chart-pct" id="h-btc-chg"></div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="chart-btc"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-top">
+        <div><div class="chart-title-text">🥇 ทองคำ (บาทไทย) · 6 ชั่วโมงล่าสุด</div></div>
+        <div style="text-align:right">
+          <div class="chart-price-now" style="color:#eab308" id="h-gold-price">กำลังโหลด</div>
+          <div class="chart-pct" id="h-gold-chg"></div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="chart-gold"></canvas></div>
+    </div>
+
+    <div class="chart-card land-card">
+      <div class="land-left">
+        <div class="land-label">🏗️ ที่ดิน</div>
+        <div class="land-val" id="h-land-price">฿–</div>
+        <div class="land-note">ต่อ 1 แปลง · ราคาคงที่ กำหนดโดยครู</div>
+      </div>
+      <div class="land-badge">
+        <div class="risk-label">ความเสี่ยง</div>
+        <div class="risk-val">ต่ำมาก</div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="view-pane" id="view-wallet">
+  <div class="panel-title">💼 กระเป๋าสินทรัพย์แต่ละทีม — มูลค่า ณ ปัจจุบัน</div>
+  <div class="wallet-grid" id="wallet-grid">
+    <div style="color:#1c3327; font-size:.9rem; padding:20px; grid-column:1/-1">กำลังโหลดข้อมูล...</div>
+  </div>
+</div>
+
+<div class="view-pane" id="view-schedule">
+  <div class="panel-title">📋 กำหนดการกิจกรรม (แข่งพร้อมกันทั้ง 4 ทีมทุกเกม)</div>
+  <div id="sched-grid"><!-- render by JS --></div>
+</div>
+
+<footer id="page-ticker" class="show">
+  <div class="tick-block">
+    <span class="tick-icon">₿</span>
+    <div class="tick-info">
+      <div class="tick-name">Bitcoin</div>
+      <div><span class="tick-val" style="color:#f97316" id="t-btc">–</span><span class="tick-chg" id="t-btc-chg"></span></div>
+    </div>
+  </div>
+  <div class="tick-sep"></div>
+  <div class="tick-block">
+    <span class="tick-icon">🥇</span>
+    <div class="tick-info">
+      <div class="tick-name">ทองคำ / บาทไทย</div>
+      <div><span class="tick-val" style="color:#eab308" id="t-gold">–</span><span class="tick-chg" id="t-gold-chg"></span></div>
+    </div>
+  </div>
+  <div class="tick-sep"></div>
+  <div class="tick-block">
+    <span class="tick-icon">🏗️</span>
+    <div class="tick-info">
+      <div class="tick-name">ที่ดิน / แปลง</div>
+      <div><span class="tick-val" style="color:#22c55e" id="t-land">–</span><span class="tick-chg" style="color:#22c55e">● คงที่</span></div>
+    </div>
+  </div>
+  <div class="tick-right" id="t-updated">–</div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG (ใช้ร่วมกันทั้งระบบคะแนน + ภารกิจเซลฟี่ — Apps Script เดียวกัน)
+// ═══════════════════════════════════════════════════════
+// 4 ทีมสี — แต่ละทีมรวมนักเรียน ม.1 และ ม.4 ผสมกัน (ไม่แยกทีมตามชั้น)
+// เลี่ยงสีเขียว/ขาว เพราะเป็นสีประจำโรงเรียนมุกดาหาร
+const TEAMS = [
+  { id: 'ม่วง',    name: 'VIOLET TEAM', emoji: '🟣', hex: '#a855f7', grad: ['#3b0a6444', '#a855f788'] },
+  { id: 'น้ำเงิน', name: 'NAVY TEAM',   emoji: '🔵', hex: '#2563eb', grad: ['#0a1e5544', '#2563eb88'] },
+  { id: 'เหลือง',  name: 'YELLOW TEAM',emoji: '🟡', hex: '#eab308', grad: ['#4a3a0a44', '#eab30888'] },
+  { id: 'เขียว',   name: 'GREEN TEAM', emoji: '🟢', hex: '#22c55e', grad: ['#0a3a1a44', '#22c55e88'] },
+  { id: 'แดง',     name: 'RED TEAM',   emoji: '🔴', hex: '#ef4444', grad: ['#5a0a0a44', '#ef444488'] },
+  { id: 'ชมพู',    name: 'PINK TEAM',  emoji: '🩷', hex: '#ec4899', grad: ['#6b0a4444', '#ec489988'] },
+];
+const RANK_ICON = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
+const GOLD_TROY_TO_BAHT = 15.244 / 31.1035; // troy oz → Thai baht weight
+
+// ── กิจกรรมที่มีการจัดอันดับ (4 ทีมแข่งพร้อมกันทั้งฮอลล์ ไม่ใช่หมุนฐานแบบ SWP) ──
+const GAMES = [
+  { id: 'glass',     name: 'ฐานเรียงแก้ว',                    time: '13:30–15:00 (3 ต.ค.)', scored: true },
+  { id: 'block',     name: 'ฐานต่อบล็อค',                     time: '13:30–15:00 (3 ต.ค.)', scored: true },
+  { id: 'coding',    name: 'ฐาน Coding',                      time: '13:30–15:00 (3 ต.ค.)', scored: true },
+  { id: 'innovator', name: 'สร้างสุดยอดนวัตกรในอนาคต',          time: '15:30–17:00 (3 ต.ค.)', scored: true },
+  { id: 'quiz',      name: 'Speedy Quiz',                     time: '13:30–15:30 (4 ต.ค.)', scored: true },
+  { id: 'murder',    name: 'ฆาตกรรม (เกมสืบสวน)',              time: '13:30–15:30 (4 ต.ค.)', scored: true },
+  { id: 'tube',      name: 'ต่อหลอด',                         time: '13:30–15:30 (4 ต.ค.)', scored: true },
+  { id: 'sports',    name: 'กีฬาสีชาวค่าย',                    time: '15:30–17:00 (4 ต.ค.)', scored: true },
+  { id: 'stage',     name: 'งานเย็น: สีสันเปลวไฟ (Stage Show)', time: '18:30–21:00 (4 ต.ค.)', scored: true },
+  { id: 'genwit',    name: 'ถอดบทเรียนผ่าน GENwit',            time: '08:30–10:40 (5 ต.ค.)', scored: true },
+];
+
+// ── URL Apps Script เดียวกับ ScoreInput / StudentView ──
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPDB-PW0wdOUFxUyeftTOXz3EJIaZLYLu_vgbud1yh3agFU6F3E8FRGkPIpJEd3mQ1tw/exec';
+
+let prices = { btc: null, gold: null };
+let remoteState = { transactions: [], settings: { landPrice: 100000 } };
+let chartBTC = null;
+let chartGold = null;
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+const fmt = n => n == null ? '–' : '฿' + Math.round(n).toLocaleString('th-TH');
+const fmtK = n => {
+  if (n == null) return '–';
+  if (n >= 1e6) return '฿' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '฿' + (n/1e3).toFixed(1) + 'K';
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+};
+const pct = (a,b) => b ? (((a-b)/b)*100).toFixed(2) : null;
+const timeFmt = ts => new Date(ts).toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', hour12:false });
+
+function setChgEl(id, val) {
+  const el = document.getElementById(id);
+  if (!el || val == null) return;
+  const v = parseFloat(val);
+  el.textContent = (v >= 0 ? '▲ +' : '▼ ') + val + '%';
+  el.className = 'chart-pct ' + (v >= 0 ? 'positive' : 'negative');
+}
+function setTickChg(id, val) {
+  const el = document.getElementById(id);
+  if (!el || val == null) return;
+  const v = parseFloat(val);
+  el.textContent = (v >= 0 ? '+' : '') + val + '%';
+  el.className = 'tick-chg ' + (v >= 0 ? 'positive' : 'negative');
+}
+function teamHex(id) { const t = TEAMS.find(x => x.id === id); return t ? t.hex : '#9fc2ab'; }
+function teamEmoji(id) { const t = TEAMS.find(x => x.id === id); return t ? t.emoji : ''; }
+
+// ═══════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('th-TH', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════
+//  STATE — Google Sheets (primary) + localStorage (fallback)
+// ═══════════════════════════════════════════════════════
+async function fetchRemoteState() {
+  if (!SCRIPT_URL) {
+    try { return JSON.parse(localStorage.getItem('mathCampScoreState') || '{}'); }
+    catch(e) { return {}; }
+  }
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', 'getAll');
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    const data = await res.json();
+    remoteState = data;
+    return data;
+  } catch(e) {
+    console.warn('[Sheets] fetch failed, using last known state');
+    return remoteState;
+  }
+}
+
+// ใช้เขียนค่ากลับขึ้น config sheet (saveSettings) — เดิม ScoreBoard อ่านอย่างเดียว
+// เพิ่มตัวนี้เพื่อให้เขียนสถานะนาฬิกาจับเวลาเซลฟี่กลับไปให้ StudentView อ่านได้
+async function apiCall(action, params = {}) {
+  if (!SCRIPT_URL) return null;
+  try {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', action);
+    for (const [k, v] of Object.entries(params)) {
+      url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    }
+    const res = await fetch(url.toString());
+    return await res.json();
+  } catch(e) {
+    console.warn('[Sheets] API error:', action, e);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCORE CALCULATION
+// ═══════════════════════════════════════════════════════
+function calcScores(s) {
+  s = s || remoteState;
+  const landPrice = s.settings?.landPrice ?? 100000;
+  const txs = s.transactions ?? [];
+
+  document.getElementById('h-land-price').textContent = fmt(landPrice);
+  document.getElementById('t-land').textContent = fmt(landPrice);
+
+  return TEAMS.map(c => {
+    const rows = txs.filter(t => t.studentId === c.id);
+    let invested = 0, current = 0;
+    rows.forEach(t => {
+      invested += t.valueAtAward ?? 0;
+      if      (t.type === 'land') current += t.qty * landPrice;
+      else if (t.type === 'gold' && prices.gold) current += t.qty * prices.gold;
+      else if (t.type === 'btc'  && prices.btc ) current += t.qty * prices.btc;
+      else current += t.valueAtAward ?? 0;
+    });
+    return { ...c, invested, current, gain: current - invested, count: rows.length };
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCOREBOARD RENDER
+// ═══════════════════════════════════════════════════════
+function renderScoreboard(s) {
+  const scores = calcScores(s).sort((a, b) => b.current - a.current);
+  const maxVal = Math.max(...scores.map(x => x.current), 1);
+
+  document.getElementById('bars-container').innerHTML = scores.map((sc, i) => {
+    const widthPct = maxVal > 0 ? Math.max((sc.current / maxVal) * 100, sc.current > 0 ? 1.5 : 0) : 0;
+    const gainPct = sc.invested > 0 ? pct(sc.current, sc.invested) : null;
+    const gainClass = sc.gain > 0 ? 'positive' : sc.gain < 0 ? 'negative' : 'neutral';
+    const isLeader = i === 0 && sc.current > 0;
+    const fillStyle = `background: linear-gradient(90deg, ${sc.grad[0]}, ${sc.hex}cc); width:${widthPct}%`;
+
+    return `
+      <div class="bar-row">
+        <div class="bar-rank">${RANK_ICON[i]}</div>
+        <div class="bar-label-wrap">
+          <div class="bar-color-name" style="color:${sc.hex}">${sc.emoji} ${sc.name}</div>
+          <div class="bar-sub-info">${sc.count} รางวัล</div>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ${isLeader ? 'is-leader' : ''}" style="${fillStyle}">
+            ${sc.current > 0 ? `<span class="bar-inline-value">${fmtK(sc.current)}</span>` : ''}
+          </div>
+        </div>
+        <div class="bar-right">
+          <div class="bar-value" style="color:${sc.hex}">${sc.current > 0 || sc.count > 0 ? fmt(sc.current) : '–'}</div>
+          <div class="bar-change ${gainClass}">
+            ${gainPct != null && sc.invested > 0 ? (parseFloat(gainPct)>=0?'▲ +':'▼ ') + gainPct + '%' : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  WALLET RENDER
+// ═══════════════════════════════════════════════════════
+function assetLabel(type) {
+  if (type === 'btc') return '₿ Bitcoin';
+  if (type === 'gold') return '🥇 ทองคำ';
+  return '🏗️ ที่ดิน';
+}
+function assetIcon(type) {
+  if (type === 'btc') return '₿';
+  if (type === 'gold') return '🥇';
+  return '🏗️';
+}
+function fmtQty(type, qty) {
+  if (type === 'btc') return qty.toFixed(8) + ' BTC';
+  if (type === 'gold') return qty.toFixed(4) + ' บาท (ทอง)';
+  return qty.toFixed(0) + ' แปลง';
+}
+
+function renderWallet(s) {
+  s = s || remoteState;
+  const landPrice = s.settings?.landPrice ?? 100000;
+  const txs = s.transactions ?? [];
+  const grid = document.getElementById('wallet-grid');
+  if (!grid) return;
+
+  grid.innerHTML = TEAMS.map(team => {
+    const rows = txs.filter(t => t.studentId === team.id);
+    const invested = rows.reduce((sum, t) => sum + (t.valueAtAward ?? 0), 0);
+    let current = 0;
+    const itemsHtml = rows.length === 0
+      ? '<div class="wallet-empty">ยังไม่มีรางวัล</div>'
+      : rows.map(t => {
+          let cv = null;
+          if      (t.type === 'land') cv = t.qty * landPrice;
+          else if (t.type === 'gold' && prices.gold) cv = t.qty * prices.gold;
+          else if (t.type === 'btc'  && prices.btc ) cv = t.qty * prices.btc;
+          if (cv !== null) current += cv;
+          const g = cv !== null ? cv - t.valueAtAward : null;
+          const gp = g !== null && t.valueAtAward > 0 ? (g / t.valueAtAward) * 100 : null;
+          return `
+            <div class="wallet-asset-row">
+              <div class="wallet-asset-left">
+                <span class="wallet-asset-icon">${assetIcon(t.type)}</span>
+                <div>
+                  <div class="wallet-asset-name">${assetLabel(t.type)}</div>
+                  <div class="wallet-asset-qty">${fmtQty(t.type, t.qty)}</div>
+                </div>
+              </div>
+              <div class="wallet-asset-right">
+                <div class="wallet-asset-val">${cv !== null ? fmt(cv) : '?'}</div>
+                ${gp !== null ? `<div class="wallet-asset-chg ${gp >= 0 ? 'positive' : 'negative'}">${gp >= 0 ? '▲' : '▼'} ${Math.abs(gp).toFixed(1)}%</div>` : ''}
+              </div>
+            </div>`;
+        }).join('');
+
+    const gain = current - invested;
+    const gainClass = gain > 0 ? 'positive' : gain < 0 ? 'negative' : 'neutral';
+
+    return `
+      <div class="wallet-card" style="border-color:${team.hex}33">
+        <div class="wallet-card-header">
+          <div class="wallet-team-name" style="color:${team.hex}">${team.emoji} ${team.name}</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+          <span class="wallet-team-total" style="color:${team.hex}">${fmt(current)}</span>
+        </div>
+        <div class="wallet-team-gain ${gainClass}">${invested > 0 ? (gain >= 0 ? '+' : '') + fmt(gain) : ''}</div>
+        ${itemsHtml}
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHART HELPERS
+// ═══════════════════════════════════════════════════════
+function sampleData(arr, maxPts = 30) {
+  if (arr.length <= maxPts) return arr;
+  const step = Math.ceil(arr.length / maxPts);
+  return arr.filter((_, i) => i % step === 0 || i === arr.length - 1);
+}
+function makeChartData(rawPrices) {
+  const sampled = sampleData(rawPrices);
+  return { labels: sampled.map(p => timeFmt(p[0])), values: sampled.map(p => Math.round(p[1])) };
+}
+const CHART_OPTS = (color) => ({
+  responsive: true, maintainAspectRatio: false,
+  animation: { duration: 800 },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#10241a', borderColor: '#1c3327', borderWidth: 1,
+      titleColor: '#6b8f7a', bodyColor: '#e2e8f0',
+      callbacks: { label: ctx => '฿' + ctx.parsed.y.toLocaleString('th-TH') }
+    }
+  },
+  scales: {
+    x: { grid: { color: '#10241a' }, ticks: { color: '#1c4a35', maxTicksLimit: 7, font: { size: 10 }, maxRotation: 0 } },
+    y: { grid: { color: '#0c1f14' }, ticks: { color: '#1c4a35', font: { size: 10 },
+         callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v } }
+  }
+});
+function makeGradient(ctx, chart, hex) {
+  const { chartArea } = chart;
+  if (!chartArea) return hex + '33';
+  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, hex + '55');
+  g.addColorStop(1, hex + '00');
+  return g;
+}
+function initChart(canvasId, d, color) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels: d.labels, datasets: [{
+      data: d.values, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.35, fill: true,
+      backgroundColor: (context) => makeGradient(context.chart.ctx, context.chart, color)
+    }] },
+    options: CHART_OPTS(color),
+  });
+}
+function updateChart(chart, d) {
+  chart.data.labels = d.labels;
+  chart.data.datasets[0].data = d.values;
+  chart.update('none');
+}
+
+// ═══════════════════════════════════════════════════════
+//  FETCH (คะแนน)
+// ═══════════════════════════════════════════════════════
+async function fetchPrices() {
+  const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether-gold&vs_currencies=thb', { cache: 'no-store' });
+  const data = await res.json();
+  prices.btc  = data.bitcoin.thb;
+  prices.gold = data['tether-gold'].thb * GOLD_TROY_TO_BAHT;
+
+  document.getElementById('h-btc-price').textContent = fmt(prices.btc);
+  document.getElementById('h-gold-price').textContent = fmt(prices.gold);
+  document.getElementById('t-btc').textContent  = fmt(prices.btc);
+  document.getElementById('t-gold').textContent = fmt(prices.gold);
+}
+
+async function fetchHistorical() {
+  const cutoff = Date.now() - 6 * 60 * 60 * 1000;
+
+  const btcRes  = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+  const btcJson = await btcRes.json();
+  const btcPts  = btcJson.prices.filter(p => p[0] >= cutoff);
+
+  const gRes  = await fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=thb&days=1', { cache: 'no-store' });
+  const gJson = await gRes.json();
+  const gPts  = gJson.prices.filter(p => p[0] >= cutoff).map(p => [p[0], p[1] * GOLD_TROY_TO_BAHT]);
+
+  if (btcPts.length > 1) {
+    const c = pct(btcPts.at(-1)[1], btcPts[0][1]);
+    setChgEl('h-btc-chg', c);
+    setTickChg('t-btc-chg', c);
+  }
+  if (gPts.length > 1) {
+    const c = pct(gPts.at(-1)[1], gPts[0][1]);
+    setChgEl('h-gold-chg', c);
+    setTickChg('t-gold-chg', c);
+  }
+
+  const bd = makeChartData(btcPts);
+  const gd = makeChartData(gPts);
+
+  if (!chartBTC)  chartBTC  = initChart('chart-btc',  bd, '#f97316');
+  else            updateChart(chartBTC, bd);
+
+  if (!chartGold) chartGold = initChart('chart-gold', gd, '#eab308');
+  else            updateChart(chartGold, gd);
+}
+
+// ═══════════════════════════════════════════════════════
+//  REFRESH LOOP (คะแนน)
+// ═══════════════════════════════════════════════════════
+let countdown = 60;
+
+async function refresh() {
+  try { await fetchPrices(); } catch(e) { console.warn('prices err', e); }
+  try { await fetchHistorical(); } catch(e) { console.warn('history err', e); }
+  const s = await fetchRemoteState();
+  renderScoreboard(s);
+  if (currentTab === 'wallet') renderWallet(s);
+  document.getElementById('t-updated').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour12:false });
+}
+
+setInterval(() => {
+  countdown--;
+  document.getElementById('refresh-label').textContent =
+    countdown > 0 ? `อัปเดตอัตโนมัติทุก 60 วินาที (อีก ${countdown}s)` : 'กำลังอัปเดต...';
+  if (countdown <= 0) { countdown = 60; refresh(); }
+}, 1000);
+
+// ═══════════════════════════════════════════════════════
+//  SCHEDULE RENDER
+// ═══════════════════════════════════════════════════════
+function renderSchedule() {
+  const html = GAMES.map(g => `
+    <div style="display:flex; align-items:center; gap:14px; background:#071a10; border:1px solid #123a24; border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+      <div style="min-width:110px; font-weight:800; color:#22c55e; font-size:0.85rem;">${g.time}</div>
+      <div style="flex:1; font-weight:700; font-size:0.9rem;">${g.name}</div>
+      <div style="font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:100px; ${g.scored ? 'background:#123a24;color:#22c55e;' : 'background:#1c3327;color:#4b6b58;'}">${g.scored ? '🏆 มีคะแนน' : 'ไม่นับคะแนน'}</div>
+    </div>`).join('');
+  document.getElementById('sched-grid').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAB SWITCHING (รวมทุกแท็บ — คะแนน + เซลฟี่)
+// ═══════════════════════════════════════════════════════
+let currentTab = 'scoreboard';
+function switchTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.view-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.getElementById('tab-btn-' + name).classList.add('active');
+  document.getElementById('page-ticker').classList.toggle('show', name === 'scoreboard');
+  if (name === 'wallet')     renderWallet(remoteState);
+  if (name === 'schedule')   renderSchedule();
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+async function init() {
+  await refresh();
+}
+init();
+</script>
+</body>
+</html>
