@@ -819,7 +819,12 @@ async function init() {
 
   const remote = await apiCall('getAll');
   if (remote && !remote.error) {
-    if (remote.transactions?.length) state.transactions = remote.transactions;
+    // 2 ต.ค. 2569: แก้บั๊ก — เดิมเช็ค remote.transactions?.length (truthy) ทำให้ถ้าลบ
+    // transaction ออกจน Sheet ว่างเปล่า (length = 0) เงื่อนไขนี้เป็น false ทันที
+    // ทำให้ state.transactions เก่าที่ยังค้างใน localStorage ไม่ถูกเขียนทับ
+    // (หน้าเว็บเลยคิดว่าทุกทีม "แจกแล้ว" ทั้งที่ลบออกจาก Sheet ไปแล้วจริงๆ)
+    // เปลี่ยนมาเช็คว่า remote.transactions เป็น array จริง (ไม่ใช่ undefined) แทน
+    if (Array.isArray(remote.transactions)) state.transactions = remote.transactions;
     if (remote.settings) state.settings = { ...state.settings, ...remote.settings };
     saveState();
   }
