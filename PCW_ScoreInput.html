@@ -160,6 +160,11 @@
   .gw-dot { display: inline-block; min-width: 44px; padding: 2px 8px; margin: 1px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
   .gw-dot.bad { background: rgba(239,68,68,.25); color: #fecaca; }
   .gw-dot.ok { background: rgba(34,197,94,.28); color: #bbf7d0; }
+  .gw-fee-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+  .gw-fee-row .tn { font-weight: 800; min-width: 80px; }
+  .gw-fee-btn { padding: 8px 14px; border-radius: 100px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+  .gw-fee-btn:hover { border-color: #f59e0b; color: #fbbf24; }
+  .gw-fee-count { font-size: 0.78rem; color: #94a3b8; margin-left: auto; text-align: right; }
   @media (max-width: 600px) { .gw-qgrid { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
@@ -179,6 +184,7 @@
   <button onclick="showTab('wallets')">👜 กระเป๋าเงิน</button>
   <button onclick="showTab('history')">📋 ประวัติ</button>
   <button onclick="showTab('genwit')">🧩 GENwit</button>
+  <button onclick="showTab('gwfees')">💸 ค่าบริการ</button>
 </nav>
 
 <!-- TAB: ตั้งค่า -->
@@ -297,6 +303,24 @@
     <p style="font-weight:600; margin-bottom:10px;">คะแนนรวม GENwit</p>
     <table class="gw-table" id="gw-total"></table>
   </div>
+</div>
+
+<!-- TAB: ค่าบริการ GENwit (หักคะแนน) -->
+<div class="tab" id="tab-gwfees">
+  <p class="section-title">💸 ค่าบริการ GENwit — หักคะแนนทีม</p>
+  <div class="notice">💡 เครื่องคิดเลข −฿1,000 ต่อครั้งที่ขอใช้ · ห้องสมุด −฿1,000 ต่อข้อ · เข้าใช้ได้ทีมละไม่เกิน 2 คน · กดบันทึกแล้วคะแนน GENwit ของทีมถูกหักทันที (กดลบได้ถ้าบันทึกผิด)</div>
+  <div class="card">
+    <label>บันทึกค่าบริการของข้อที่</label>
+    <select id="gwf-q" onchange="gwFeeQ = +this.value; gwFeeSig = ''; gwRenderFees();"></select>
+  </div>
+  <div class="card">
+    <div id="gwf-teams"></div>
+  </div>
+  <div class="card">
+    <p style="font-weight:600; margin-bottom:10px;">รายการที่บันทึกแล้ว (ล่าสุดอยู่บนสุด)</p>
+    <div class="history-list" id="gwf-log"></div>
+  </div>
+  <div class="rc-status" id="gwf-msg">&nbsp;</div>
 </div>
 
 <script>
@@ -866,12 +890,15 @@ function showTab(name) {
   if (name === 'award')       { updatePriceDisplays(); renderAwardGrid(); }
   if (name === 'bonus')       updateBonusPrices();
   if (name === 'setup')       renderStartMissionGrid();
-  if (name === 'genwit') gwEnter(); else gwLeave();
+  if (name === 'genwit' || name === 'gwfees') gwEnter(); else gwLeave();
 }
 
 // ======================== GENWIT ========================
 // ใช้ Apps Script ตัวเดียวกับระบบคะแนน (action: gwAdminState / gwAdmin) — ไม่มี PIN (หน้านี้เข้าได้เฉพาะครู)
 const GW_HEX = { 'ม่วง':'#a855f7','น้ำเงิน':'#2563eb','เหลือง':'#eab308','เขียว':'#22c55e','แดง':'#ef4444','ชมพู':'#ec4899' };
+const GW_TITLES = { 1:'กล่องข้าวปริศนา', 2:'หลอดทดลองความหนาแน่น', 3:'โดมิโน', 4:'เรียงลำดับความสูง', 5:'กระเป๋าเงิน', 6:'แกะ', 7:'น้ำส้มสายชู', 8:'ปาท่องโก๋' };
+const GW_EMPTY = { currentQ: 0, status: 0, startedAt: 0, durationSec: 300, maxAttempts: 3, attempts: [], teams: Object.keys(GW_HEX), titles: GW_TITLES };
+function gwNote(msg) { const m = document.getElementById('gw-msg'); if (m) m.textContent = msg; }
 let gwS = null, gwOffset = 0, gwSel = 0, gwBusy = false, gwTimerA = null, gwTimerB = null;
 
 async function gwApi(p) {
@@ -887,16 +914,20 @@ function gwLeave() { clearInterval(gwTimerA); clearInterval(gwTimerB); }
 async function gwPoll() {
   try {
     const r = await gwApi({ action: 'gwAdminState' });
-    if (r.error) return;
+    if (r.error || !Array.isArray(r.attempts)) {
+      gwNote('⚠️ ระบบ GENwit ฝั่ง Google ยังไม่พร้อม (' + (r.error || 'ข้อมูลไม่ถูกต้อง') + ') — ต้อง Deploy PCW_AppsScript.js เป็น New version ก่อน');
+      gwRender(); return;
+    }
+    const mm = document.getElementById('gw-msg'); if (mm && mm.textContent.startsWith('⚠️')) mm.textContent = '\u00a0';
     gwS = r; gwOffset = r.now - Date.now(); if (!gwSel) gwSel = r.currentQ || 0; gwRender();
-  } catch (e) {}
+  } catch (e) { gwNote('⚠️ เชื่อมต่อระบบ GENwit ไม่ได้ (เช็คเน็ต/ลิงก์ Apps Script)'); gwRender(); }
 }
 function gwRemaining() {
   if (!gwS || gwS.status !== 1) return 0;
   return Math.max(0, Math.ceil((gwS.startedAt + gwS.durationSec * 1000 - (Date.now() + gwOffset)) / 1000));
 }
 function gwRender() {
-  const S = gwS; if (!S) return;
+  const S = gwS || GW_EMPTY;   // ยังโหลดไม่ได้ก็ยังโชว์ปุ่มเลือกข้อไว้
   document.getElementById('gw-qgrid').innerHTML = [1,2,3,4,5,6,7,8].map(n => {
     const done = S.attempts.some(a => a.q === n);
     return `<button class="gw-qb ${n === gwSel ? 'sel' : ''} ${done && n !== S.currentQ ? 'done' : ''}" onclick="gwSel=${n}; gwRender();"><b>${n}</b>${S.titles[n]}</button>`;
@@ -915,9 +946,58 @@ function gwRender() {
       <td>${solved ? `อันดับ ${solved.rank} (+${solved.points})` : att.length >= S.maxAttempts ? 'ครบสิทธิ์' : ''}</td></tr>`;
   }).join('');
   const tot = {}; S.teams.forEach(t => tot[t] = 0);
+  const fee = {}; S.teams.forEach(t => fee[t] = 0);
   S.attempts.filter(a => a.correct).forEach(a => tot[a.team] += a.points);
-  document.getElementById('gw-total').innerHTML = '<tr><th>ทีม</th><th>คะแนนรวม</th></tr>' +
-    S.teams.slice().sort((a, b) => tot[b] - tot[a]).map(t => `<tr><td class="tn" style="color:${GW_HEX[t]}">${t}</td><td>${tot[t].toLocaleString()}</td></tr>`).join('');
+  (S.fees || []).forEach(f => { if (fee[f.team] !== undefined) fee[f.team] += f.amount; });
+  document.getElementById('gw-total').innerHTML = '<tr><th>ทีม</th><th>ได้</th><th>หักค่าบริการ</th><th>สุทธิ</th></tr>' +
+    S.teams.slice().sort((a, b) => (tot[b] - fee[b]) - (tot[a] - fee[a])).map(t => `<tr><td class="tn" style="color:${GW_HEX[t]}">${t}</td><td>${tot[t].toLocaleString()}</td><td style="color:#fca5a5">${fee[t] ? '−' + fee[t].toLocaleString() : '-'}</td><td><b>${(tot[t] - fee[t]).toLocaleString()}</b></td></tr>`).join('');
+  gwRenderFees();
+}
+
+// ---- ค่าบริการ (เครื่องคิดเลข / ห้องสมุด) ----
+let gwFeeQ = 0, gwFeeSig = '';
+const GW_FEE_LABEL = { calc: '🧮 เครื่องคิดเลข', library: '📚 ห้องสมุด' };
+function gwRenderFees() {
+  const S = gwS || GW_EMPTY, el = document.getElementById('gwf-teams');
+  if (!el) return;
+  if (!gwFeeQ && gwS) gwFeeQ = S.currentQ || 1;   // ตั้งค่าเริ่มต้นเป็นข้อปัจจุบัน หลังโหลดข้อมูลจริงแล้วเท่านั้น
+  const fq = gwFeeQ || S.currentQ || 1;
+  const fees = S.fees || [];
+  const sig = JSON.stringify([fq, S.currentQ, fees.map(f => f.id)]);
+  if (sig === gwFeeSig) return;      // ไม่วาดซ้ำถ้าไม่มีอะไรเปลี่ยน (กันปุ่มกะพริบตอนกำลังกด)
+  gwFeeSig = sig;
+  const amt = S.feeAmounts || { calc: 1000, library: 1000 };
+  document.getElementById('gwf-q').innerHTML = [1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${n === fq ? 'selected' : ''}>ข้อ ${n} · ${S.titles[n]}${n === S.currentQ ? ' (ข้อปัจจุบัน)' : ''}</option>`).join('');
+  el.innerHTML = S.teams.map(t => {
+    const mine = fees.filter(f => f.team === t && f.q === fq);
+    const c = mine.filter(f => f.type === 'calc').length, l = mine.filter(f => f.type === 'library').length;
+    const totalAll = fees.filter(f => f.team === t).reduce((s, f) => s + f.amount, 0);
+    return `<div class="gw-fee-row"><span class="tn" style="color:${GW_HEX[t]}">ทีม${t}</span>
+      <button class="gw-fee-btn" onclick="gwChargeFee('${t}','calc')">🧮 เครื่องคิดเลข −${amt.calc.toLocaleString()}</button>
+      <button class="gw-fee-btn" onclick="gwChargeFee('${t}','library')">📚 ห้องสมุด −${amt.library.toLocaleString()}</button>
+      <span class="gw-fee-count">ข้อนี้: คิดเลข ${c} · ห้องสมุด ${l}<br>หักสะสมทุกข้อ −${totalAll.toLocaleString()}</span></div>`;
+  }).join('');
+  const log = fees.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
+  document.getElementById('gwf-log').innerHTML = log.length ? log.map(f => `<div class="history-item">
+      <span class="history-text"><b style="color:${GW_HEX[f.team]}">ทีม${f.team}</b> · ข้อ ${f.q} · ${GW_FEE_LABEL[f.type] || f.type} <span style="color:#fca5a5">−${f.amount.toLocaleString()}</span></span>
+      <button class="btn-del-history" title="ลบรายการนี้" onclick="gwDeleteFee('${f.id}')">🗑</button></div>`).join('') : '<div class="wallet-empty">ยังไม่มีรายการ</div>';
+}
+async function gwChargeFee(team, type) {
+  const amt = (gwS && gwS.feeAmounts ? gwS.feeAmounts[type] : 1000);
+  if (!confirm(`หัก ฿${amt.toLocaleString()} จากทีม${team} (${GW_FEE_LABEL[type]}) ข้อ ${gwFeeQ}?\n(เข้าใช้ได้ไม่เกิน 2 คน)`)) return;
+  const m = document.getElementById('gwf-msg'); m.textContent = 'กำลังบันทึก...';
+  try {
+    const r = await gwApi({ action: 'gwFeeAdd', team, type, q: gwFeeQ || (gwS && gwS.currentQ) || 1, id: 'fee' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) });
+    m.textContent = r.ok ? `✔ หักค่า${GW_FEE_LABEL[type]} ทีม${team} แล้ว` : '❌ ' + (r.error || 'บันทึกไม่สำเร็จ');
+  } catch (e) { m.textContent = '❌ เน็ตมีปัญหา ลองอีกครั้ง'; }
+  await gwPoll();
+}
+async function gwDeleteFee(id) {
+  if (!confirm('ลบรายการค่าบริการนี้? (คะแนนจะถูกคืนให้ทีม)')) return;
+  const m = document.getElementById('gwf-msg');
+  try { const r = await gwApi({ action: 'gwFeeDel', id }); m.textContent = r.ok ? '✔ ลบรายการแล้ว' : '❌ ' + (r.error || 'ลบไม่สำเร็จ'); }
+  catch (e) { m.textContent = '❌ เน็ตมีปัญหา ลองอีกครั้ง'; }
+  await gwPoll();
 }
 async function gwCmd(c, extra) {
   if (gwBusy) return; gwBusy = true;
