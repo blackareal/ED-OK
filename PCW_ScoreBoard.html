@@ -964,6 +964,24 @@ function gwRender() {
 }
 
 // ═══════════════════════════════════════════════════════
+//  FULLSCREEN (เหมาะกับการฉายขึ้นจอโปรเจกเตอร์)
+// ═══════════════════════════════════════════════════════
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  } else {
+    document.exitFullscreen?.();
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('fullscreenBtn');
+  if (!btn) return;
+  const isFs = !!document.fullscreenElement;
+  btn.classList.toggle('active', isFs);
+  btn.title = isFs ? 'ออกจากเต็มหน้าจอ' : 'เต็มหน้าจอ';
+});
+
+// ═══════════════════════════════════════════════════════
 //  TAB SWITCHING (รวมทุกแท็บ — คะแนน + เซลฟี่)
 // ═══════════════════════════════════════════════════════
 let currentTab = 'scoreboard';
