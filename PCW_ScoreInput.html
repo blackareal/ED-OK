@@ -269,11 +269,6 @@
   <div class="notice">💡 เลือกข้อ → กดเริ่ม 5 นาที (ทีมส่งคำตอบจากหน้า PCW_GenwitTeam.html, จอฉายใช้ PCW_GenwitBoard.html) · คะแนน GENwit แยกจากคะแนนบิทคอยน์/ทอง/ที่ดิน</div>
 
   <div class="card">
-    <label>PIN ครู <span id="gw-pinmsg" style="margin-left:6px;"></span></label>
-    <input type="password" id="gw-pin" placeholder="PIN" inputmode="numeric" style="max-width:160px;" oninput="gwPinChanged()">
-  </div>
-
-  <div class="card">
     <p style="font-weight:600; margin-bottom:10px;">เลือกข้อ</p>
     <div class="gw-qgrid" id="gw-qgrid"></div>
   </div>
@@ -875,18 +870,15 @@ function showTab(name) {
 }
 
 // ======================== GENWIT ========================
-// ใช้ Apps Script ตัวเดียวกับระบบคะแนน (action: gwAdminState / gwAdmin) — PIN ตรงกับ GW_ADMIN_PIN ในสคริปต์
+// ใช้ Apps Script ตัวเดียวกับระบบคะแนน (action: gwAdminState / gwAdmin) — ไม่มี PIN (หน้านี้เข้าได้เฉพาะครู)
 const GW_HEX = { 'ม่วง':'#a855f7','น้ำเงิน':'#2563eb','เหลือง':'#eab308','เขียว':'#22c55e','แดง':'#ef4444','ชมพู':'#ec4899' };
 let gwS = null, gwOffset = 0, gwSel = 0, gwBusy = false, gwTimerA = null, gwTimerB = null;
-try { document.getElementById('gw-pin').value = localStorage.getItem('gw_pin') || ''; } catch (e) {}
 
 async function gwApi(p) {
   const qs = new URLSearchParams(Object.assign({}, p, { _: Date.now() }));
   const r = await fetch(SCRIPT_URL + '?' + qs, { redirect: 'follow' });
   return r.json();
 }
-function gwPin() { return document.getElementById('gw-pin').value; }
-function gwPinChanged() { try { localStorage.setItem('gw_pin', gwPin()); } catch (e) {} gwPoll(); }
 function gwEnter() {            // เรียกตอนเปิดแท็บ: เริ่มดึงสถานะทุก 2 วิ (หยุดเมื่อออกจากแท็บ)
   gwLeave(); gwPoll();
   gwTimerA = setInterval(gwPoll, 2000); gwTimerB = setInterval(gwRender, 500);
@@ -894,10 +886,8 @@ function gwEnter() {            // เรียกตอนเปิดแท็
 function gwLeave() { clearInterval(gwTimerA); clearInterval(gwTimerB); }
 async function gwPoll() {
   try {
-    const r = await gwApi({ action: 'gwAdminState', pin: gwPin() });
-    const pm = document.getElementById('gw-pinmsg');
-    if (r.error) { pm.textContent = '❌ ' + r.error; pm.style.color = '#fca5a5'; return; }
-    pm.textContent = '✔ ถูกต้อง'; pm.style.color = '#86efac';
+    const r = await gwApi({ action: 'gwAdminState' });
+    if (r.error) return;
     gwS = r; gwOffset = r.now - Date.now(); if (!gwSel) gwSel = r.currentQ || 0; gwRender();
   } catch (e) {}
 }
@@ -933,7 +923,7 @@ async function gwCmd(c, extra) {
   if (gwBusy) return; gwBusy = true;
   const m = document.getElementById('gw-msg'); m.textContent = 'กำลังส่งคำสั่ง...';
   try {
-    const r = await gwApi(Object.assign({ action: 'gwAdmin', pin: gwPin(), cmd: c }, extra || {}));
+    const r = await gwApi(Object.assign({ action: 'gwAdmin', cmd: c }, extra || {}));
     m.textContent = r.ok ? '✔ สำเร็จ' : '❌ ' + (r.error || 'ไม่สำเร็จ');
   } catch (e) { m.textContent = '❌ เน็ตมีปัญหา ลองอีกครั้ง'; }
   gwBusy = false; await gwPoll();
