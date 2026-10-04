@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>GENwit · ส่งคำตอบ | ค่ายพรเจริญ ESMT</title>
+<style>
+:root{--bg:#1a0b2e;--panel:#2d1654;--line:#4c2889;--gold:#facc15;--text:#f1ecff;--muted:#b49ad9;--ok:#22c55e;--bad:#ef4444;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun','Noto Sans Thai','Leelawadee UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(circle at 15% 0%,rgba(250,204,21,.10),transparent 45%),radial-gradient(circle at 90% 100%,rgba(76,40,137,.6),transparent 55%);}
+button{font-family:inherit;cursor:pointer;}
+.wrap{max-width:460px;margin:0 auto;padding:16px 16px 40px;}
+.top{text-align:center;margin-bottom:14px;}
+.top h1{font-size:22px;font-weight:800;color:var(--gold);letter-spacing:1px;}
+.top p{font-size:12.5px;color:var(--muted);}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;}
+.hidden{display:none !important;}
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.team-btn{border:3px solid transparent;border-radius:14px;padding:16px 8px;font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);}
+.me{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.me .chip{padding:7px 16px;border-radius:999px;font-weight:800;color:#fff;font-size:15px;}
+.me button{background:none;border:1px dashed var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:12px;}
+.qhead{text-align:center;}
+.qno{font-size:15px;color:var(--muted);}
+.qname{font-size:24px;font-weight:800;margin-top:2px;}
+.timer{font-size:54px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--gold);line-height:1.1;margin-top:6px;}
+.timer.low{color:var(--bad);animation:blink 1s infinite;}
+@keyframes blink{50%{opacity:.45;}}
+.status{font-size:13.5px;color:var(--muted);margin-top:2px;}
+.lamps{display:flex;justify-content:center;gap:14px;margin:12px 0 4px;}
+.lamp{width:44px;height:44px;border-radius:50%;background:#3a2a56;border:3px solid #5b3a99;}
+.lamp.bad{background:var(--bad);border-color:#fecaca;box-shadow:0 0 14px var(--bad);}
+.lamp.ok{background:var(--ok);border-color:#bbf7d0;box-shadow:0 0 14px var(--ok);}
+.lampnote{text-align:center;font-size:13px;color:var(--muted);}
+input#code{width:100%;font-size:44px;font-weight:900;text-align:center;letter-spacing:14px;padding:12px 0 12px 14px;border-radius:14px;border:3px solid var(--line);background:#120a1f;color:#fff;font-family:inherit;}
+input#code:focus{outline:none;border-color:var(--gold);}
+input#code:disabled{opacity:.4;}
+.send{width:100%;margin-top:12px;padding:16px;border:none;border-radius:14px;font-size:19px;font-weight:800;background:linear-gradient(120deg,var(--gold),#eab308);color:#1a0b2e;}
+.send:disabled{opacity:.35;cursor:not-allowed;}
+.msg{margin-top:12px;text-align:center;font-weight:700;font-size:16px;min-height:24px;}
+.msg.ok{color:var(--ok);} .msg.bad{color:#fca5a5;} .msg.info{color:var(--muted);}
+.foot{text-align:center;font-size:12px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1>GENWIT</h1><p>ค่ายพรเจริญ ESMT · ส่งคำตอบประจำทีม</p></div>
+
+  <!-- เลือกทีม -->
+  <div id="pick" class="card hidden">
+    <div style="text-align:center;font-weight:800;margin-bottom:12px;">เลือกสีทีมของคุณ</div>
+    <div class="team-grid" id="teamGrid"></div>
+  </div>
+
+  <!-- หน้าตอบ -->
+  <div id="play" class="hidden">
+    <div class="me"><span class="chip" id="meChip"></span><button id="changeTeam">เปลี่ยนทีม</button></div>
+    <div class="card qhead">
+      <div class="qno" id="qno">รอครูเริ่มข้อแรก</div>
+      <div class="qname" id="qname">&nbsp;</div>
+      <div class="timer" id="timer">--:--</div>
+      <div class="status" id="status">&nbsp;</div>
+    </div>
+    <div class="card">
+      <div class="lamps" id="lamps"></div>
+      <div class="lampnote" id="lampnote">&nbsp;</div>
+      <div style="height:12px"></div>
+      <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="0000">
+      <button class="send" id="send">ส่งคำตอบ</button>
+      <div class="msg info" id="msg">&nbsp;</div>
+    </div>
+    <div class="foot">ตอบได้สูงสุด 3 ครั้งต่อข้อ · ตอบถูกเร็ว ได้คะแนนมาก</div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPDB-PW0wdOUFxUyeftTOXz3EJIaZLYLu_vgbud1yh3agFU6F3E8FRGkPIpJEd3mQ1tw/exec';
+const TEAMS = [
+  { id:'ม่วง', hex:'#a855f7' }, { id:'น้ำเงิน', hex:'#2563eb' }, { id:'เหลือง', hex:'#eab308' },
+  { id:'เขียว', hex:'#22c55e' }, { id:'แดง', hex:'#ef4444' }, { id:'ชมพู', hex:'#ec4899' }
+];
+const $ = id => document.getElementById(id);
+let team = null, S = null, offset = 0, busy = false, pending = null;
+
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+async function api(params){
+  const qs = new URLSearchParams(Object.assign({}, params, { _: Date.now() })).toString();
+  const r = await fetch(SCRIPT_URL + '?' + qs, { redirect: 'follow' });
+  return r.json();
+}
+
+// ---- เลือกทีม ----
+(function initTeam(){
+  const fromUrl = new URLSearchParams(location.search).get('team');
+  const saved = fromUrl || lsGet('gw_team');
+  if (saved && TEAMS.some(t => t.id === saved)) team = saved;
+  $('teamGrid').innerHTML = TEAMS.map(t => `<button class="team-btn" style="background:${t.hex}" data-t="${t.id}">${t.id}</button>`).join('');
+  $('teamGrid').querySelectorAll('button').forEach(b => b.onclick = () => { team = b.dataset.t; lsSet('gw_team', team); showPlay(); });
+  $('changeTeam').onclick = () => { if (confirm('เปลี่ยนทีม? (ตรวจให้แน่ใจว่าเลือกสีทีมตัวเอง)')) { team = null; showPlay(); } };
+  showPlay();
+})();
+function showPlay(){
+  $('pick').classList.toggle('hidden', !!team);
+  $('play').classList.toggle('hidden', !team);
+  if (team){
+    const t = TEAMS.find(x => x.id === team);
+    $('meChip').textContent = 'ทีม' + t.id; $('meChip').style.background = t.hex;
+    render();
+  }
+}
+
+// ---- สถานะ ----
+async function poll(){
+  try { S = await api({ action:'gwState' }); offset = S.now - Date.now(); render(); } catch(e){ /* เน็ตสะดุด ลองใหม่รอบหน้า */ }
+}
+function remainingSec(){
+  if (!S || S.status !== 1) return 0;
+  return Math.max(0, Math.ceil((S.startedAt + S.durationSec*1000 - (Date.now() + offset)) / 1000));
+}
+function mine(){ return S ? S.attempts.filter(a => a.q === S.currentQ && a.team === team) : []; }
+function render(){
+  if (!team || !S) return;
+  const q = S.currentQ, att = mine(), solved = att.find(a => a.correct);
+  const rem = remainingSec(), running = S.status === 1 && rem > 0;
+  const used = att.length, left = Math.max(0, S.maxAttempts - used);
+  $('qno').textContent = q ? 'ข้อที่ ' + q + ' / 8' : 'รอครูเริ่มข้อแรก';
+  $('qname').textContent = q ? (S.titles[q] || '') : ' ';
+  const m = Math.floor(rem/60), s = rem % 60;
+  $('timer').textContent = running ? String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') : (q && S.status >= 1 ? '00:00' : '--:--');
+  $('timer').classList.toggle('low', running && rem <= 30);
+  $('status').textContent = !q ? 'ยังไม่เริ่ม' : running ? 'กำลังเปิดรับคำตอบ' : S.status === 0 ? 'รอครูกดเริ่ม' : 'ปิดรับคำตอบแล้ว';
+  $('lamps').innerHTML = Array.from({length:S.maxAttempts}, (_,i) => {
+    const a = att[i]; return `<div class="lamp ${a ? (a.correct ? 'ok' : 'bad') : ''}"></div>`;
+  }).join('');
+  $('lampnote').textContent = !q ? '' : solved ? `ตอบถูกแล้ว! ได้ลำดับที่ ${solved.rank} (+${solved.points.toLocaleString()} คะแนน)`
+    : left === 0 ? 'ใช้สิทธิ์ครบ 3 ครั้งแล้ว' : `ตอบแล้ว ${used} ครั้ง · เหลืออีก ${left} ครั้ง`;
+  const can = running && !solved && left > 0 && !busy;
+  $('code').disabled = !can;
+  $('send').disabled = !can || $('code').value.length !== 4;
+}
+$('code').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,4); render(); });
+$('code').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('send').disabled) $('send').click(); });
+
+function say(text, cls){ $('msg').textContent = text; $('msg').className = 'msg ' + cls; }
+$('send').onclick = async () => {
+  const guess = $('code').value;
+  if (guess.length !== 4 || busy || !S) return;
+  // กดซ้ำ/เน็ตหลุดแล้วส่งใหม่ด้วยคำตอบเดิม ใช้ id เดิม เพื่อไม่ให้เซิร์ฟเวอร์นับเป็นอีกครั้ง
+  if (!pending || pending.q !== S.currentQ || pending.guess !== guess) pending = { id: uid(), q: S.currentQ, guess };
+  busy = true; render(); say('กำลังส่ง...', 'info');
+  try {
+    const r = await api({ action:'gwSubmit', team, q: pending.q, guess, id: pending.id });
+    if (r.ok){
+      pending = null; $('code').value = '';
+      if (r.correct) say(`ถูกต้อง! ลำดับที่ ${r.rank} · +${r.points.toLocaleString()} คะแนน`, 'ok');
+      else say(r.attemptsLeft > 0 ? `ยังไม่ถูก เหลืออีก ${r.attemptsLeft} ครั้ง` : 'ยังไม่ถูก และใช้สิทธิ์ครบแล้ว', 'bad');
+    } else { pending = null; say(r.error || 'ส่งไม่สำเร็จ', 'bad'); }
+  } catch(e){ say('เน็ตมีปัญหา กดส่งอีกครั้งได้ (ไม่นับซ้ำ)', 'bad'); }
+  busy = false; await poll();
+};
+
+poll(); setInterval(poll, 2000); setInterval(render, 500);
+</script>
+</body>
+</html>
