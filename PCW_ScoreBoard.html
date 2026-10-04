@@ -343,6 +343,9 @@ main { display: flex; flex: 1; overflow: hidden; }
 .gw-lamp.bad { background: #ef4444; border-color: #fecaca; box-shadow: 0 0 20px #ef4444; }
 .gw-lamp.ok { background: #22c55e; border-color: #bbf7d0; box-shadow: 0 0 20px #22c55e; }
 .gw-tstat { text-align: center; font-size: 1rem; font-weight: 700; color: #b49ad9; min-height: 1.5em; }
+.gw-fees { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 22px; }
+.gw-fee { font-size: .78rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: rgba(239,68,68,.22); color: #fecaca; border: 1px solid rgba(239,68,68,.5); }
+.gw-row .pt small { display: block; font-size: .62rem; color: #fca5a5; font-weight: 700; }
 .gw-tstat.ok { color: #22c55e; } .gw-tstat.bad { color: #fca5a5; }
 .gw-aside { flex: 0 0 33%; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
 .gw-panel { background: #2d1654; border: 1px solid #4c2889; border-radius: 18px; padding: 12px 14px; }
@@ -459,7 +462,7 @@ table.gw-mx th { color: #b49ad9; font-weight: 600; } table.gw-mx td.tn { text-al
       <div class="gw-teams" id="gw-teams"></div>
       <div class="gw-aside">
         <div class="gw-panel gw-answer" id="gw-ans"><div style="font-size:.85rem;color:#b49ad9">เฉลยข้อนี้</div><div class="num" id="gw-ansnum">----</div></div>
-        <div class="gw-panel"><h3>คะแนนรวม GENwit</h3><div id="gw-rank"></div></div>
+        <div class="gw-panel"><h3>คะแนนรวม GENwit (หักค่าบริการแล้ว)</h3><div id="gw-rank"></div></div>
         <div class="gw-panel" style="flex:1; overflow:hidden;"><h3>คะแนนรายข้อ</h3><table class="gw-mx" id="gw-mx"></table>
           <div id="gw-scoretbl" style="font-size:.75rem;color:#b49ad9;text-align:center;margin-top:8px;"></div></div>
       </div>
@@ -926,7 +929,7 @@ function gwRemaining() {
 }
 function gwRender() {
   const S = gwS; if (!S || S.error) return;
-  const q = S.currentQ, rem = gwRemaining(), running = S.status === 1 && rem > 0;
+  const q = S.currentQ, rem = gwRemaining(), running = S.status === 1 && rem > 0, fees = S.fees || [];
   const $ = id => document.getElementById(id);
   $('gw-qn').textContent = q ? 'GENWIT · ข้อที่ ' + q + ' / 8' : 'GENWIT · รอเริ่มเกม';
   $('gw-qt').textContent = q ? (S.titles[q] || '') : ' ';
@@ -940,7 +943,8 @@ function gwRender() {
     const st = !q ? '' : solved ? `✔ ถูก! อันดับ ${solved.rank} (+${solved.points.toLocaleString()})` : locked ? '✖ ใช้สิทธิ์ครบแล้ว' : att.length ? `ตอบแล้ว ${att.length} ครั้ง` : 'ยังไม่ตอบ';
     return `<div class="gw-tcard ${solved ? 'solved' : ''} ${locked ? 'locked' : ''}" style="--c:${GW_HEX[t]}">
       <div class="gw-tname">ทีม${t}</div><div class="gw-tpts">${q ? att.length + '/' + S.maxAttempts : ''}</div>
-      <div class="gw-lamps">${lamps}</div><div class="gw-tstat ${solved ? 'ok' : locked ? 'bad' : ''}">${st}</div></div>`;
+      <div class="gw-lamps">${lamps}</div><div class="gw-tstat ${solved ? 'ok' : locked ? 'bad' : ''}">${st}</div>
+      <div class="gw-fees">${fees.filter(f => f.team === t && f.q === q).map(f => `<span class="gw-fee">${f.type === 'calc' ? '🧮' : '📚'} −${f.amount.toLocaleString()}</span>`).join('')}</div></div>`;
   }).join('');
   if (q) {   // เสียงเมื่อมีทีมตอบถูกใหม่ (ไม่ดังตอนโหลดหน้าครั้งแรก)
     S.attempts.filter(a => a.q === q && a.correct).forEach(a => {
@@ -951,15 +955,16 @@ function gwRender() {
   }
   $('gw-ans').classList.toggle('show', !!(S.revealed && S.answer));
   $('gw-ansnum').textContent = S.answer || '----';
-  const tot = {}, per = {}; S.teams.forEach(t => { tot[t] = 0; per[t] = {}; });
-  S.attempts.filter(a => a.correct).forEach(a => { tot[a.team] += a.points; per[a.team][a.q] = a.points; });
+  const tot = {}, per = {}, feeTot = {}; S.teams.forEach(t => { tot[t] = 0; feeTot[t] = 0; per[t] = {}; });
+  S.attempts.filter(a => a.correct).forEach(a => { tot[a.team] += a.points; per[a.team][a.q] = (per[a.team][a.q] || 0) + a.points; });
+  fees.forEach(f => { if (tot[f.team] === undefined) return; tot[f.team] -= f.amount; feeTot[f.team] += f.amount; per[f.team][f.q] = (per[f.team][f.q] || 0) - f.amount; });   // คะแนนสุทธิ = ได้ − ค่าบริการ
   const order = S.teams.slice().sort((a, b) => tot[b] - tot[a]);
-  const max = Math.max(1, ...Object.values(tot)), medal = ['🥇', '🥈', '🥉', '4', '5', '6'];
+  const max = Math.max(1, ...Object.values(tot).map(v => Math.max(v, 0))), medal = ['🥇', '🥈', '🥉', '4', '5', '6'];
   $('gw-rank').innerHTML = order.map((t, i) => `<div class="gw-row" style="--c:${GW_HEX[t]}"><div class="rk">${medal[i]}</div><div class="nm">${t}</div>
-    <div class="bar"><i style="width:${tot[t] / max * 100}%"></i></div><div class="pt">${tot[t].toLocaleString()}</div></div>`).join('');
+    <div class="bar"><i style="width:${Math.max(tot[t], 0) / max * 100}%"></i></div><div class="pt">${tot[t].toLocaleString()}${feeTot[t] ? `<small>หักค่าบริการ −${feeTot[t].toLocaleString()}</small>` : ''}</div></div>`).join('');
   const qs8 = [1,2,3,4,5,6,7,8];
   $('gw-mx').innerHTML = '<tr><th></th>' + qs8.map(n => `<th>${n}</th>`).join('') + '</tr>' +
-    order.map(t => `<tr><td class="tn" style="--c:${GW_HEX[t]}">${t}</td>` + qs8.map(n => per[t][n] ? `<td>${per[t][n] / 1000}k</td>` : '<td class="z">·</td>').join('') + '</tr>').join('');
+    order.map(t => `<tr><td class="tn" style="--c:${GW_HEX[t]}">${t}</td>` + qs8.map(n => per[t][n] ? `<td style="${per[t][n] < 0 ? 'color:#fca5a5' : ''}">${per[t][n] / 1000}k</td>` : '<td class="z">·</td>').join('') + '</tr>').join('');
   $('gw-scoretbl').textContent = 'คะแนนตามลำดับที่ตอบถูก: ' + S.points.map(p => p.toLocaleString()).join(' / ');
 }
 
