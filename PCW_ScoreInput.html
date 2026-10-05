@@ -272,7 +272,7 @@
 <!-- TAB: GENwit -->
 <div class="tab" id="tab-genwit">
   <p class="section-title">🧩 GENwit — ควบคุมเกมไขรหัส</p>
-  <div class="notice">💡 เลือกข้อ → กดเริ่ม 5 นาที (ทีมส่งคำตอบจากหน้า PCW_GenwitTeam.html, จอฉายใช้ PCW_GenwitBoard.html) · คะแนน GENwit แยกจากคะแนนบิทคอยน์/ทอง/ที่ดิน</div>
+  <div class="notice">💡 เลือกข้อ → กดเริ่ม 7 นาที (ทีมสแกน QR จากสกอร์บอร์ดแล้วส่งคำตอบที่หน้า PCW_GenwitTeam.html, จอฉายใช้แท็บ GENWIT ในสกอร์บอร์ด) · คะแนน GENwit แยกจากคะแนนบิทคอยน์/ทอง/ที่ดิน</div>
 
   <div class="card">
     <p style="font-weight:600; margin-bottom:10px;">เลือกข้อ</p>
@@ -285,7 +285,7 @@
       <div class="gw-time" id="gw-nowtm">--:--</div>
     </div>
     <div class="gw-ctrl">
-      <button class="btn btn-success" id="gw-start" onclick="gwStartQ()">▶ เริ่มจับเวลา 5 นาที</button>
+      <button class="btn btn-success" id="gw-start" onclick="gwStartQ()">▶ เริ่มจับเวลา 7 นาที</button>
       <button class="btn btn-danger" style="font-size:0.9rem; padding:10px 20px;" onclick="gwCmd('stop')">⏹ ปิดรับคำตอบ</button>
       <button class="btn btn-primary" onclick="gwCmd('reveal')">👁 โชว์เฉลยบนจอ</button>
       <button class="btn" style="background:#334155; color:#e2e8f0;" onclick="gwCmd('hide')">ซ่อนเฉลย</button>
@@ -897,7 +897,7 @@ function showTab(name) {
 // ใช้ Apps Script ตัวเดียวกับระบบคะแนน (action: gwAdminState / gwAdmin) — ไม่มี PIN (หน้านี้เข้าได้เฉพาะครู)
 const GW_HEX = { 'ม่วง':'#a855f7','น้ำเงิน':'#2563eb','เหลือง':'#eab308','เขียว':'#22c55e','แดง':'#ef4444','ชมพู':'#ec4899' };
 const GW_TITLES = { 1:'กล่องข้าวปริศนา', 2:'หลอดทดลองความหนาแน่น', 3:'โดมิโน', 4:'เรียงลำดับความสูง', 5:'กระเป๋าเงิน', 6:'แกะ', 7:'น้ำส้มสายชู', 8:'ปาท่องโก๋' };
-const GW_EMPTY = { currentQ: 0, status: 0, startedAt: 0, durationSec: 300, maxAttempts: 3, attempts: [], teams: Object.keys(GW_HEX), titles: GW_TITLES };
+const GW_EMPTY = { currentQ: 0, status: 0, startedAt: 0, durationSec: 420, maxAttempts: 3, attempts: [], teams: Object.keys(GW_HEX), titles: GW_TITLES };
 function gwNote(msg) { const m = document.getElementById('gw-msg'); if (m) m.textContent = msg; }
 let gwS = null, gwOffset = 0, gwSel = 0, gwBusy = false, gwTimerA = null, gwTimerB = null;
 
@@ -937,7 +937,7 @@ function gwRender() {
   document.getElementById('gw-nowst').textContent = running ? 'กำลังเปิดรับคำตอบ' : S.status === 0 ? 'รอเริ่ม' : S.currentQ ? 'ปิดรับแล้ว' : '';
   document.getElementById('gw-nowtm').textContent = running ? String(Math.floor(rem / 60)).padStart(2, '0') + ':' + String(rem % 60).padStart(2, '0') : '--:--';
   const sb = document.getElementById('gw-start');
-  sb.textContent = gwSel ? `▶ เริ่มข้อ ${gwSel} (5 นาที)` : '▶ เริ่มจับเวลา 5 นาที';
+  sb.textContent = gwSel ? `▶ เริ่มข้อ ${gwSel} (7 นาที)` : '▶ เริ่มจับเวลา 7 นาที';
   sb.disabled = !gwSel || gwBusy;
   const q = S.currentQ;
   document.getElementById('gw-tbl').innerHTML = '<tr><th>ทีม</th><th>ครั้งที่ส่ง (1-3)</th><th>ผล</th></tr>' + S.teams.map(t => {
